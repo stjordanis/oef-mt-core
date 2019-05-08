@@ -152,5 +152,3 @@ git_repository(
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
 
-#load("//coroutines:coroutines.bzl", "boost_deps")
-#boost_deps()
