@@ -17,6 +17,11 @@ public:
     this -> id = id;
   }
 
+  virtual void collect(void)
+  {
+    std::cout << "Task "<< id << " collected." << std::endl;
+  }
+
   virtual bool isRunnable(void) const
   {
     return true;
@@ -70,7 +75,18 @@ int main(int argc, char *argv[])
     pool.post(t);
   }
 
-  sleep(7);
+  for(int i=0; i<7;i++)
+  {
+    sleep(1);
+    auto dones = pool.getFinishedTasks();
+    std::cout << "COLLECTING " << dones.size() << " FINISHED TASKS"<<std::endl;
+    for(auto& done : dones)
+    {
+      Task *p = done.second.get();
+      MyTask *p2 = (MyTask*)p;
+      p2 -> collect();
+    }
+  }
 
   for(auto &t : myTasks)
   {
