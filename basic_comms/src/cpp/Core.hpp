@@ -8,13 +8,21 @@ using boost::asio::ip::tcp;
 class Core
 {
 public:
-  std::shared_ptr<boost::asio::io_context> context;
-
   Core();
   virtual ~Core();
 
   void run(void);
+  void runThreaded(std::size_t threadcount);
 
   operator boost::asio::io_context*() { return context.get(); }
   operator boost::asio::io_context&() { return *context; }
+
+  std::shared_ptr<tcp::acceptor> makeAcceptor(unsigned short int port);
+private:
+  void stop(void);
+
+  std::shared_ptr<boost::asio::io_context> context;
+  using ThreadP  = std::shared_ptr<std::thread>;
+  using Threads = std::vector<ThreadP>;
+  Threads threads;
 };

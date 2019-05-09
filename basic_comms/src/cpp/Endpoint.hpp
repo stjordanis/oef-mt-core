@@ -40,6 +40,7 @@ public:
   }
   virtual ~Endpoint()
   {
+    std::cerr << "~Endpoint" << std::endl;
   }
 
   virtual Socket& socket()
@@ -53,7 +54,6 @@ public:
 
   virtual void go()
   {
-    std::cerr << "GO!" << std::endl;
     if (onStart)
     {
       onStart();
@@ -147,6 +147,12 @@ public:
     closing = true;
     sock.close();
     onStart = 0;
+    if (onEof)
+      {
+        onEof();
+        onEof = 0;
+        onError = 0;
+      }
   }
 
 private:
@@ -168,6 +174,7 @@ private:
       if (onEof)
       {
         onEof();
+        onEof = 0;
       }
       return;
     }
@@ -204,6 +211,7 @@ private:
       if (onEof)
       {
         onEof();
+        onEof = 0;
       }
       return;
     }

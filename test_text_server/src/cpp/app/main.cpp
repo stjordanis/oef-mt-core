@@ -14,6 +14,8 @@
 #include "test_text_server/src/cpp/lib/TextLineMessageReader.hpp"
 #include "test_text_server/src/cpp/lib/TextLineMessageSender.hpp"
 
+bool quit = false;
+
 class EndpointCollection
 {
 public:
@@ -28,10 +30,14 @@ public:
 
   ~EndpointCollection()
   {
-    for(auto& kv : eps)
+    //std::cerr << "CLOSING..."<<std::endl;
+    Eps local_eps;
+    local_eps.swap(eps);
+    for(auto& kv : local_eps)
     {
       kv.second -> close();
     }
+
     while(true)
     {
       int count = 0;
@@ -39,32 +45,37 @@ public:
         Lock lock(mutex);
         count = eps.size();
       }
+
       if (count == 0)
       {
         break;
       }
-      std::cerr << "Waiting for shutdowns "<< count << std::endl;
+
       sleep(1);
     }
+    //std::cerr << "NUKING..."<<std::endl;
   }
 
    void Error(int ident, const boost::system::error_code& ec)
   {
-    std::cout << "Error..." << std::endl;
+    //std::cout << "Error..." << std::endl;
+    Lock lock(mutex);
     eps.erase(ident);
     std::cout << "Error: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
 
   void Eof(int ident)
   {
-    std::cout << "Eof..." << std::endl;
+    //std::cout << "Eof..." << std::endl;
+    Lock lock(mutex);
     eps.erase(ident);
     std::cout << "Eof: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
 
   void Start(int ident, EpP obj)
   {
-    std::cout << "Join..." << std::endl;
+    //std::cout << "Join..." << std::endl;
+    Lock lock(mutex);
     eps[ident] = obj;
     std::cout << "Joined: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
@@ -81,17 +92,24 @@ public:
     auto textLineMessageSenderPtr = std::make_shared<TextLineMessageSender>();
     auto textLineMessageReaderPtr = std::make_shared<TextLineMessageReader>();
 
-    textLineMessageReaderPtr -> onCompletion =
+    textLineMessageReaderPtr -> onComplete =
       [textLineMessageSenderPtr, endpoint](const std::string &s) {
+      if (s=="shutdown")
+      {
+        quit = true;
+      }
       textLineMessageSenderPtr -> send(s);
-      endpoint -> run_sender();
+      endpoint -> run_sending();
     };
 
     endpoint -> reader = textLineMessageReaderPtr;
     endpoint -> writer = textLineMessageSenderPtr;
     endpoint -> onError = [this, ident](const boost::system::error_code& ec){ this->Error(ident, ec); };
     endpoint -> onEof   = [this, ident](){ this->Eof(ident); };
-    endpoint -> onStart = [this, ident, &endpoint](){ this->Start(ident, endpoint); }; // Capture sp by reference to avoid an increment until the call.
+    endpoint -> onStart = [this, ident, endpoint](){
+      //std::cerr << "onStart handler" << std::endl;
+      this->Start(ident, endpoint);
+    }; // Capture sp by reference to avoid an increment until the call.
 
     return endpoint;
   }
@@ -105,14 +123,24 @@ private:
 
 int main(int argc, char *argv[])
 {
-  Core core;
+  std::cerr << "ALLO" << std::endl;
+  {
+    Core core;
 
   EndpointCollection ec;
 
-  Listener listener(core);
+  Listener listener(core, 7600);
   listener.creator = [&ec](Core &core){ return ec.createNewConnection(core); };
 
   listener.start_accept();
 
-  core.run();
+  core.runThreaded(5);
+
+  while(!quit)
+  {
+    sleep(1);
+    std::cerr<< "tick"<<std::endl;
+  }
+  }
+  std::cerr << "BYE" << std::endl;
 }

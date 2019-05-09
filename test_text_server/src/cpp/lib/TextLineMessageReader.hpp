@@ -10,12 +10,10 @@
 class TextLineMessageReader:public IMessageReader
 {
 public:
-  using CompleteNotification = std::function<void (const std::string &)>
+  using CompleteNotification = std::function<void (const std::string &)>;
 
-  TextLineMessageReader(std::shared_ptr<TextLineMessageSender> sender, std::shared_ptr<Endpoint> endpoint)
+  TextLineMessageReader()
   {
-    this -> sender = sender;
-    this -> endpoint = endpoint;
   }
   virtual ~TextLineMessageReader()
   {
@@ -64,9 +62,6 @@ public:
     }
     return consumed_needed_pair(consumed, needed);
   }
-
-  std::shared_ptr<TextLineMessageSender> sender;
-  std::shared_ptr<Endpoint> endpoint;
 
   CompleteNotification onComplete;
 protected:

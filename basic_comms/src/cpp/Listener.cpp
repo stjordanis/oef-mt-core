@@ -3,9 +3,9 @@
 #include "Listener.hpp"
 #include "Core.hpp"
 
-Listener::Listener(Core &thecore):core(thecore)
+Listener::Listener(Core &thecore, unsigned short int port):core(thecore)
 {
-  acceptor = std::make_shared<tcp::acceptor>(*(core.context), tcp::endpoint(tcp::v4(), 7600));
+  acceptor = thecore.makeAcceptor(port);
 }
 
 void Listener::start_accept()
@@ -20,9 +20,8 @@ void Listener::handle_accept(std::shared_ptr<ISocketOwner> new_connection, const
   if (!error)
   {
     new_connection->go();
+    start_accept();
   }
-
-  start_accept();
 }
 
 Listener::~Listener()
