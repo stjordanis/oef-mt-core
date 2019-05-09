@@ -2,6 +2,7 @@
 
 #include <boost/asio.hpp>
 #include <list>
+#include <iostream>
 
 class RingBuffer
 {
@@ -14,6 +15,11 @@ public:
   using byte = std::uint8_t;
 
   using SignalReady = std::function<void ()>;
+
+protected:
+  void ignored()
+  {
+  }
 public:
   RingBuffer(const RingBuffer &other) = delete;
   RingBuffer &operator=(const RingBuffer &other) = delete;
@@ -59,7 +65,7 @@ public:
   {
     Lock lock(mut);
     std::list<mutable_buffer> r;
-    if (getFreeSpace() > 0)
+    if (lockless_getFreeSpace() > 0)
       {
         size_t buffer1size = std::min(writep + lockless_getFreeSpace(), size) - writep;
         size_t buffer2size = lockless_getFreeSpace() - buffer1size;
@@ -71,17 +77,17 @@ public:
     return r;
   }
 
-  std::list<mutable_buffer> getDataBuffers()
+  std::list<buffer> getDataBuffers()
   {
     Lock lock(mut);
-    std::list<mutable_buffer> r;
-    if (getFreeSpace() < size)
+    std::list<buffer> r;
+    if (lockless_getDataAvailable() < size)
       {
         size_t buffer1size = std::min(readp + lockless_getDataAvailable(), size) - readp;
         size_t buffer2size = lockless_getDataAvailable() - buffer1size;
-        r.push_back(mutable_buffer( addressOf(readp%size), buffer1size ));
+        r.push_back(buffer( addressOf(readp%size), buffer1size ));
         if (buffer2size) {
-          r.push_back(mutable_buffer(addressOf(0), buffer2size));
+          r.push_back(buffer(addressOf(0), buffer2size));
         }
       }
     return r;
@@ -89,10 +95,13 @@ public:
 
   void markSpaceUsed(size_t amount)
   {
-    Lock lock(mut);
-    writep += amount;
-    auto prevAvail = getDataAvailable();
-    freeSpace -= amount;
+    std::size_t prevAvail = 0;
+    {
+      Lock lock(mut);
+      writep += amount;
+      prevAvail = lockless_getDataAvailable();
+      freeSpace -= amount;
+    }
     if (!prevAvail)
       {
         signalDataReady();
@@ -101,10 +110,13 @@ public:
 
   void markDataUsed(size_t amount)
   {
-    Lock lock(mut);
-    readp += amount;
-    auto prevSpace = getFreeSpace();
-    freeSpace += amount;
+    std::size_t prevSpace = 0;
+    {
+      Lock lock(mut);
+      readp += amount;
+      prevSpace = lockless_getFreeSpace();
+      freeSpace += amount;
+    }
     if (!prevSpace)
       {
         signalSpaceReady();
@@ -143,8 +155,8 @@ protected:
   byte *store;
   mutable Mutex mut;
 
-  SignalReady signalSpaceReady;
-  SignalReady signalDataReady;
+  SignalReady signalSpaceReady = [](){};
+  SignalReady signalDataReady = [](){};
 
   size_t lockless_getFreeSpace() const
   {

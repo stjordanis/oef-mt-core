@@ -23,9 +23,7 @@ public:
   void handle_accept(ISocketOwner *new_connection, const boost::system::error_code& error);
 
   std::shared_ptr<tcp::acceptor> acceptor;
-
-
-private:
   CONN_CREATOR creator;
+private:
   Core &core;
 };
