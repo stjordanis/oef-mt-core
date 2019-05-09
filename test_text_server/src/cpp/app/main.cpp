@@ -76,18 +76,24 @@ public:
 
     auto ident = counter;
 
-    auto obj = std::make_shared<Endpoint>(core, 2000, 2000);
+    auto endpoint = std::make_shared<Endpoint>(core, 2000, 2000);
 
     auto textLineMessageSenderPtr = std::make_shared<TextLineMessageSender>();
-    auto textLineMessageReaderPtr = std::make_shared<TextLineMessageReader>(textLineMessageSenderPtr, obj);
+    auto textLineMessageReaderPtr = std::make_shared<TextLineMessageReader>();
 
-    obj -> reader = textLineMessageReaderPtr;
-    obj -> writer = textLineMessageSenderPtr;
-    obj -> onError = [this, ident](const boost::system::error_code& ec){ this->Error(ident, ec); };
-    obj -> onEof   = [this, ident](){ this->Eof(ident); };
-    obj -> onStart = [this, ident, &obj](){ this->Start(ident, obj); }; // Capture sp by reference to avoid an increment until the call.
+    textLineMessageReaderPtr -> onCompletion =
+      [textLineMessageSenderPtr, endpoint](const std::string &s) {
+      textLineMessageSenderPtr -> send(s);
+      endpoint -> run_sender();
+    };
 
-    return obj;
+    endpoint -> reader = textLineMessageReaderPtr;
+    endpoint -> writer = textLineMessageSenderPtr;
+    endpoint -> onError = [this, ident](const boost::system::error_code& ec){ this->Error(ident, ec); };
+    endpoint -> onEof   = [this, ident](){ this->Eof(ident); };
+    endpoint -> onStart = [this, ident, &endpoint](){ this->Start(ident, endpoint); }; // Capture sp by reference to avoid an increment until the call.
+
+    return endpoint;
   }
 private:
   Mutex mutex;

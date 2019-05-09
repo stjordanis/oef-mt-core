@@ -10,6 +10,8 @@
 class TextLineMessageReader:public IMessageReader
 {
 public:
+  using CompleteNotification = std::function<void (const std::string &)>
+
   TextLineMessageReader(std::shared_ptr<TextLineMessageSender> sender, std::shared_ptr<Endpoint> endpoint)
   {
     this -> sender = sender;
@@ -43,8 +45,10 @@ public:
         switch(c)
         {
         case '\r':
-          sender -> send(s);
-          endpoint -> run_sending();
+          if (onComplete)
+          {
+            onComplete(s);
+          }
           consumed = total_so_far;
           s = "";
 
@@ -63,6 +67,8 @@ public:
 
   std::shared_ptr<TextLineMessageSender> sender;
   std::shared_ptr<Endpoint> endpoint;
+
+  CompleteNotification onComplete;
 protected:
 private:
   TextLineMessageReader(const TextLineMessageReader &other) = delete;
