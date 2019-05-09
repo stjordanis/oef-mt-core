@@ -12,22 +12,23 @@
 #include "basic_comms/src/cpp/IMessageWriter.hpp"
 
 #include "test_text_server/src/cpp/lib/TextLineMessageReader.hpp"
+#include "test_text_server/src/cpp/lib/TextLineMessageSender.hpp"
 
-TextLineMessageReader textLineMessageReader;
 
 ISocketOwner *createNewConnection(Core &core)
 {
-  
   auto obj = new Endpoint(core, 2000, 2000);
-  obj -> reader = &textLineMessageReader;
-  obj -> writer = 0;
+
+  auto textLineMessageSenderPtr = std::make_shared<TextLineMessageSender>();
+  auto textLineMessageReaderPtr = std::make_shared<TextLineMessageReader>(textLineMessageSenderPtr, obj);
+
+  obj -> reader = textLineMessageReaderPtr;
+  obj -> writer = textLineMessageSenderPtr;
   return obj;
 }
 
 int main(int argc, char *argv[])
 {
-  std::cout << "Hello"<< std::endl;
-
   Core core;
 
   Listener listener(core);

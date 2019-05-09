@@ -1,7 +1,7 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include <list>
+#include <vector>
 #include <iostream>
 
 class RingBuffer
@@ -61,10 +61,10 @@ public:
     return buffer( addressOf(readp%size), std::min(readp+lockless_getDataAvailable(), size) - readp );
   }
 
-  std::list<mutable_buffer> getSpaceBuffers()
+  std::vector<mutable_buffer> getSpaceBuffers()
   {
     Lock lock(mut);
-    std::list<mutable_buffer> r;
+    std::vector<mutable_buffer> r;
     if (lockless_getFreeSpace() > 0)
       {
         size_t buffer1size = std::min(writep + lockless_getFreeSpace(), size) - writep;
@@ -77,10 +77,10 @@ public:
     return r;
   }
 
-  std::list<buffer> getDataBuffers()
+  std::vector<buffer> getDataBuffers()
   {
     Lock lock(mut);
-    std::list<buffer> r;
+    std::vector<buffer> r;
     if (lockless_getDataAvailable() < size)
       {
         size_t buffer1size = std::min(readp + lockless_getDataAvailable(), size) - readp;
