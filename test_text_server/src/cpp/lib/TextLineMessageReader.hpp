@@ -10,7 +10,7 @@
 class TextLineMessageReader:public IMessageReader
 {
 public:
-  TextLineMessageReader(std::shared_ptr<TextLineMessageSender> sender, Endpoint *endpoint)
+  TextLineMessageReader(std::shared_ptr<TextLineMessageSender> sender, std::shared_ptr<Endpoint> endpoint)
   {
     this -> sender = sender;
     this -> endpoint = endpoint;
@@ -62,7 +62,7 @@ public:
   }
 
   std::shared_ptr<TextLineMessageSender> sender;
-  Endpoint *endpoint;
+  std::shared_ptr<Endpoint> endpoint;
 protected:
 private:
   TextLineMessageReader(const TextLineMessageReader &other) = delete;

@@ -13,14 +13,14 @@ class Core;
 class Listener
 {
 public:
-  using CONN_CREATOR = std::function< ISocketOwner* (Core &core)>;
+  using CONN_CREATOR = std::function< std::shared_ptr<ISocketOwner> (Core &core)>;
 
 
   Listener(Core &core);
   virtual ~Listener();
 
   void start_accept();
-  void handle_accept(ISocketOwner *new_connection, const boost::system::error_code& error);
+  void handle_accept(std::shared_ptr<ISocketOwner> new_connection, const boost::system::error_code& error);
 
   std::shared_ptr<tcp::acceptor> acceptor;
   CONN_CREATOR creator;

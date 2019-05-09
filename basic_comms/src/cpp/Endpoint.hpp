@@ -16,6 +16,11 @@ public:
   using Lock = std::lock_guard<Mutex>;
   using Socket = boost::asio::ip::tcp::socket;
 
+  using ErrorNotification = std::function<void (const boost::system::error_code& ec)> ;
+  using EofNotification = std::function<void ()> ;
+  using StartNotification = std::function<void ()> ;
+
+
   Endpoint(const Endpoint &other) = delete;
   Endpoint &operator=(const Endpoint &other) = delete;
   bool operator==(const Endpoint &other) = delete;
@@ -44,11 +49,16 @@ public:
 
   virtual void eof()
   {
-    //TODO(kll): tell someone
   }
 
   virtual void go()
   {
+    std::cerr << "GO!" << std::endl;
+    if (onStart)
+    {
+      onStart();
+    }
+
     {
       Lock lock(mutex);
       read_needed++;
@@ -65,11 +75,15 @@ public:
   RingBuffer sendBuffer;
   RingBuffer readBuffer;
 
+  ErrorNotification onError;
+  EofNotification onEof;
+  StartNotification onStart;
+
   void run_sending()
   {
     {
       Lock lock(mutex);
-      if (asio_sending)
+      if (asio_sending || closing)
       {
         return;
       }
@@ -99,7 +113,7 @@ public:
 
     {
       Lock lock(mutex);
-      if (asio_reading)
+      if (asio_reading || closing)
       {
         return;
       }
@@ -127,13 +141,21 @@ public:
                             );
   }
 
+  void close()
+  {
+    Lock lock(mutex);
+    closing = true;
+    sock.close();
+    onStart = 0;
+  }
+
 private:
   Mutex mutex;
   std::size_t read_needed = 0;
 
   std::atomic<bool> asio_sending;
   std::atomic<bool> asio_reading;
-
+  std::atomic<bool> closing;
 
   void complete_sending(const boost::system::error_code& ec, const size_t &bytes)
   {
@@ -143,15 +165,19 @@ private:
     }
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
-      std::cerr << "EOF" << ec << std::endl;
-      exit(0); // TODO(KLL): Tell someone.
+      if (onEof)
+      {
+        onEof();
+      }
       return;
     }
 
     if (ec)
     {
-      std::cout << "ERROR:" << ":" << ec.message() << std::endl;
-      exit(0); // TODO(KLL): Tell someone.
+      if (onError)
+      {
+        onError(ec);
+      }
       return;
     }
 
@@ -175,15 +201,19 @@ private:
     }
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
-      std::cerr << "EOF" << ec << std::endl;
-      exit(0); // TODO(KLL): Tell someone.
+      if (onEof)
+      {
+        onEof();
+      }
       return;
     }
 
     if (ec)
     {
-      std::cout << "ERROR:" << ":" << ec.message() << std::endl;
-      exit(0); // TODO(KLL): Tell someone.
+      if (onError)
+      {
+        onError(ec);
+      }
       return;
     }
 

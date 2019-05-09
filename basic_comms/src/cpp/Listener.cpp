@@ -10,12 +10,12 @@ Listener::Listener(Core &thecore):core(thecore)
 
 void Listener::start_accept()
 {
-  ISocketOwner *new_connection = creator(core);
+  auto new_connection = creator(core);
   acceptor -> async_accept(new_connection->socket(),
                            std::bind(&Listener::handle_accept, this, new_connection, std::placeholders::_1));
 }
 
-void Listener::handle_accept(ISocketOwner *new_connection, const boost::system::error_code& error)
+void Listener::handle_accept(std::shared_ptr<ISocketOwner> new_connection, const boost::system::error_code& error)
 {
   if (!error)
   {
