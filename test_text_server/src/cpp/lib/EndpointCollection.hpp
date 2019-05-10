@@ -59,6 +59,8 @@ public:
     std::cout << "Joined: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
 
+  void kill(void);
+
   std::shared_ptr<ISocketOwner> createNewConnection(Core &core);
 private:
   Mutex mutex;

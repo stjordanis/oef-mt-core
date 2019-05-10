@@ -5,9 +5,13 @@
 #include "basic_comms/src/cpp/IMessageReader.hpp"
 #include "basic_comms/src/cpp/IMessageWriter.hpp"
 
-#include "test_text_server/src/cpp/lib/TextLineMessageReader.hpp"
-#include "test_text_server/src/cpp/lib/TextLineMessageSender.hpp"
-#include "test_text_server/src/cpp/lib/BroadcastTask.hpp"
+void EndpointCollection::kill()
+{
+  if (onKill)
+  {
+    onKill();
+  }
+}
 
 EndpointCollection::~EndpointCollection()
 {
@@ -43,33 +47,13 @@ std::shared_ptr<ISocketOwner> EndpointCollection::createNewConnection(Core &core
 
   auto ident = counter;
 
-  auto endpoint = std::make_shared<ChatEndpoint>(ident, core);
+  auto endpoint = std::make_shared<ChatEndpoint>(shared_from_this(), ident, core);
 
-  auto textLineMessageSenderPtr = std::make_shared<TextLineMessageSender>();
-  auto textLineMessageReaderPtr = std::make_shared<TextLineMessageReader>();
-
-  endpoint -> textLineMessageSender = textLineMessageSenderPtr;
-  endpoint -> reader = textLineMessageReaderPtr;
-  endpoint -> writer = textLineMessageSenderPtr;
   endpoint -> onError = [this, ident](const boost::system::error_code& ec){ this->Error(ident, ec); };
   endpoint -> onEof   = [this, ident](){ this->Eof(ident); };
   endpoint -> onStart = [this, ident, endpoint](){
     //std::cerr << "onStart handler" << std::endl;
     this->Start(ident, endpoint);
   };
-
-  textLineMessageReaderPtr -> onComplete =
-    [this, textLineMessageSenderPtr, endpoint](const std::string &s) {
-    if (s=="shutdown")
-    {
-      if (onKill)
-      {
-        onKill();
-      }
-    }
-    auto task = std::make_shared<BroadcastTask>(shared_from_this(), s, endpoint -> id);
-    task -> submit();
-  };
-
   return endpoint;
 }
