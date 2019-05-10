@@ -22,34 +22,19 @@ public:
   using FinishedTasks = std::list<TaskDone>;
   using RunningTasks = std::map<std::size_t, TaskP>;
 
-  Taskpool();
+  Taskpool(bool autoReapFinishedTasks=true);
   virtual ~Taskpool();
 
-  void submit(TaskP task)
-  {
-    Lock lock(mutex);
-    pending_tasks.push_back(task);
-    work_available.notify_one();
-  }
-
+  virtual void submit(TaskP task);
   virtual void run(std::size_t thread_number);
-  void setDefault();
-
-  virtual FinishedTasks getFinishedTasks()
-  {
-    Lock lock(mutex);
-    FinishedTasks result;
-    result.swap(finished_tasks);
-    return result;
-  }
-
-  void stop(void);
+  virtual void setDefault();
+  virtual FinishedTasks getFinishedTasks();
+  virtual void stop(void);
 
   static std::weak_ptr<Taskpool> getDefaultTaskpool();
 
-  void remove(TaskP task);
-  void makeRunnable(TaskP task);
-
+  virtual void remove(TaskP task);
+  virtual void makeRunnable(TaskP task);
 protected:
 private:
   Mutex mutex;
@@ -58,6 +43,7 @@ private:
   Tasks pending_tasks;
   FinishedTasks finished_tasks;
   RunningTasks running_tasks;
+  bool autoReapFinishedTasks;
 
   Taskpool(const Taskpool &other) = delete; // { copy(other); }
   Taskpool &operator=(const Taskpool &other) = delete; // { copy(other); return *this; }

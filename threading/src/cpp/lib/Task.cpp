@@ -25,3 +25,11 @@ bool Task::submit()
   }
   return false;
 }
+
+void Task::makeRunnable()
+{
+  if (this -> pool)
+  {
+    this -> pool -> makeRunnable(shared_from_this());
+  }
+}

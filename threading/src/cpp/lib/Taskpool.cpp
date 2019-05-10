@@ -2,8 +2,9 @@
 
 static std::weak_ptr<Taskpool> gDefaultTaskPool;
 
-Taskpool::Taskpool():quit(false)
+Taskpool::Taskpool(bool autoReapFinishedTasks):quit(false)
 {
+  this -> autoReapFinishedTasks = autoReapFinishedTasks;
 }
 
 void Taskpool::setDefault()
@@ -81,7 +82,7 @@ void Taskpool::run(std::size_t thread_idx)
       //std::cerr << "TASK " << mytask.get() << " DEFER" << std::endl;
       {
         Lock lock(mutex);
-        pending_tasks.push_back(mytask);
+        suspended_tasks.insert(mytask);
       }
       break;
     case ERRORED:
@@ -100,8 +101,11 @@ void Taskpool::run(std::size_t thread_idx)
       break;
     case COMPLETE:
       {
-        Lock lock(mutex);
-        finished_tasks.push_back(TaskDone(status, mytask));
+        if (autoReapFinishedTasks)
+        {
+          Lock lock(mutex);
+          finished_tasks.push_back(TaskDone(status, mytask));
+        }
       }
       //std::cerr << "TASK " << mytask.get() << " COMPLETE" << std::endl;
       break;
@@ -158,4 +162,19 @@ void Taskpool::stop(void)
   work_available.notify_all();
   work_available.notify_all();
   work_available.notify_all();
+}
+
+void Taskpool::submit(TaskP task)
+{
+  Lock lock(mutex);
+  pending_tasks.push_back(task);
+  work_available.notify_one();
+}
+
+Taskpool::FinishedTasks Taskpool::getFinishedTasks()
+{
+  Lock lock(mutex);
+  FinishedTasks result;
+  result.swap(finished_tasks);
+  return result;
 }
