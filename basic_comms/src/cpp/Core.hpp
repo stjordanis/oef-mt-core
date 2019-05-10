@@ -12,14 +12,13 @@ public:
   virtual ~Core();
 
   void run(void);
-  void runThreaded(std::size_t threadcount);
+  void stop(void);
 
   operator boost::asio::io_context*() { return context.get(); }
   operator boost::asio::io_context&() { return *context; }
 
   std::shared_ptr<tcp::acceptor> makeAcceptor(unsigned short int port);
 private:
-  void stop(void);
 
   std::shared_ptr<boost::asio::io_context> context;
   using ThreadP  = std::shared_ptr<std::thread>;

@@ -8,5 +8,6 @@ cc_library(
     deps = [
         "@boost//:asio",
         "//basic_comms/src/cpp:lib",
+        "//threading/src/cpp/lib:lib",
     ],
 )

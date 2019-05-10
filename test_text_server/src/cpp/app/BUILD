@@ -6,6 +6,7 @@ cc_binary(
     srcs = glob(["main.cpp"]),
     deps = [
         "//basic_comms/src/cpp:lib",
+        "//threading/src/cpp/lib:lib",
         "//test_text_server/src/cpp/lib:lib",
     ],
     data = [
