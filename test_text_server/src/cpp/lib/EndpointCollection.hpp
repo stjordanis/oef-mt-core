@@ -48,7 +48,7 @@ public:
     //std::cout << "Eof..." << std::endl;
     Lock lock(mutex);
     eps.erase(ident);
-    std::cout << "Eof: " << ident << ". Current count = " << eps.size() << "." << std::endl;
+    std::cout << "Left: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
 
   void Start(int ident, EpP obj)

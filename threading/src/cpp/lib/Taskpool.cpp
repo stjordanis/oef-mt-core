@@ -101,7 +101,7 @@ void Taskpool::run(std::size_t thread_idx)
       break;
     case COMPLETE:
       {
-        if (autoReapFinishedTasks)
+        if (!autoReapFinishedTasks)
         {
           Lock lock(mutex);
           finished_tasks.push_back(TaskDone(status, mytask));
@@ -109,11 +109,6 @@ void Taskpool::run(std::size_t thread_idx)
       }
       //std::cerr << "TASK " << mytask.get() << " COMPLETE" << std::endl;
       break;
-    }
-
-    {
-      Lock lock(mutex);
-      std::cerr << "DONE " << finished_tasks.size() << " TASKS" << std::endl;
     }
   }
 }

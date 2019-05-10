@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <vector>
 #include <map>
+#include <set>
 #include <list>
 #include <iostream>
 
@@ -21,6 +22,7 @@ public:
   using TaskDone = std::pair<ExitState, TaskP>;
   using FinishedTasks = std::list<TaskDone>;
   using RunningTasks = std::map<std::size_t, TaskP>;
+  using SuspendedTasks = std::set<TaskP>;
 
   Taskpool(bool autoReapFinishedTasks=true);
   virtual ~Taskpool();
@@ -43,6 +45,7 @@ private:
   Tasks pending_tasks;
   FinishedTasks finished_tasks;
   RunningTasks running_tasks;
+  SuspendedTasks suspended_tasks;
   bool autoReapFinishedTasks;
 
   Taskpool(const Taskpool &other) = delete; // { copy(other); }

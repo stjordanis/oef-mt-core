@@ -16,7 +16,8 @@
 #include "test_text_server/src/cpp/lib/TextLineMessageReader.hpp"
 #include "test_text_server/src/cpp/lib/TextLineMessageSender.hpp"
 
-bool quit = false;
+std::mutex mutex;
+std::condition_variable quit;
 
 using namespace std::placeholders;
 
@@ -39,7 +40,10 @@ int main(int argc, char *argv[])
 
     auto ec = std::make_shared<EndpointCollection>();
 
-    ec -> onKill = [](){ quit = true; };
+    ec -> onKill = [](){
+      std::unique_lock<std::mutex> lock(mutex);
+      quit.notify_all();
+    };
 
     Listener listener(core, 7600);
     listener.creator = [ec](Core &core){ return ec -> createNewConnection(core); };
@@ -55,22 +59,16 @@ int main(int argc, char *argv[])
     core_runners.start(5, run_core);
     task_runners.start(5, run_task);
 
-    while(!quit)
     {
-      sleep(1);
-      std::cerr<< "tick"<<std::endl;
+      std::unique_lock<std::mutex> lock(mutex);
+      quit.wait(lock);
     }
-    std::cerr<< "quit"<<std::endl;
 
+    std::cerr<< "QUIT"<<std::endl;
     tasks -> stop();
-    std::cerr<< "quit"<<std::endl;
     core.stop();
-    std::cerr<< "quit"<<std::endl;
-
     core_runners.stop();
-    std::cerr<< "quit"<<std::endl;
     task_runners.stop();
-    std::cerr<< "quit"<<std::endl;
   }
   std::cerr << "BYE" << std::endl;
 
