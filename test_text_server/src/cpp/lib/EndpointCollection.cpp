@@ -37,7 +37,6 @@ EndpointCollection::~EndpointCollection()
 
     sleep(1);
   }
-  //std::cerr << "NUKING..."<<std::endl;
 }
 
 std::shared_ptr<ISocketOwner> EndpointCollection::createNewConnection(Core &core)
@@ -52,7 +51,6 @@ std::shared_ptr<ISocketOwner> EndpointCollection::createNewConnection(Core &core
   endpoint -> onError = [this, ident](const boost::system::error_code& ec){ this->Error(ident, ec); };
   endpoint -> onEof   = [this, ident](){ this->Eof(ident); };
   endpoint -> onStart = [this, ident, endpoint](){
-    //std::cerr << "onStart handler" << std::endl;
     this->Start(ident, endpoint);
   };
   return endpoint;
