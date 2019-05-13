@@ -56,6 +56,15 @@ public:
 
       chars.read(body_size);
 
+      if (body_size > 10000) // TODO(kll)
+      {
+        onProtoError(
+                       std::string("Proto deserialisation refuses incoming ")
+                       + std::to_string(body_size)
+                       + "bytes message header.");
+        break;
+      }
+
       if (chars.remainingData() < body_size)
       {
         needed = body_size - chars.remainingData();

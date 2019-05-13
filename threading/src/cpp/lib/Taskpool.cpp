@@ -30,11 +30,14 @@ void Taskpool::run(std::size_t thread_idx)
       return;
     }
 
+    auto cv_status = std::cv_status::no_timeout;
+
+    Timestamp now = Clock::now();
     {
       Lock lock(mutex);
       if (pending_tasks.empty())
       {
-        work_available.wait(lock);
+        cv_status = work_available.wait_until(lock, lockless_getNextWakeTime(now, Milliseconds(100)));
       }
     }
 
@@ -44,15 +47,26 @@ void Taskpool::run(std::size_t thread_idx)
     }
 
     TaskP mytask;
+
+    now = Clock::now();
+
     {
       Lock lock(mutex);
-      if (pending_tasks.empty())
-      {
-        continue; // back to sleep
-      }
+      mytask = lockless_getNextFutureWork(now);
+    }
+    {
+      Lock lock(mutex);
+      if (!pending_tasks.empty())
+        {
+          mytask = pending_tasks.front();
+          pending_tasks.pop_front();
+        }
+    }
 
-      mytask = pending_tasks.front();
-      pending_tasks.pop_front();
+    if (!mytask)
+    {
+      // back to sleep
+      continue;
     }
 
     ExitState status;
@@ -166,10 +180,47 @@ void Taskpool::submit(TaskP task)
   work_available.notify_one();
 }
 
+void Taskpool::after(TaskP task, const Milliseconds &delay)
+{
+  Lock lock(mutex);
+
+  FutureTask ft;
+  ft.task = task;
+  ft.due = Clock::now() + delay;
+
+  future_tasks.push(ft);
+}
+
 Taskpool::FinishedTasks Taskpool::getFinishedTasks()
 {
   Lock lock(mutex);
   FinishedTasks result;
   result.swap(finished_tasks);
+  return result;
+}
+
+Taskpool::Timestamp Taskpool::lockless_getNextWakeTime(const Timestamp &current_time,
+                                                       const Milliseconds &deflt)
+{
+  Timestamp result = current_time + deflt;
+  if (!future_tasks.empty())
+  {
+    result = future_tasks.top().due;
+  }
+  return result;
+}
+
+
+Taskpool::TaskP Taskpool::lockless_getNextFutureWork(const Timestamp &current_time)
+{
+  TaskP result;
+  if (!future_tasks.empty())
+  {
+    if (future_tasks.top().due < current_time)
+    {
+      result = future_tasks.top().task;
+      future_tasks.pop();
+    }
+  }
   return result;
 }

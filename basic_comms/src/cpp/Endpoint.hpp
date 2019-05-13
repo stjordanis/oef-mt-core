@@ -121,11 +121,11 @@ public:
       {
         return;
       }
-      if (read_needed > readBuffer.getFreeSpace())
-      {
-        return;
-      }
       read_needed_local = read_needed;
+      if (read_needed_local > readBuffer.getFreeSpace())
+      {
+        read_needed_local = readBuffer.getFreeSpace();
+      }
       read_needed = 0;
       asio_reading = true;
     }

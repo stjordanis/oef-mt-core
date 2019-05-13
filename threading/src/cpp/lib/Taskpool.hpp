@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <vector>
 #include <map>
+#include <queue>
 #include <set>
 #include <list>
 #include <iostream>
@@ -24,10 +25,15 @@ public:
   using RunningTasks = std::map<std::size_t, TaskP>;
   using SuspendedTasks = std::set<TaskP>;
 
+  using Clock     = std::chrono::system_clock;
+  using Timestamp = Clock::time_point;
+  using Milliseconds = std::chrono::milliseconds;
+
   Taskpool(bool autoReapFinishedTasks=true);
   virtual ~Taskpool();
 
   virtual void submit(TaskP task);
+  virtual void after(TaskP task, const Milliseconds &delay);
   virtual void run(std::size_t thread_number);
   virtual void setDefault();
   virtual FinishedTasks getFinishedTasks();
@@ -37,8 +43,13 @@ public:
 
   virtual void remove(TaskP task);
   virtual void makeRunnable(TaskP task);
+
 protected:
 private:
+
+  Timestamp lockless_getNextWakeTime(const Timestamp &current_time, const Milliseconds &deflt);
+  TaskP lockless_getNextFutureWork(const Timestamp &current_time);
+
   Mutex mutex;
   std::atomic<bool> quit;
   std::condition_variable work_available;
@@ -47,6 +58,34 @@ private:
   RunningTasks running_tasks;
   SuspendedTasks suspended_tasks;
   bool autoReapFinishedTasks;
+
+  struct FutureTask
+  {
+    TaskP task;
+    Timestamp due;
+  };
+
+  struct FutureTaskOrdering
+  {
+    bool operator()(const FutureTask &a,const FutureTask &b)
+    {
+      // Needs to be a > because the PriQ outputs largest elements first.
+      // so if a's due is before b's
+      // we need to say "false".
+      if (a.due < b.due)
+      {
+        return false;
+      }
+      else
+      {
+        return true;
+      }
+    }
+  };
+
+  using FutureTasks = std::priority_queue<FutureTask, std::vector<FutureTask>, FutureTaskOrdering>;
+
+  FutureTasks future_tasks;
 
   Taskpool(const Taskpool &other) = delete; // { copy(other); }
   Taskpool &operator=(const Taskpool &other) = delete; // { copy(other); return *this; }

@@ -24,6 +24,8 @@ public:
   {
   }
 
+  bool submit(std::shared_ptr<Taskpool> pool,const std::chrono::milliseconds &delay);
+  bool submit(const std::chrono::milliseconds &delay);
   bool submit(std::shared_ptr<Taskpool> pool);
   bool submit();
 
