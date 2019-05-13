@@ -9,17 +9,17 @@
 
 #include "test_text_server/src/cpp/lib/EndpointCollection.hpp"
 
-template<class ENDPOINT_TYPE, class MESSAGE_TYPE>
-class BroadcastTask: public Task
+class ProtoBroadcastTask: public Task
 {
 public:
-  std::shared_ptr<EndpointCollection<ENDPOINT_TYPE>> ec;
-  MESSAGE_TYPE s;
+  std::shared_ptr<EndpointCollection<ProtoChatEndpoint>> ec;
+  using Data = std::shared_ptr<TextLine>;
+  Data s;
   std::size_t from;
 
-  BroadcastTask(
-                std::shared_ptr<EndpointCollection<ENDPOINT_TYPE>> ec,
-                const MESSAGE_TYPE &s,
+  ProtoBroadcastTask(
+                std::shared_ptr<EndpointCollection<ProtoChatEndpoint>> ec,
+                Data s,
                 std::size_t from
                 )
   {
@@ -28,7 +28,7 @@ public:
     this -> from = from;
   }
 
-  virtual ~BroadcastTask()
+  virtual ~ProtoBroadcastTask()
   {
   }
 
@@ -40,10 +40,10 @@ public:
   void broadcast()
   {
     ec -> visit(
-                [this](std::shared_ptr<ENDPOINT_TYPE> ep){
+                [this](std::shared_ptr<ProtoChatEndpoint> ep){
                   if (ep -> id != from)
                   {
-                    ep -> textLineMessageSender -> send(s);
+                    ep -> protoTextLineMessageSender -> send(s);
                     ep -> run_sending();
                   }
                 }

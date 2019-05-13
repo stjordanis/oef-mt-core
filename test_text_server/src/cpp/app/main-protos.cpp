@@ -21,11 +21,11 @@ std::condition_variable quit;
 
 using namespace std::placeholders;
 
-#include "test_text_server/src/cpp/lib/ChatEndpoint.hpp"
+#include "test_text_server/src/cpp/lib/ProtoChatEndpoint.hpp"
 #include "test_text_server/src/cpp/lib/BroadcastTask.hpp"
 #include "test_text_server/src/cpp/lib/EndpointCollection.hpp"
 
-using ChatEndpointCollection = EndpointCollection<ChatEndpoint>;
+using ProtoChatEndpointCollection = EndpointCollection<ProtoChatEndpoint>;
 
 int main(int argc, char *argv[])
 {
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     auto tasks = std::make_shared<Taskpool>();
     tasks -> setDefault();
 
-    auto ec = std::make_shared<ChatEndpointCollection>();
+    auto ec = std::make_shared<ProtoChatEndpointCollection>();
 
     ec -> onKill = [](){
       std::unique_lock<std::mutex> lock(mutex);
@@ -69,5 +69,4 @@ int main(int argc, char *argv[])
     task_runners.stop();
   }
   std::cerr << "BYE" << std::endl;
-
 }

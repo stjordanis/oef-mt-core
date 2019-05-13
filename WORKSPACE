@@ -6,14 +6,30 @@ http_archive(
     name = "com_google_protobuf",
     sha256 = "9510dd2afc29e7245e9e884336f848c8a6600a14ae726adb6befdb4f786f0be2",
     strip_prefix = "protobuf-3.6.1.3",
-    urls = ["https://github.com/google/protobuf/archive/v3.6.1.3.zip"],
+    urls = ["https://github.com/google/protobuf/archive/v3.7.1.zip"],
 )
 
 http_archive(
     name = "six_archive",
-    build_file = "@//:six.BUILD",
-    sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a",
-    urls = ["https://pypi.python.org/packages/source/s/six/six-1.10.0.tar.gz#md5=34eed507548117b2ab523ab14b2f8b55"],
+    build_file_content = """
+genrule(
+  name = "copy_six",
+  srcs = ["six-1.10.0/six.py"],
+  outs = ["six.py"],
+  cmd = "cp $< $(@)",
+)
+
+py_library(
+  name = "six",
+  srcs = ["six.py"],
+  srcs_version = "PY2AND3",
+  visibility = ["//visibility:public"],
+)
+""",
+#    sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a",
+    urls = [
+          "https://pypi.python.org/packages/source/s/six/six-1.10.0.tar.gz",
+    ],
 )
 
 bind(
@@ -28,18 +44,18 @@ http_archive(
     urls = ["https://github.com/bazelbuild/bazel-skylib/archive/2169ae1c374aab4a09aa90e65efe1a3aad4e279b.tar.gz"],
 )
 
-http_archive(
-    name = "pypi_six",
-    url = "https://pypi.python.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz",
-    build_file_content = """
-py_library(
-    name = "six",
-    srcs = ["six.py"],
-    visibility = ["//visibility:public"],
-)
-    """,
-    strip_prefix = "six-1.11.0",
-)
+#http_archive(
+#    name = "pypi_six",
+#    url = "https://pypi.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz",
+#    build_file_content = """
+#py_library(
+#    name = "six",
+#    srcs = ["six.py"],
+#    visibility = ["//visibility:public"],
+#)
+#    """,
+#    strip_prefix = "six-1.11.0",
+#)
 
 http_archive(
     name = "protobuf_python",
@@ -50,7 +66,7 @@ py_library(
     srcs = glob(["google/protobuf/**/*.py"]),
     visibility = ["//visibility:public"],
     imports = [
-        "@pypi_six//:six",
+        "//six:six",
     ],
 )
     """,
@@ -151,4 +167,3 @@ git_repository(
 
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
-

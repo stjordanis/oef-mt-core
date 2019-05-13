@@ -130,6 +130,7 @@ public:
       asio_reading = true;
     }
 
+    //std::cout << "start_reading:" << read_needed_local << " bytes." << std::endl;
     auto space = readBuffer.getSpaceBuffers();
     boost::asio::async_read(
                             sock,
@@ -202,6 +203,7 @@ private:
 
   void complete_reading(const boost::system::error_code& ec, const size_t &bytes)
   {
+    //std::cout << "complete_reading:" << ec << ", "<< bytes << std::endl;
     {
       Lock lock(mutex);
       asio_reading = false;
@@ -227,6 +229,7 @@ private:
 
     readBuffer.markSpaceUsed(bytes);
 
+    //std::cout << "Endpoint::complete_reading READER=" << reader.get() << std::endl;
     auto consumed_needed = reader -> checkForMessage(readBuffer.getDataBuffers());
     auto consumed = consumed_needed.first;
     auto needed = consumed_needed.second;
