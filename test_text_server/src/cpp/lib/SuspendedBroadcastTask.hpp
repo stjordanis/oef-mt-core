@@ -36,6 +36,7 @@ public:
 
   virtual void makeRunnable(void)
   {
+    std::cout << "SuspendedBroadcastTask::makeRunnable" << std::endl;
     state = true;
     Task::makeRunnable();
   }

@@ -21,6 +21,12 @@ public:
   using StartNotification = std::function<void ()> ;
   using ProtoErrorNotification = std::function<void (const std::string &message)> ;
 
+  using EndpointState = enum {
+    RUNNING_ENDPOINT = 1,
+    CLOSED_ENDPOINT = 2,
+    EOF_ENDPOINT = 4,
+    ERRORED_ENDPOINT = 8
+  };
 
   Endpoint(const Endpoint &other) = delete;
   Endpoint &operator=(const Endpoint &other) = delete;
@@ -39,34 +45,10 @@ public:
     return sock;
   }
 
-  virtual void eof()
-  {
-  }
-
-  virtual void go()
-  {
-    if (onStart)
-    {
-      auto myStart = onStart;
-      onStart = 0;
-      myStart();
-    }
-
-    {
-      Lock lock(mutex);
-      read_needed++;
-    }
-
-    run_reading();
-  }
-
-  Socket sock;
+  virtual void go();
 
   std::shared_ptr<IMessageReader> reader;
   std::shared_ptr<IMessageWriter> writer;
-
-  RingBuffer sendBuffer;
-  RingBuffer readBuffer;
 
   ErrorNotification onError;
   EofNotification onEof;
@@ -77,12 +59,21 @@ public:
   void run_reading();
   void close();
 private:
+  Socket sock;
+  RingBuffer sendBuffer;
+  RingBuffer readBuffer;
+
+  void error(const boost::system::error_code& ec);
+  void proto_error(const std::string &msg);
+  void eof();
+
   Mutex mutex;
   std::size_t read_needed = 0;
 
   std::atomic<bool> asio_sending;
   std::atomic<bool> asio_reading;
-  std::atomic<bool> closing;
+
+  std::atomic<int> state;
 
   void complete_sending(const boost::system::error_code& ec, const size_t &bytes);
   void create_messages();

@@ -13,9 +13,6 @@ class ProtoTextLineMessageReader:public IMessageReader
 {
 public:
   using Data = std::shared_ptr<TextLine>;
-
-  std::function<void (const std::string &)> onProtoError;
-
   using CompleteNotification = std::function<void (Data)>;
 
   ProtoTextLineMessageReader()
@@ -58,10 +55,10 @@ public:
 
       if (body_size > 10000) // TODO(kll)
       {
-        onProtoError(
-                       std::string("Proto deserialisation refuses incoming ")
-                       + std::to_string(body_size)
-                       + "bytes message header.");
+        throw std::invalid_argument(
+                             std::string("Proto deserialisation refuses incoming ")
+                             + std::to_string(body_size)
+                             + " bytes message header.");
         break;
       }
 
@@ -83,24 +80,16 @@ public:
 
       if (!result)
       {
-        if (onProtoError)
-        {
-          onProtoError("Failed proto deserialisation.");
-        }
-        break;
+        throw std::invalid_argument("Failed proto deserialisation.");
       }
       if (eaten != body_size)
       {
-        if (onProtoError)
-        {
-          onProtoError(
-                       std::string("Proto deserialisation used ")
-                       + std::to_string(eaten)
-                       + "bytes instead of "
-                       + std::to_string(body_size)
-                       + ".");
-        }
-        break;
+        throw std::invalid_argument(
+                             std::string("Proto deserialisation used ")
+                             + std::to_string(eaten)
+                             + " bytes instead of "
+                             + std::to_string(body_size)
+                             + ".");
       }
 
       if (onComplete)

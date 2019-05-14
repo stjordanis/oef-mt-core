@@ -11,6 +11,4 @@ public:
   virtual ~ISocketOwner() {}
   virtual Socket& socket() = 0;
   virtual void go() = 0;
-
-  virtual void eof() = 0;
 };

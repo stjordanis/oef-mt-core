@@ -4,6 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <map>
+#include <vector>
 #include <boost/asio.hpp>
 #include <iostream>
 #include <typeinfo>
@@ -28,9 +29,28 @@ public:
 
   void visit(std::function<void (EpP endpoint)> visitor)
   {
-    for(auto& kv : eps)
+    std::vector<int> endpoint_names;
+    endpoint_names.reserve(eps.size());
     {
-      visitor(kv.second);
+      Lock lock(mutex);
+      for(auto& kv : eps)
+      {
+        endpoint_names.push_back(kv.first);
+      }
+    }
+
+    for(auto& endpoint_name : endpoint_names)
+    {
+      EpP p;
+      {
+        Lock lock(mutex);
+        auto kvi = eps.find(endpoint_name);
+        if (kvi != eps.end())
+        {
+          p = kvi -> second;
+        }
+      }
+      visitor(p);
     }
   }
 
@@ -99,7 +119,6 @@ public:
     auto ident = counter;
 
     std::shared_ptr<TYPE> endpoint = std::make_shared<TYPE>(std::enable_shared_from_this<EndpointCollection<TYPE>>::shared_from_this(), ident, core);
-    //std::cout << "New object:" << typeid(*endpoint).name() << std::endl;
 
     endpoint -> onError        = [this, ident](const boost::system::error_code& ec){ this->Error(ident, ec); };
     endpoint -> onEof          = [this, ident](){ this->Eof(ident); };
@@ -110,29 +129,24 @@ public:
 
   void Error(int ident, const boost::system::error_code& ec)
   {
-    //std::cout << "Error..." << std::endl;
     close(ident);
     std::cout << "Error: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
 
   void ProtoError(int ident, const std::string &msg)
   {
-    //std::cout << "Error..." << std::endl;
     close(ident);
     std::cout << "ProtoError: " << msg << std::endl;
   }
 
   void Eof(int ident)
   {
-    std::cout << "Eof..." << std::endl; 
-    std::cout << "Leaving: " << ident << ". Current count = " << eps.size() << "." << std::endl;
     close(ident);
     std::cout << "Left: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
 
   void Start(int ident, EpP obj)
   {
-    //std::cout << "Join..." << std::endl;
     eps[ident] = obj;
     std::cout << "Joined: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
