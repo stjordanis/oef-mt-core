@@ -48,18 +48,18 @@ public:
 
   void close(int ident)
   {
-    std::cout << "close?: " << ident << std::endl;
+    //std::cout << "close?: " << ident << std::endl;
     Lock lock(mutex);
     auto kv = eps.find(ident);
     if (kv != eps.end())
     {
-      std::cout << "close: " << ident << std::endl;
+      //std::cout << "close: " << ident << std::endl;
       kv -> second -> close();
       eps.erase(ident);
     }
     else
     {
-      std::cout << "notfound: " << ident << std::endl;
+      //std::cout << "notfound: " << ident << std::endl;
     }
   }
 
