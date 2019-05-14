@@ -57,15 +57,14 @@ void Taskpool::run(std::size_t thread_idx)
     {
       Lock lock(mutex);
       if (!pending_tasks.empty())
-        {
-          mytask = pending_tasks.front();
-          pending_tasks.pop_front();
-        }
+      {
+        mytask = pending_tasks.front();
+        pending_tasks.pop_front();
+      }
     }
 
     if (!mytask)
     {
-      // back to sleep
       continue;
     }
 
@@ -129,6 +128,7 @@ void Taskpool::run(std::size_t thread_idx)
 
 void Taskpool::remove(TaskP task)
 {
+  Lock lock(mutex);
   auto iter = pending_tasks.begin();
   while(iter != pending_tasks.end())
   {
@@ -145,6 +145,16 @@ void Taskpool::remove(TaskP task)
 
 void Taskpool::makeRunnable(TaskP task)
 {
+  Lock lock(mutex);
+
+  auto iter = suspended_tasks.find(task);
+  if (iter != suspended_tasks.end())
+  {
+    auto task = *iter;
+    suspended_tasks.erase(iter);
+    pending_tasks.push_front(task);
+    work_available.notify_one();
+  }
 }
 
 void Taskpool::stop(void)
@@ -155,7 +165,7 @@ void Taskpool::stop(void)
 
   for(auto const &t : pending_tasks)
   {
-     t -> cancel();
+    t -> cancel();
   }
   pending_tasks.clear();
 
@@ -173,11 +183,23 @@ void Taskpool::stop(void)
   work_available.notify_all();
 }
 
+void Taskpool::suspend(TaskP task)
+{
+  suspended_tasks.insert(task);
+}
+
 void Taskpool::submit(TaskP task)
 {
-  Lock lock(mutex);
-  pending_tasks.push_back(task);
-  work_available.notify_one();
+  if (task -> isRunnable())
+  {
+    Lock lock(mutex);
+    pending_tasks.push_back(task);
+    work_available.notify_one();
+  }
+  else
+  {
+    suspend(task);
+  }
 }
 
 void Taskpool::after(TaskP task, const Milliseconds &delay)

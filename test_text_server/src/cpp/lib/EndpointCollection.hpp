@@ -46,20 +46,39 @@ public:
     }
   }
 
+  void close(int ident)
+  {
+    std::cout << "close?: " << ident << std::endl;
+    Lock lock(mutex);
+    auto kv = eps.find(ident);
+    if (kv != eps.end())
+    {
+      std::cout << "close: " << ident << std::endl;
+      kv -> second -> close();
+      eps.erase(ident);
+    }
+    else
+    {
+      std::cout << "notfound: " << ident << std::endl;
+    }
+  }
+
   ~EndpointCollection()
   {
-    Eps local_eps;
-    local_eps.swap(eps);
-    for(auto& kv : local_eps)
     {
-      kv.second -> close();
+      Lock lock(mutex);
+      Eps local_eps;
+      local_eps.swap(eps);
+      for(auto& kv : local_eps)
+      {
+        kv.second -> close();
+      }
     }
 
     while(true)
     {
       int count = 0;
       {
-        Lock lock(mutex);
         count = eps.size();
       }
 
@@ -82,34 +101,38 @@ public:
     std::shared_ptr<TYPE> endpoint = std::make_shared<TYPE>(std::enable_shared_from_this<EndpointCollection<TYPE>>::shared_from_this(), ident, core);
     //std::cout << "New object:" << typeid(*endpoint).name() << std::endl;
 
-    endpoint -> onError = [this, ident](const boost::system::error_code& ec){ this->Error(ident, ec); };
-    endpoint -> onEof   = [this, ident](){ this->Eof(ident); };
-    endpoint -> onStart = [this, ident, endpoint](){
-      this->Start(ident, endpoint);
-    };
+    endpoint -> onError        = [this, ident](const boost::system::error_code& ec){ this->Error(ident, ec); };
+    endpoint -> onEof          = [this, ident](){ this->Eof(ident); };
+    endpoint -> onProtoError   = [this, ident](const std::string &msg){ this->ProtoError(ident, msg); };
+    endpoint -> onStart        = [this, ident, endpoint](){ this->Start(ident, endpoint); };
     return endpoint;
   }
 
   void Error(int ident, const boost::system::error_code& ec)
   {
     //std::cout << "Error..." << std::endl;
-    Lock lock(mutex);
-    eps.erase(ident);
+    close(ident);
     std::cout << "Error: " << ident << ". Current count = " << eps.size() << "." << std::endl;
+  }
+
+  void ProtoError(int ident, const std::string &msg)
+  {
+    //std::cout << "Error..." << std::endl;
+    close(ident);
+    std::cout << "ProtoError: " << msg << std::endl;
   }
 
   void Eof(int ident)
   {
-    //std::cout << "Eof..." << std::endl;
-    Lock lock(mutex);
-    eps.erase(ident);
+    std::cout << "Eof..." << std::endl; 
+    std::cout << "Leaving: " << ident << ". Current count = " << eps.size() << "." << std::endl;
+    close(ident);
     std::cout << "Left: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }
 
   void Start(int ident, EpP obj)
   {
     //std::cout << "Join..." << std::endl;
-    Lock lock(mutex);
     eps[ident] = obj;
     std::cout << "Joined: " << ident << ". Current count = " << eps.size() << "." << std::endl;
   }

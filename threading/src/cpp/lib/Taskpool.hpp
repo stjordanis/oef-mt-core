@@ -33,7 +33,9 @@ public:
   virtual ~Taskpool();
 
   virtual void submit(TaskP task);
+  virtual void suspend(TaskP task);
   virtual void after(TaskP task, const Milliseconds &delay);
+
   virtual void run(std::size_t thread_number);
   virtual void setDefault();
   virtual FinishedTasks getFinishedTasks();

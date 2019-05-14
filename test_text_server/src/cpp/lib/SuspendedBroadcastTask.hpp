@@ -8,37 +8,41 @@
 #include <iostream>
 
 #include "test_text_server/src/cpp/lib/EndpointCollection.hpp"
-#include "test_text_server/src/cpp/lib/SuspendedBroadcastTask.hpp"
 
-class DelayedBroadcastTask: public Task
+class SuspendedBroadcastTask: public Task
 {
 public:
   std::shared_ptr<EndpointCollection<ProtoChatEndpoint>> ec;
   using Data = std::shared_ptr<TextLine>;
   Data s;
   std::size_t from;
-  std::shared_ptr<SuspendedBroadcastTask> wakeup;
+  bool state;
 
-  DelayedBroadcastTask(
+  SuspendedBroadcastTask(
                 std::shared_ptr<EndpointCollection<ProtoChatEndpoint>> ec,
                 const Data &s,
-                std::size_t from,
-                std::shared_ptr<SuspendedBroadcastTask> wakeup
+                std::size_t from
   )
   {
     this -> ec = ec;
     this -> s = s;
     this -> from = from;
-    this -> wakeup = wakeup;
+    this -> state = false; // not runnable yet.
   }
 
-  virtual ~DelayedBroadcastTask()
+  virtual ~SuspendedBroadcastTask()
   {
+  }
+
+  virtual void makeRunnable(void)
+  {
+    state = true;
+    Task::makeRunnable();
   }
 
   virtual bool isRunnable(void) const
   {
-    return true;
+    return state;
   }
 
   void broadcast()
@@ -57,10 +61,6 @@ public:
   virtual ExitState run(void)
   {
     broadcast();
-    if (wakeup)
-    {
-      wakeup -> makeRunnable();
-    }
     return ExitState::COMPLETE;
   }
 };
