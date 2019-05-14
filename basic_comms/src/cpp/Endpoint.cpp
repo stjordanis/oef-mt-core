@@ -107,7 +107,6 @@ void Endpoint::complete_sending(const boost::system::error_code& ec, const size_
   }
   if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
   {
-    std::cout << "EOF" << std::endl;
     if (onEof)
     {
       auto  myEof = onEof;
@@ -149,7 +148,6 @@ void Endpoint::complete_reading(const boost::system::error_code& ec, const size_
   }
   if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
   {
-    std::cout << "EOF" << std::endl;
     if (onEof)
     {
       auto  myEof = onEof;
