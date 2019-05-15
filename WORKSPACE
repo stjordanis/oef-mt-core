@@ -37,6 +37,8 @@ bind(
   actual = "@six_archive//:six",
 )
 
+
+
 http_archive(
     name = "bazel_skylib",
     sha256 = "bbccf674aa441c266df9894182d80de104cabd19be98be002f6d478aaa31574d",
@@ -167,3 +169,22 @@ git_repository(
 
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
+
+
+new_local_repository(
+    name = "spdlog",
+    path = "3rd",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    visibility = [
+        "//visibility:public",
+    ],
+    srcs = glob(["spdlog/**/*.cpp"]),
+    hdrs = glob(["spdlog/**/*.hpp", "**/*.h"]),
+    copts = ["-Iexternal/"],
+    deps = [
+    ],
+)
+"""
+)
