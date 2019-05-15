@@ -54,6 +54,8 @@ void Taskpool::run(std::size_t thread_idx)
       Lock lock(mutex);
       mytask = lockless_getNextFutureWork(now);
     }
+
+    if (!mytask)
     {
       Lock lock(mutex);
       if (!pending_tasks.empty())

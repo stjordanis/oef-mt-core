@@ -69,7 +69,7 @@ public:
       {
         size_t buffer1size = std::min(writep + lockless_getFreeSpace(), size) - writep;
         size_t buffer2size = lockless_getFreeSpace() - buffer1size;
-        r.push_back(mutable_buffer( addressOf(writep%size), buffer1size ));
+        r.push_back(mutable_buffer( addressOf(writep), buffer1size ));
         if (buffer2size) {
           r.push_back(mutable_buffer(addressOf(0), buffer2size));
         }
@@ -85,7 +85,7 @@ public:
       {
         size_t buffer1size = std::min(readp + lockless_getDataAvailable(), size) - readp;
         size_t buffer2size = lockless_getDataAvailable() - buffer1size;
-        r.push_back(buffer( addressOf(readp%size), buffer1size ));
+        r.push_back(buffer( addressOf(readp), buffer1size ));
         if (buffer2size) {
           r.push_back(buffer(addressOf(0), buffer2size));
         }
@@ -99,6 +99,7 @@ public:
     {
       Lock lock(mut);
       writep += amount;
+      writep %= size;
       prevAvail = lockless_getDataAvailable();
       freeSpace -= amount;
     }
@@ -114,6 +115,7 @@ public:
     {
       Lock lock(mut);
       readp += amount;
+      readp %= size;
       prevSpace = lockless_getFreeSpace();
       freeSpace += amount;
     }
