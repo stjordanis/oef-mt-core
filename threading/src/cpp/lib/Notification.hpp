@@ -3,7 +3,10 @@
 #include <mutex>
 #include <condition_variable>
 
-class NotificationBuilder;
+namespace Notification
+{
+
+  class NotificationBuilder;
 
 class NotificationImplementation
 {
@@ -65,27 +68,34 @@ private:
   Callback callback_complete_;
 };
 
+using Notification = std::shared_ptr<NotificationImplementation>;
 
 class NotificationBuilder
 {
 public:
   using Callback = NotificationImplementation::Callback;
 
-  explicit NotificationBuilder(NotificationImplementation &notification)
+  explicit NotificationBuilder(Notification notification)
     : notification_(notification)
+  {}
+
+  explicit NotificationBuilder()
   {}
 
   ~NotificationBuilder()
   {
-    notification_.SetSuccessCallback(callback_success_);
-    notification_.SetFailureCallback(callback_failure_);
-    notification_.SetCompletionCallback(callback_complete_);
+    if (notification_)
+    {
+      notification_ -> SetSuccessCallback(callback_success_);
+      notification_ -> SetFailureCallback(callback_failure_);
+      notification_ -> SetCompletionCallback(callback_complete_);
 
     // in the rare (probably failure case) when the notification has been resolved during before the
     // responses have been set
-    if (!notification_.IsWaiting())
-    {
-      notification_.DispatchCallbacks();
+      if (!notification_ -> IsWaiting())
+      {
+        notification_ -> DispatchCallbacks();
+      }
     }
   }
 
@@ -107,12 +117,34 @@ public:
     return *this;
   }
 
+  NotificationBuilder &Cancel()
+  {
+    notification_.reset();
+    return *this;
+  }
+
+  bool Waiting()
+  {
+    return notification_ && notification_ -> IsWaiting();
+  }
+
+  NotificationBuilder(NotificationBuilder&& other)
+    : notification_(other.notification_)
+    , callback_success_(other.callback_success_)
+    , callback_failure_(other.callback_failure_)
+    , callback_complete_(other.callback_complete_)
+  {
+  }
+
 private:
-  NotificationImplementation &notification_;
+  Notification notification_;
 
   Callback callback_success_;
   Callback callback_failure_;
   Callback callback_complete_;
 };
 
-using Notification = std::shared_ptr<NotificationImplementation>;
+  Notification create();
+  NotificationBuilder builder(Notification n);
+
+}

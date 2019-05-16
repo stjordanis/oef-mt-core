@@ -1,6 +1,6 @@
 #include "Notification.hpp"
 
-void NotificationImplementation::DispatchCallbacks()
+void Notification::NotificationImplementation::DispatchCallbacks()
 {
   Callback *handler = nullptr;
 
@@ -35,7 +35,7 @@ void NotificationImplementation::DispatchCallbacks()
   callback_complete_   = nullptr;
 }
 
-void NotificationImplementation::UpdateState(State state)
+void Notification::NotificationImplementation::UpdateState(State state)
 {
   assert(state != State::WAITING);
 
@@ -56,4 +56,9 @@ void NotificationImplementation::UpdateState(State state)
     notify_.notify_all();
     DispatchCallbacks();
   }
+}
+
+Notification::Notification Notification::create()
+{
+  return std::make_shared<NotificationImplementation>();
 }

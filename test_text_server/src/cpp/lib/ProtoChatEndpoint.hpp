@@ -2,6 +2,7 @@
 
 #include "basic_comms/src/cpp/Endpoint.hpp"
 #include "test_text_server/src/cpp/lib/ProtoTextLineMessageSender.hpp"
+#include "test_text_server/src/cpp/lib/ProtoTextLineMessageReader.hpp"
 #include "test_text_server/src/cpp/lib/EndpointCollection.hpp"
 
 class ProtoChatEndpoint: public Endpoint
@@ -12,6 +13,7 @@ public:
 
   std::size_t id;
   std::shared_ptr<ProtoTextLineMessageSender> protoTextLineMessageSender;
+  std::shared_ptr<ProtoTextLineMessageReader> protoTextLineMessageReader;
 
   ProtoChatEndpoint(std::shared_ptr<SuitableEndpointCollection> ec, std::size_t id, Core &core);
 

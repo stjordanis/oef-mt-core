@@ -23,28 +23,22 @@ public:
   using Mutex = std::mutex;
   using Lock = std::lock_guard<Mutex>;
   using EpP = std::shared_ptr<TYPE>;
-  using Eps = std::map<int, EpP>;
+  using EpIdent = int;
+  using Eps = std::map<EpIdent, EpP>;
+  using EpIdents = std::vector<EpIdent>;
 
   std::function<void (void)> onKill;
 
   void visit(std::function<void (EpP endpoint)> visitor)
   {
-    std::vector<int> endpoint_names;
-    endpoint_names.reserve(eps.size());
-    {
-      Lock lock(mutex);
-      for(auto& kv : eps)
-      {
-        endpoint_names.push_back(kv.first);
-      }
-    }
+    std::vector<int> endpoint_idents = getEndpointIdents();
 
-    for(auto& endpoint_name : endpoint_names)
+    for(auto& endpoint_ident : endpoint_idents)
     {
       EpP p;
       {
         Lock lock(mutex);
-        auto kvi = eps.find(endpoint_name);
+        auto kvi = eps.find(endpoint_ident);
         if (kvi != eps.end())
         {
           p = kvi -> second;
@@ -54,8 +48,33 @@ public:
     }
   }
 
+  EpIdents getEndpointIdents()
+  {
+    std::vector<int> endpoint_idents;
+    endpoint_idents.reserve(eps.size());
+    {
+      Lock lock(mutex);
+      for(auto& kv : eps)
+      {
+        endpoint_idents.push_back(kv.first);
+      }
+    }
+    return endpoint_idents;
+  }
+
   EndpointCollection()
   {
+  }
+
+  EpP getEndpoint(EpIdent ident)
+  {
+    Lock lock(mutex);
+    auto kv = eps.find(ident);
+    if (kv != eps.end())
+    {
+      return kv -> second;
+    }
+    return EpP();
   }
 
   void kill()
@@ -66,7 +85,7 @@ public:
     }
   }
 
-  void close(int ident)
+  void close(EpIdent ident)
   {
     //std::cout << "close?: " << ident << std::endl;
     Lock lock(mutex);
@@ -111,7 +130,7 @@ public:
   }
 }
 
-  std::shared_ptr<ISocketOwner> createNewConnection(Core &core)
+  std::shared_ptr<TYPE> createNewConnection(Core &core)
   {
     Lock lock(mutex);
     counter+=1;

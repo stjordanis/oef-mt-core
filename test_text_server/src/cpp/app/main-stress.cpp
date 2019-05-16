@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-          auto task = std::make_shared<StressInducingBroadcastTask>(ec, s, id);
+          auto task = std::make_shared<StressInducingBroadcastTask>(ec, s -> contents(), id);
           task -> submit();
         }
       };
