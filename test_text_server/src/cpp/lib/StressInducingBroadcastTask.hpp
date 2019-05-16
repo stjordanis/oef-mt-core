@@ -68,8 +68,6 @@ public:
 
   virtual ExitState run(void)
   {
-    std::cout << "RUN!!" << transmissions.size() << std::endl;
-
     auto result = ExitState::COMPLETE;
     while(transmissions.size() > 0)
     {
@@ -100,4 +98,3 @@ public:
     return result;
   }
 };
-

@@ -75,9 +75,20 @@ int main(int argc, char *argv[])
     core_runners.start(5, run_core);
     task_runners.start(5, run_task);
 
+    while(true)
     {
       std::unique_lock<std::mutex> lock(mutex);
-      quit.wait(lock);
+      if (quit.wait_for(lock, std::chrono::milliseconds(500)) != std::cv_status::timeout)
+      {
+        break;
+      }
+      auto r = tasks -> getStatus();
+      std::cout
+        << "P=" << r.pending_tasks  
+        << "  R=" << r.running_tasks   
+        << "  S=" << r.suspended_tasks 
+        << "  F=" << r.future_tasks    
+        << std::endl;
     }
 
     std::cerr<< "QUIT"<<std::endl;

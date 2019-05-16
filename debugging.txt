@@ -1,0 +1,12 @@
+
+export SYMBOLIZER=/opt/local/libexec/llvm-5.0/bin/llvm-symbolizer
+export TSAN_OPTIONS="external_symbolizer_path=SYMBOLIZER"
+
+export ASAN_OPTIONS=symbolize=1
+export TSAN_OPTIONS=symbolize=1
+export MSAN_OPTIONS=symbolize=1
+
+export ASAN_SYMBOLIZER_PATH="$SYMBOLIZER"
+export TSAN_SYMBOLIZER_PATH="$SYMBOLIZER"
+export MSAN_SYMBOLIZER_PATH="$SYMBOLIZER"
+

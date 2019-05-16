@@ -51,12 +51,19 @@ public:
         Lock lock(mutex);
         if (txq.size() < BUFFER_SIZE_LIMIT)
         {
-          for(auto& waiter : waiting)
+          if (!waiting.empty())
           {
-            waiter -> Notify();
+            std::cout << "wakem" << std::endl;
+            for(auto& waiter : waiting)
+            {
+              waiter -> Notify();
+            }
+            waiting.empty();
           }
-          waiting.empty();
-          break;
+          if (txq.empty())
+          {
+            break;
+          }
         }
 
         uint32_t body_size = txq.front() -> ByteSize();

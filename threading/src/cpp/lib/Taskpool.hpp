@@ -46,13 +46,22 @@ public:
   virtual void remove(TaskP task);
   virtual void makeRunnable(TaskP task);
 
+  struct TaskpoolStatus {
+    std::size_t pending_tasks;
+    std::size_t running_tasks;
+    std::size_t suspended_tasks;
+    std::size_t future_tasks;
+  };
+
+  TaskpoolStatus getStatus() const;
+
 protected:
 private:
 
   Timestamp lockless_getNextWakeTime(const Timestamp &current_time, const Milliseconds &deflt);
   TaskP lockless_getNextFutureWork(const Timestamp &current_time);
 
-  Mutex mutex;
+  mutable Mutex mutex;
   std::atomic<bool> quit;
   std::condition_variable work_available;
   Tasks pending_tasks;

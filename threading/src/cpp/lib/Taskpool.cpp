@@ -72,7 +72,10 @@ void Taskpool::run(std::size_t thread_idx)
 
     ExitState status;
 
-    running_tasks[thread_idx] = mytask;
+    {
+      Lock lock(mutex);
+      running_tasks[thread_idx] = mytask;
+    }
 
     try
     {
@@ -89,7 +92,7 @@ void Taskpool::run(std::size_t thread_idx)
       status = ERRORED;
     }
 
-    running_tasks[thread_idx].reset();
+    running_tasks.erase(thread_idx);
 
     switch(status)
     {
@@ -157,6 +160,18 @@ void Taskpool::makeRunnable(TaskP task)
     pending_tasks.push_front(task);
     work_available.notify_one();
   }
+}
+
+Taskpool::TaskpoolStatus Taskpool::getStatus() const
+{
+  TaskpoolStatus r;
+  Lock lock(mutex);
+
+  r.pending_tasks  = pending_tasks.size();
+  r.running_tasks   = running_tasks.size();
+  r.suspended_tasks = suspended_tasks.size();
+  r.future_tasks    = future_tasks.size();
+  return r;
 }
 
 void Taskpool::stop(void)
@@ -248,3 +263,5 @@ Taskpool::TaskP Taskpool::lockless_getNextFutureWork(const Timestamp &current_ti
   }
   return result;
 }
+
+

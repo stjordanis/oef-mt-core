@@ -149,25 +149,34 @@ public:
   void Error(int ident, const boost::system::error_code& ec)
   {
     close(ident);
-    std::cout << "Error: " << ident << ". Current count = " << eps.size() << "." << std::endl;
+    //std::cout << "Error: " << ident << ". Current count = " << size() << "." << std::endl;
   }
 
   void ProtoError(int ident, const std::string &msg)
   {
     close(ident);
-    std::cout << "ProtoError: " << msg << std::endl;
+    //std::cout << "ProtoError: " << msg << std::endl;
   }
 
   void Eof(int ident)
   {
     close(ident);
-    std::cout << "Left: " << ident << ". Current count = " << eps.size() << "." << std::endl;
+    //std::cout << "Left: " << ident << ". Current count = " << size() << "." << std::endl;
+  }
+
+  std::size_t size(void)
+  {
+    Lock lock(mutex);
+    return eps.size();
   }
 
   void Start(int ident, EpP obj)
   {
-    eps[ident] = obj;
-    std::cout << "Joined: " << ident << ". Current count = " << eps.size() << "." << std::endl;
+    {
+      Lock lock(mutex);
+      eps[ident] = obj;
+    }
+    //std::cout << "Joined: " << ident << ". Current count = " << size() << "." << std::endl;
   }
 
 private:
