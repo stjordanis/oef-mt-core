@@ -14,6 +14,8 @@ public:
   using Mutex = std::mutex;
   using Lock = std::lock_guard<Mutex>;
 
+  static constexpr std::size_t BUFFER_SIZE_LIMIT = 3;
+
   ProtoTextLineMessageSender()
   {
   }
@@ -24,7 +26,7 @@ public:
   Notification::NotificationBuilder send(std::shared_ptr<TextLine> &s)
   {
     Lock lock(mutex);
-    if (txq.size() < 3)
+    if (txq.size() < BUFFER_SIZE_LIMIT)
     {
       txq.push_back(s);
       return Notification::NotificationBuilder();
@@ -47,12 +49,13 @@ public:
     {
       {
         Lock lock(mutex);
-        if (txq.empty())
+        if (txq.size() < BUFFER_SIZE_LIMIT)
         {
           for(auto& waiter : waiting)
           {
             waiter -> Notify();
           }
+          waiting.empty();
           break;
         }
 
