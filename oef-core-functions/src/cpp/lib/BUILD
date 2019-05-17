@@ -1,13 +1,14 @@
 cc_library(
-    name = "lib",
+    name = "liboef-old",
     visibility = [
         "//visibility:public",
     ],
-    srcs = glob(["logger.cpp"]),
-    hdrs = glob(["logger.hpp"]),
+    srcs = glob(["*.cpp"]),
+    hdrs = glob(["*.hpp","api/*.hpp"]),
     deps = [
         "@boost//:asio",
         "@spdlog//:lib",
+        "@mapbox//:lib",
         "//protos/src/protos:cc_oef_core_pb",
     ],
 )
