@@ -17,7 +17,7 @@
 //------------------------------------------------------------------------------
 
 #include <iostream>
-#include "core_server.hpp"
+#include "oef-core-functions/src/cpp/lib/core_server.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -27,7 +27,6 @@ int main(int argc, char* argv[])
   {
     if (argc != 6)
     {
-      std::cerr << "Usage: node\n";
       std::cerr << "Usage: node <core_key> <core_ip> <core_port> <search_ip> <search_port>\n";
       return 1;
     }

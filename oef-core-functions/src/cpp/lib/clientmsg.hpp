@@ -17,7 +17,7 @@
 //
 //------------------------------------------------------------------------------
 
-#include "agent.pb.h"
+#include "protos/src/protos/agent.pb.h"
 #include "schema.hpp"
 
 namespace fetch {
@@ -102,7 +102,7 @@ namespace fetch {
         query.match(
                     [cfp](const std::string &content) { cfp->set_content(content); },
                     [cfp](const QueryModel &query) { auto *q = cfp->mutable_query(); q->CopyFrom(query.handle());},
-                    [cfp](stde::nullopt_t) { (void)cfp->mutable_nothing(); } );
+                    [cfp](stde::none_t) { (void)cfp->mutable_nothing(); } );
       }
       fetch::oef::pb::Envelope &handle() { return envelope_; }
     };

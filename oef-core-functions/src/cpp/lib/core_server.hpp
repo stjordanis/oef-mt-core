@@ -29,8 +29,8 @@
 #include "config.hpp"
 #include "logger.hpp"
 
-#include "agent.pb.h"
-#include "asio.hpp"
+#include "protos/src/protos/agent.pb.h"
+#include <boost/asio.hpp>
 
 #include <memory>
 

@@ -19,10 +19,11 @@
 
 #include "api/basic_communicator_t.hpp"
 
-#include "asio.hpp"
+#include <boost/asio.hpp>
 
 #include <vector>
 
+namespace asio = boost::asio;
 using asio::ip::tcp;
 
 namespace fetch {
@@ -58,9 +59,9 @@ namespace oef {
       
       // sync operations
       
-      std::error_code send_sync(const void* buffer, std::size_t nbytes) override 
+      boosts::error_code send_sync(const void* buffer, std::size_t nbytes) override 
       {
-        std::error_code ec;
+        boosts::error_code ec;
         auto len = asio_send_sync_(std::vector<asio::const_buffer>{asio::buffer(buffer, nbytes)}, ec);
         if (len != nbytes) {
           std::cerr << "AsioBasicComm::send_sync error sent " << len << " expected " << nbytes
@@ -70,10 +71,10 @@ namespace oef {
         return ec;
       } 
       
-      std::error_code send_sync(std::vector<void*> buffers, std::vector<std::size_t> nbytes) override 
+      boosts::error_code send_sync(std::vector<void*> buffers, std::vector<std::size_t> nbytes) override 
       {
         assert(buffers.size()==nbytes.size());
-        std::error_code ec;
+        boosts::error_code ec;
         std::vector<asio::const_buffer> asio_buffers;
         size_t n = buffers.size();
         size_t nbytes_acc = 0;
@@ -90,9 +91,9 @@ namespace oef {
         return ec;
       }
       
-      std::error_code receive_sync(void* buffer, const std::size_t& nbytes ) override 
+      boosts::error_code receive_sync(void* buffer, const std::size_t& nbytes ) override 
       {
-        std::error_code ec;
+        boosts::error_code ec;
         auto asio_buffer = asio::buffer(buffer, nbytes);
         auto len = asio_receive_sync_(asio_buffer, ec);
         if (len != nbytes) {
@@ -116,7 +117,7 @@ namespace oef {
           nbytes_acc+=nbytes[i];
         }
         asio::async_write(socket_, asio_buffers,
-            [nbytes_acc,continuation](std::error_code ec, std::size_t length) {
+            [nbytes_acc,continuation](boosts::error_code ec, std::size_t length) {
               if(ec) {
                 std::cerr << "AsioBasicComm::send_async: error while sending data (grouped) sent " 
                     << length << " expected " << nbytes_acc << " : " << ec.value() << std::endl;
@@ -128,7 +129,7 @@ namespace oef {
       void send_async(std::shared_ptr<Buffer> buffer, std::size_t nbytes, LengthContinuation continuation) override 
       {
         asio::async_write(socket_, asio::buffer(buffer->data(), nbytes),
-            [nbytes,continuation](std::error_code ec, std::size_t length) {
+            [nbytes,continuation](boosts::error_code ec, std::size_t length) {
               if(ec) {
                 std::cerr << "AsioBasicComm::send_async: error while sending data sent " 
                     << length << " expected " << nbytes << " : " << ec.value() << std::endl;
@@ -141,7 +142,7 @@ namespace oef {
       {
         std::shared_ptr<Buffer> buffer = std::make_shared<Buffer>(nbytes);
         asio::async_read(socket_, asio::buffer(buffer->data(), nbytes), 
-            [buffer,nbytes,continuation](std::error_code ec, std::size_t length) {
+            [buffer,nbytes,continuation](boosts::error_code ec, std::size_t length) {
               if(ec) {
                 std::cerr << "AsioBasicComm::receive_async: error while receiving data, expected " 
                           << nbytes << " got " << length << " : " << ec.value() << std::endl;
@@ -159,10 +160,10 @@ namespace oef {
     
     private:
       //
-      std::size_t asio_send_sync_(const std::vector<asio::const_buffer>& buffers, std::error_code& ec) {
+      std::size_t asio_send_sync_(const std::vector<asio::const_buffer>& buffers, boosts::error_code& ec) {
         return asio::write(socket_, buffers, ec);
       }
-      std::size_t asio_receive_sync_(asio::mutable_buffer buffer, std::error_code& ec) {
+      std::size_t asio_receive_sync_(asio::mutable_buffer buffer, boosts::error_code& ec) {
         return asio::read(socket_, buffer, ec);
       }
     

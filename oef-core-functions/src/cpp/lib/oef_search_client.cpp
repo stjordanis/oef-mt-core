@@ -22,6 +22,7 @@
 
 #include <arpa/inet.h>
 #include <functional>
+#include <memory>
 
 namespace fetch {
 namespace oef {
@@ -74,7 +75,7 @@ void OefSearchClient::register_service(const Instance& service,
         agent, pbs::to_string(header), pbs::to_string(update));
   
   send_(header_buffer, update_buffer, 
-      [this,agent,smsg_id,msg_id,continuation](std::error_code ec, uint32_t length) {
+      [this,agent,smsg_id,msg_id,continuation](boosts::error_code ec, uint32_t length) {
         if (ec) {
           logger.debug("::register_service error while sending update from agent {} to OefSearch: {}",
               agent, ec.value());
@@ -104,7 +105,7 @@ void OefSearchClient::unregister_service(const Instance& service,
         agent, pbs::to_string(header), pbs::to_string(remove));
   
   send_(header_buffer, remove_buffer, 
-      [this,agent,smsg_id,msg_id,continuation](std::error_code ec, uint32_t length) {
+      [this,agent,smsg_id,msg_id,continuation](boosts::error_code ec, uint32_t length) {
         if (ec) {
           logger.debug("::unregister_service error while sending remove from agent {} to OefSearch: {}",
               agent, ec.value());
@@ -134,7 +135,7 @@ void OefSearchClient::search_service(const QueryModel& query,
         agent, pbs::to_string(header), pbs::to_string(search));
   
   send_(header_buffer, search_buffer, 
-      [this,agent,smsg_id,msg_id,continuation](std::error_code ec, uint32_t length) {
+      [this,agent,smsg_id,msg_id,continuation](boosts::error_code ec, uint32_t length) {
         if (ec) {
           logger.debug("::search_service error while sending search from agent {} to OefSearch: {}",
               agent, ec.value());
@@ -164,7 +165,7 @@ void OefSearchClient::search_service_wide(const QueryModel& query,
         agent, pbs::to_string(header), pbs::to_string(search));
   
   send_(header_buffer, search_buffer, 
-      [this,agent,smsg_id,msg_id,continuation](std::error_code ec, uint32_t length) {
+      [this,agent,smsg_id,msg_id,continuation](boosts::error_code ec, uint32_t length) {
         if (ec) {
           logger.debug("::search_service_wide error while sending search from agent {} to OefSearch: {}",
               agent, ec.value());
@@ -218,11 +219,11 @@ void OefSearchClient::schedule_rcv_callback_(uint32_t smsg_id, std::string opera
 }
 
 void OefSearchClient::receive_(
-    std::function<void(std::error_code,pb::TransportHeader,std::shared_ptr<Buffer>)> continuation)
+    std::function<void(boosts::error_code,pb::TransportHeader,std::shared_ptr<Buffer>)> continuation)
 {
   // first, receive sizes
   comm_->receive_async(2*sizeof(uint32_t),
-      [this,continuation](std::error_code ec, std::shared_ptr<Buffer> buffer){
+      [this,continuation](boosts::error_code ec, std::shared_ptr<Buffer> buffer){
         if (ec) {
           logger.error("receive_ Error while receiving header and payload lengths : {}", ec.value());
           continuation(ec, pb::TransportHeader{}, nullptr);
@@ -274,11 +275,11 @@ void OefSearchClient::process_message_(pb::TransportHeader header, std::shared_p
   AgentSessionContinuation msg_continuation = msg_handle.continuation;
   
   // answer to AgentSession
-  std::error_code ec{};
+  boosts::error_code ec{};
 
   if(!header.status().success()) {
     logger.warn("::process_message_ answer to message {} (aka {}) unsuccessful", smsg_id, amsg_id);
-    ec = std::make_error_code(std::errc::no_message_available);
+    ec = boosts::errc::make_error_code(boosts::errc::no_message_available);
   }
   
   if(!payload) {
@@ -350,7 +351,7 @@ void OefSearchClient::process_message_(pb::TransportHeader header, std::shared_p
   else {
     logger.error("::process_message_ unknown operation '{}' for message {} (aka {}) answer", 
         msg_operation, smsg_id, amsg_id);
-    ec = std::make_error_code(std::errc::no_message_available);
+    ec = boosts::errc::make_error_code(boosts::errc::no_message_available);
   }
 
   msg_continuation(ec, OefSearchResponse{});

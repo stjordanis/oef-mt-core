@@ -26,7 +26,7 @@ namespace oef {
     explicit MsgHandle(){}
     explicit MsgHandle(uint32_t smsg_id) 
       : operation{""}
-      , continuation{[smsg_id](std::error_code ec, oef::OefSearchResponse response) -> void {
+      , continuation{[smsg_id](boosts::error_code ec, oef::OefSearchResponse response) -> void {
                        std::cerr << "No handle registered for message " << smsg_id << std::endl;
                      }}
       , amsg_id{0}

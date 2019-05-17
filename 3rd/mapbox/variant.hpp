@@ -13,8 +13,8 @@
 #include <functional>
 #include <limits>
 
-#include <mapbox/recursive_wrapper.hpp>
-#include <mapbox/variant_visitor.hpp>
+#include "mapbox/recursive_wrapper.hpp"
+#include "mapbox/variant_visitor.hpp"
 
 // clang-format off
 // [[deprecated]] is only available in C++14, use this for the time being

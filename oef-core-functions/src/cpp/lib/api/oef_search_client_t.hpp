@@ -17,14 +17,14 @@
 //
 //------------------------------------------------------------------------------
 
-#include "api/communicator_t.hpp"
-#include "api/buffer_t.hpp"
-#include "api/continuation_t.hpp"
+#include "communicator_t.hpp"
+#include "buffer_t.hpp"
+#include "continuation_t.hpp"
 
-#include "schema.hpp" // TOFIX
+#include "../schema.hpp" // TOFIX
 
 #include <memory>
-#include <system_error>
+//#include <system_error>
 
 namespace fetch {
 namespace oef {

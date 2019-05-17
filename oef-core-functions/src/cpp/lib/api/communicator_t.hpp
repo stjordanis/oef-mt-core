@@ -17,10 +17,11 @@
 //
 //------------------------------------------------------------------------------
 
-#include "api/continuation_t.hpp"
-#include "api/buffer_t.hpp"
+#include "continuation_t.hpp"
+#include "buffer_t.hpp"
 
 #include <memory>
+
 
 namespace fetch {
 namespace oef {
@@ -48,14 +49,14 @@ namespace oef {
          *   - [overload1][in] buffer: serialized message to be sent
          *   - [overload2][in] buffers: a grouped send
          * return: error_code for error or success : if(ec) error; if(!ec) success */
-        virtual std::error_code send_sync(std::shared_ptr<Buffer> buffer) = 0;
-        virtual std::error_code send_sync(std::vector<std::shared_ptr<Buffer>> buffers) = 0;
+        virtual boosts::error_code send_sync(std::shared_ptr<Buffer> buffer) = 0;
+        virtual boosts::error_code send_sync(std::vector<std::shared_ptr<Buffer>> buffers) = 0;
         
         /* Receive data synchronously through Communicator. Will block until all data has been received or an error occured
          * params: 
          *   - [overload1][out] buffer: received serialized message 
          * return: error_code for error or success : if(ec) error; if(!ec) success */
-        virtual std::error_code receive_sync(std::shared_ptr<Buffer>& buffer) = 0;
+        virtual boosts::error_code receive_sync(std::shared_ptr<Buffer>& buffer) = 0;
         
         /* Send data asynchronously. Will not block.
          * params:

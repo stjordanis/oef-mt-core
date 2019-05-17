@@ -22,10 +22,11 @@
 
 #include "config.hpp"
 
-#include "asio.hpp"
+#include <boost/asio.hpp>
 
 #include <memory>
 
+namespace asio = boost::asio;
 using asio::ip::tcp;
 
 namespace fetch {

@@ -17,7 +17,7 @@
 //
 //------------------------------------------------------------------------------
 
-#include "agent.pb.h" // TOFIX
+#include "protos/src/protos/agent.pb.h" // TOFIX
 
 #include <vector>
 #include <string>

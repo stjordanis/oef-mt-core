@@ -17,9 +17,9 @@
 //
 //------------------------------------------------------------------------------
 
-#include "api/agent_session_t.hpp"
+#include "agent_session_t.hpp"
 
-#include "schema.hpp" // TOFIX
+#include "../schema.hpp" // TOFIX
 
 #include <memory>
 #include <vector>

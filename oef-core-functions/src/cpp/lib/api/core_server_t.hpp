@@ -17,11 +17,11 @@
 //
 //------------------------------------------------------------------------------
 
-#include "api/continuation_t.hpp"
-#include "api/agent_directory_t.hpp"
-#include "api/agent_session_t.hpp"
-#include "api/oef_search_client_t.hpp"
-#include "api/communicator_t.hpp"
+#include "continuation_t.hpp"
+#include "agent_directory_t.hpp"
+#include "agent_session_t.hpp"
+#include "oef_search_client_t.hpp"
+#include "communicator_t.hpp"
 
 #include <memory>
 #include <string>

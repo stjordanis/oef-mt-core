@@ -17,10 +17,12 @@
 //
 //------------------------------------------------------------------------------
 
-#include "agent.pb.h"
+#include "protos/src/protos/agent.pb.h"
 #include <algorithm>
 #include <cmath>
-#include <experimental/optional>
+//#include <experimental/optional>
+//#include <optional>
+#include <boost/optional.hpp>
 #include <iostream>
 #include <limits>
 #include "mapbox/variant.hpp"
@@ -31,7 +33,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace stde = std::experimental;
+namespace stde = boost;
 namespace var = mapbox::util; // for the variant
 
 namespace fetch {
@@ -499,7 +501,7 @@ namespace fetch {
             return stde::optional<fetch::oef::pb::Query_Attribute>{a};
           }
         }
-        return stde::nullopt;
+        return stde::none;
       }
       std::string name() const { return model_.name(); }
       static std::vector<std::pair<std::string,std::string>>
@@ -655,7 +657,7 @@ namespace fetch {
       stde::optional<VariantType> value(const std::string &name) const {
         auto iter = values_.find(name);
         if(iter == values_.end()) {
-          return stde::nullopt;
+          return stde::none;
         }
         return stde::optional<VariantType>{iter->second};
       }
@@ -988,7 +990,7 @@ namespace fetch {
       stde::optional<Schema> get(uint32_t version) const {
         std::lock_guard<std::mutex> lock(lock_);
         if(schemas_.empty()) {
-          return stde::nullopt;
+          return stde::none;
         }
         if(version == std::numeric_limits<uint32_t>::max()) {
           return schemas_.back();
@@ -1012,7 +1014,7 @@ namespace fetch {
         if(iter != schemas_.end()) {
           return iter->second.get(version);
         }
-        return stde::nullopt;
+        return stde::none;
       }
       uint32_t add(const std::string &key, const DataModel &schema, uint32_t version = std::numeric_limits<uint32_t>::max()) {
         return schemas_[key].add(version, schema);
@@ -1048,7 +1050,7 @@ namespace fetch {
       std::vector<std::string> values() const { return values_; }
       
     };
-    using CFPType = var::variant<std::string, QueryModel, stde::nullopt_t>;
+    using CFPType = var::variant<std::string, QueryModel, stde::none_t>;
     using ProposeType = var::variant<std::string, std::vector<Instance>>;
   } // namespace oef
 } // namespace fetch

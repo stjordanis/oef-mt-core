@@ -59,7 +59,7 @@ void AsioComm::send_async(std::shared_ptr<Buffer> buffer, LengthContinuation con
   buffers.emplace_back(asio::buffer(buffer->data(), len));
   uint32_t total = len+sizeof(len);
   asio::async_write(socket_, buffers,
-      [total,continuation](std::error_code ec, std::size_t length) {
+      [total,continuation](boosts::error_code ec, std::size_t length) {
         if(ec) {
           std::cerr << "AsioComm::send_async: error while sending data and its size (grouped): " 
                     << length << " expected " << total << std::endl;
@@ -70,13 +70,13 @@ void AsioComm::send_async(std::shared_ptr<Buffer> buffer, LengthContinuation con
 }
 
 void AsioComm::send_async(std::shared_ptr<Buffer> buffer) {
-  send_async(buffer, [](std::error_code ec, std::size_t length) {});
+  send_async(buffer, [](boosts::error_code ec, std::size_t length) {});
 }
 
 void AsioComm::receive_async(BufferContinuation continuation) {
   auto len = std::make_shared<uint32_t>();
   asio::async_read(socket_, asio::buffer(len.get(), sizeof(uint32_t)), 
-      [this,len,continuation](std::error_code ec, std::size_t length) {
+      [this,len,continuation](boosts::error_code ec, std::size_t length) {
         if(ec) {
           std::cerr << "AsioComm::receive_async: error while receiving the size of data " 
                     << ec.value() << std::endl;
@@ -85,7 +85,7 @@ void AsioComm::receive_async(BufferContinuation continuation) {
           assert(length == sizeof(uint32_t));
           auto buffer = std::make_shared<Buffer>(*len);
           asio::async_read(socket_, asio::buffer(buffer->data(), *len), 
-              [buffer,continuation](std::error_code ec, std::size_t length) {
+              [buffer,continuation](boosts::error_code ec, std::size_t length) {
                 if(ec) {
                   std::cerr << "AsioComm::receive_async: error while receiving the data " 
                             << ec.value() << std::endl;
@@ -96,13 +96,13 @@ void AsioComm::receive_async(BufferContinuation continuation) {
       });
 }
 
-std::error_code AsioComm::send_sync(std::shared_ptr<Buffer> buffer) {
+boosts::error_code AsioComm::send_sync(std::shared_ptr<Buffer> buffer) {
   std::vector<asio::const_buffer> buffers;
   uint32_t len = uint32_t(buffer->size());
   buffers.emplace_back(asio::buffer(&len, sizeof(len)));
   buffers.emplace_back(asio::buffer(buffer->data(), len));
   uint32_t total = len+sizeof(len);
-  std::error_code ec;
+  boosts::error_code ec;
   std::size_t length = asio::write(socket_, buffers, ec);
   if (length != total) {
     std::cerr << "AsioComm::send_sync error sent " << length << " expected " << total 
@@ -112,7 +112,7 @@ std::error_code AsioComm::send_sync(std::shared_ptr<Buffer> buffer) {
   return ec;
 }
 
-std::error_code AsioComm::send_sync(std::vector<std::shared_ptr<Buffer>> buffers) {
+boosts::error_code AsioComm::send_sync(std::vector<std::shared_ptr<Buffer>> buffers) {
   std::vector<asio::const_buffer> buffers_all;
   std::vector<uint32_t> len_all;
   uint32_t total = 0;
@@ -123,7 +123,7 @@ std::error_code AsioComm::send_sync(std::vector<std::shared_ptr<Buffer>> buffers
     buffers_all.emplace_back(asio::buffer(buffer->data(), *len));
     total += *len+sizeof(*len);
   }
-  std::error_code ec;
+  boosts::error_code ec;
   std::size_t length = asio::write(socket_, buffers_all, ec);
   if (length != total) {
     std::cerr << "AsioComm::send_sync error sent " << length << " expected " << total 
@@ -133,9 +133,9 @@ std::error_code AsioComm::send_sync(std::vector<std::shared_ptr<Buffer>> buffers
   return ec;
 }
 
-std::error_code AsioComm::receive_sync(std::shared_ptr<Buffer>& buffer) {
+boosts::error_code AsioComm::receive_sync(std::shared_ptr<Buffer>& buffer) {
   auto len = std::make_shared<uint32_t>();
-  std::error_code ec;
+  boosts::error_code ec;
   auto length = asio::read(socket_, asio::buffer(len.get(), sizeof(uint32_t)), ec);
   if (ec || length!=sizeof(uint32_t)) { // TOFIX testing length is not needed
     std::cerr << "AsioComm::receive_sync error while receivin lenght of data, got " << length 
@@ -154,13 +154,13 @@ std::error_code AsioComm::receive_sync(std::shared_ptr<Buffer>& buffer) {
   return ec;
 }
 
-std::error_code AsioComm::send_sync(asio::const_buffer& buffer) {
+boosts::error_code AsioComm::send_sync(asio::const_buffer& buffer) {
   std::vector<asio::const_buffer> buffers;
   int32_t len = -int32_t(buffer.size());
   buffers.emplace_back(asio::buffer(&len, sizeof(len)));
   buffers.emplace_back(buffer);
   uint32_t total = len+sizeof(len);
-  std::error_code ec;
+  boosts::error_code ec;
   std::size_t length = asio::write(socket_, buffers, ec);
   if (length != total) {
     std::cerr << "AsioComm::send_sync error sent " << length << " expected " << total 

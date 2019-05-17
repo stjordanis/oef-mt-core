@@ -19,10 +19,11 @@
 
 #include "api/communicator_t.hpp"
 
-#include "asio.hpp"
+#include <boost/asio.hpp>
 
 #include <vector>
 
+namespace asio = boost::asio;
 using asio::ip::tcp;
 
 namespace fetch {
@@ -39,16 +40,16 @@ namespace oef {
         void connect() override {};
         void disconnect() override;
         //
-        std::error_code send_sync(std::shared_ptr<Buffer> buffer) override;
-        std::error_code send_sync(std::vector<std::shared_ptr<Buffer>> buffers) override;
-        std::error_code receive_sync(std::shared_ptr<Buffer>& buffer) override;
+        boosts::error_code send_sync(std::shared_ptr<Buffer> buffer) override;
+        boosts::error_code send_sync(std::vector<std::shared_ptr<Buffer>> buffers) override;
+        boosts::error_code receive_sync(std::shared_ptr<Buffer>& buffer) override;
         //
         void send_async(std::shared_ptr<Buffer> buffer) override;
         void send_async(std::shared_ptr<Buffer> buffer, LengthContinuation continuation) override;
         void send_async(std::vector<std::shared_ptr<Buffer>> buffer, LengthContinuation continuation);// override;
         void receive_async(BufferContinuation continuation) override;
         //
-        std::error_code send_sync(asio::const_buffer& buffer);
+        boosts::error_code send_sync(asio::const_buffer& buffer);
         //
         ~AsioComm() {
           disconnect();

@@ -24,12 +24,12 @@
 #include "logger.hpp"
 #include "msg_handle.hpp"
 
-#include "search_message.pb.h"
-#include "search_query.pb.h"
-#include "search_remove.pb.h"
-#include "search_response.pb.h"
-#include "search_update.pb.h"
-#include "search_transport.pb.h"
+#include "protos/src/protos/search_message.pb.h"
+#include "protos/src/protos/search_query.pb.h"
+#include "protos/src/protos/search_remove.pb.h"
+#include "protos/src/protos/search_response.pb.h"
+#include "protos/src/protos/search_update.pb.h"
+#include "protos/src/protos/search_transport.pb.h"
 
 #include <memory>
 #include <unordered_map>
@@ -84,7 +84,7 @@ namespace oef {
     //
     /* check lib/proto/search_transport.proto for Oef Search communication protocol */
     void send_(std::shared_ptr<Buffer> header, std::shared_ptr<Buffer> payload, LengthContinuation continuation);
-    void receive_(std::function<void(std::error_code,pb::TransportHeader,std::shared_ptr<Buffer>)> continuation); 
+    void receive_(std::function<void(boosts::error_code,pb::TransportHeader,std::shared_ptr<Buffer>)> continuation); 
     //
     void schedule_rcv_callback_(uint32_t smsg_id, std::string operation, AgentSessionContinuation continuation, 
         uint32_t msg_id, const std::string& agent);
@@ -93,7 +93,7 @@ namespace oef {
     void handle_messages() {
       logger.debug("::handles_messages listening for messages from Oef Search ...");
       receive_(
-          [this](std::error_code ec, pb::TransportHeader header, std::shared_ptr<Buffer> payload) {
+          [this](boosts::error_code ec, pb::TransportHeader header, std::shared_ptr<Buffer> payload) {
             if (ec) {
               return; // TOFIX how to handle errors?
             }

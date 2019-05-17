@@ -17,13 +17,13 @@
 //
 //------------------------------------------------------------------------------
 
-#include "api/continuation_t.hpp"
-#include "api/communicator_t.hpp"
-#include "api/buffer_t.hpp"
+#include "continuation_t.hpp"
+#include "communicator_t.hpp"
+#include "buffer_t.hpp"
 
-#include "schema.hpp" // TOFIX
+#include "../schema.hpp" // TOFIX
 
-#include "agent.pb.h" // TOFIX
+#include "protos/src/protos/agent.pb.h" // TOFIX
 
 #include <memory>
 

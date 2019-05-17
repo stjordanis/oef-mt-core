@@ -25,7 +25,7 @@
 #include "serialization.hpp"
 #include "logger.hpp"
 
-#include "agent.pb.h" // TOFIX
+#include "protos/src/protos/agent.pb.h" // TOFIX
 
 namespace fetch {
 namespace oef {
