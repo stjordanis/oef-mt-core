@@ -19,6 +19,7 @@
 #define DEBUG_ON 1
 #include "core_server.hpp"
 #include "agent_session.hpp"
+#include <memory>
 
 namespace fetch {
 namespace oef {
