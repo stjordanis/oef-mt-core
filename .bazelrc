@@ -1,24 +1,33 @@
 build --python_path="/usr/local/opt/python/bin/python3.7"
-build  --force_python=PY3
+build --force_python=PY3
 
 build:asan --strip=never
-build:asan --copt -fsanitize=address
 build:asan --copt -O1
+build:asan --copt -g
+build:asan --copt -fsanitize=address
 build:asan --copt -fno-omit-frame-pointer
+build:asan --copt=-fno-limit-debug-info
+build:asan --features=debug_prefix_map_pwd_is_dot
+
 build:asan --linkopt -fsanitize=address
 build:asan --linkopt -g
-build:asan --copt -g
+
 build:asan --action_env=ASAN_OPTIONS=symbolize=1
-build:tsan --action_env=TSAN_OPTIONS=symbolize=1
-build:tsan --action_env=MSAN_OPTIONS=symbolize=1
+build:asan --action_env=TSAN_OPTIONS=symbolize=1
+build:asan --action_env=MSAN_OPTIONS=symbolize=1
 
 build:tsan --strip=never
-build:tsan --copt -fsanitize=thread
 build:tsan --copt -O1
+build:tsan --copt -g
+build:tsan --copt -fsanitize=thread
 build:tsan --copt -fno-omit-frame-pointer
+build:tsan --copt=-fno-limit-debug-info
+
 build:tsan --linkopt -fsanitize=thread
 build:tsan --linkopt -g
-build:tsan --copt -g
+
 build:tsan --action_env=ASAN_OPTIONS=symbolize=1
 build:tsan --action_env=TSAN_OPTIONS=symbolize=1
 build:tsan --action_env=MSAN_OPTIONS=symbolize=1
+
+build --cxxopt='-std=c++14'

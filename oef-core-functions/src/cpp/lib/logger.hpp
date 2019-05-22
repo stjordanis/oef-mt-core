@@ -134,3 +134,28 @@ namespace fetch {
     };
   } // namespace oef
 } // namespace fetch
+
+/*
+#include "api/buffer_t.hpp"
+#include "api/continuation_t.hpp"
+#include "api/oef_search_response_t.hpp"
+#include "api/communicator_t.hpp"
+#include "api/communicator_acceptor_t.hpp"
+#include "api/basic_communicator_t.hpp"
+#include "api/agent_directory_t.hpp"
+#include "api/agent_session_t.hpp"
+#include "api/oef_search_client_t.hpp"
+#include "api/core_server_t.hpp"
+#include "schema.hpp"
+#include "asio_communicator.hpp"
+#include "asio_acceptor.hpp"
+#include "asio_basic_communicator.hpp"
+#include "agent_directory.hpp"
+#include "msg_handle.hpp"
+#include "serialization.hpp"
+#include "clientmsg.hpp"
+#include "config.hpp"
+#include "agent_session.hpp"
+#include "oef_search_client.hpp"
+#include "core_server.hpp"
+*/
