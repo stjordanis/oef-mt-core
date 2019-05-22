@@ -11,4 +11,12 @@ cc_library(
         "@mapbox//:lib",
         "//protos/src/protos:cc_oef_core_pb",
     ],
+    copts = [
+        "-Iprotos/src/protos",
+        "-Ioef-core-functions/src/cpp/lib/api",
+        "-Ioef-core-functions/src/cpp/lib/",
+    ],
+    includes = [
+        "protos/src/protos",
+    ],
 )

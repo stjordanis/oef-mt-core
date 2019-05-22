@@ -30,3 +30,28 @@
 *.exe
 *.out
 *.app
+
+build
+log.txt
+
+# clion stuff
+.idea
+cmake-build-debug
+
+# vim related
+*.swp
+*.swo
+.*.swn
+.*.swm
+
+**/*.pyc
+bazel-*/**
+bazel-*
+tmp/**
+optimframe/src/data/*.xml
+optimframe/src/data/*.asc
+
+**/*.DS_Store
+.clwb
+.idea
+.ijwb

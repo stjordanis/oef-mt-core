@@ -59,8 +59,8 @@ namespace oef {
         /* OEF interface for agents, as specified in agent.proto file */
         virtual void process_register_description(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc) = 0;
         virtual void process_unregister_description(uint32_t msg_id) = 0;
-        virtual void process_register_service(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc) = 0;
-        virtual void process_unregister_service(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc) = 0;
+        virtual void process_register_service(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc, const std::string& agent_uri) = 0;
+        virtual void process_unregister_service(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc, const std::string& agent_uri) = 0;
         virtual void process_search_agents(uint32_t msg_id, const fetch::oef::pb::AgentSearch &search) = 0;
         virtual void process_search_service(uint32_t msg_id, const fetch::oef::pb::AgentSearch &search) = 0;
         virtual void process_message(uint32_t msg_id, fetch::oef::pb::Agent_Message *msg) = 0;

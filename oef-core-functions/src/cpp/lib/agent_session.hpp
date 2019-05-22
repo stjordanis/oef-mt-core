@@ -84,8 +84,8 @@ namespace oef {
     private:
       void process_register_description(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc) override;
       void process_unregister_description(uint32_t msg_id) override;
-      void process_register_service(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc) override;
-      void process_unregister_service(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc) override;
+      void process_register_service(uint32_t msg_id, const fetch::oef::pb::AgentDescription &desc, const std::string& agent_uri) override;
+      void process_unregister_service(uint32_t msg_id, const fetch::oef::pb::AgentDescription &des, const std::string& agent_uri) override;
       void process_search_agents(uint32_t msg_id, const fetch::oef::pb::AgentSearch &search) override;
       void process_search_service(uint32_t msg_id, const fetch::oef::pb::AgentSearch &search) override;
       void process_search_service_wide(uint32_t msg_id, const fetch::oef::pb::AgentSearch &search);
