@@ -11,18 +11,14 @@
 
 ProtoChatEndpoint::ProtoChatEndpoint(std::shared_ptr<SuitableEndpointCollection> ec, std::size_t id, Core &core):Endpoint(core, 2000, 2000)
 {
-  auto protoTextLineMessageSenderPtr = std::make_shared<ProtoTextLineMessageSender>();
-  auto protoTextLineMessageReaderPtr = std::make_shared<ProtoTextLineMessageReader>();
-
-  //std::cout << "ProtoChatEndpoint::ProtoChatEndpoint READER=" << protoTextLineMessageReaderPtr.get() << std::endl;
-
-  protoTextLineMessageSender = protoTextLineMessageSenderPtr;
-  reader = protoTextLineMessageReaderPtr;
-  writer = protoTextLineMessageSenderPtr;
+  protoTextLineMessageSender = std::make_shared<ProtoTextLineMessageSender>();
+  protoTextLineMessageReader = std::make_shared<ProtoTextLineMessageReader>();
+  reader = protoTextLineMessageReader;
+  writer = protoTextLineMessageSender;
 
   this -> id = id;
 
-  protoTextLineMessageReaderPtr -> onComplete =
+  protoTextLineMessageReader -> onComplete =
     [this, ec](Data s) {
     if (s -> contents() == "shutdown")
     {

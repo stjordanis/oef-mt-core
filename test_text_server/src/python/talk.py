@@ -101,6 +101,8 @@ def main():
 
     sock.connect(("127.0.0.1", 7600))
 
+    print("GO>>>>")
+
     threads = [
         threading.Thread(target = socket_to_stdout),
         threading.Thread(target = stdin_to_socket),

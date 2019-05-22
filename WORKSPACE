@@ -6,7 +6,7 @@ http_archive(
     name = "com_google_protobuf",
     sha256 = "9510dd2afc29e7245e9e884336f848c8a6600a14ae726adb6befdb4f786f0be2",
     strip_prefix = "protobuf-3.6.1.3",
-    urls = ["https://github.com/google/protobuf/archive/v3.7.1.zip"],
+    urls = ["https://github.com/google/protobuf/archive/v3.6.1.3.zip"],
 )
 
 http_archive(
@@ -36,6 +36,8 @@ bind(
   name = "six",
   actual = "@six_archive//:six",
 )
+
+
 
 http_archive(
     name = "bazel_skylib",
@@ -167,3 +169,39 @@ git_repository(
 
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
+
+
+new_local_repository(
+    name = "spdlog",
+    path = "3rd",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    visibility = [
+        "//visibility:public",
+    ],
+    srcs = glob(["spdlog/**/*.cpp"]),
+    hdrs = glob(["spdlog/**/*.hpp", "**/*.h"]),
+    copts = ["-Iexternal/"],
+    deps = [
+    ],
+)
+"""
+)
+
+new_local_repository(
+    name = "mapbox",
+    path = "3rd",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    visibility = [
+        "//visibility:public",
+    ],
+    hdrs = glob(["mapbox/*.hpp"]),
+    copts = ["-Iexternal/"],
+    deps = [
+    ],
+)
+"""
+)

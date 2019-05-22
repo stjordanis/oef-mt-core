@@ -37,8 +37,15 @@ void Endpoint::run_sending()
     }
     asio_sending = true;
   }
-
   auto data = sendBuffer.getDataBuffers();
+
+//  int i = 0;
+//  for(auto &d : data)
+//  {
+//    std::cout << "Send buffer " << i << "=" << d.size() << " bytes on thr=" << std::this_thread::get_id() << std::endl;
+//  }
+
+  //std::cout << "run_sending: START" << std::endl;
   boost::asio::async_write(
                            sock,
                            data,
@@ -192,24 +199,28 @@ void Endpoint::complete_sending(const boost::system::error_code& ec, const size_
 {
   try
   {
-    {
-      Lock lock(mutex);
-      asio_sending = false;
-    }
-
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
+      std::cout << "complete_sending EOFa:  " << ec << std::endl;
       eof();
       return; // We are done with this thing!
     }
 
     if (ec)
     {
+      std::cout << "complete_sending ERR:  " << ec << std::endl;
       error(ec);
       return; // We are done with this thing!
     }
+
+    //std::cout << "complete_sending OK:  " << bytes << std::endl;
     sendBuffer.markDataUsed(bytes);
     create_messages();
+    {
+      Lock lock(mutex);
+      asio_sending = false;
+    }
+    //std::cout << "complete_sending: kick" << std::endl;
     run_sending();
   }
 
@@ -231,12 +242,8 @@ void Endpoint::complete_reading(const boost::system::error_code& ec, const size_
 {
   try
   {
-    std::cout << "complete_reading:  " << ec << ", "<< bytes << std::endl;
-    {
-      Lock lock(mutex);
-      asio_reading = false;
-    }
-
+    //std::cout << "complete_reading:  " << ec << ", "<< bytes << std::endl;
+    
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
       eof();
@@ -280,6 +287,10 @@ void Endpoint::complete_reading(const boost::system::error_code& ec, const size_
       read_needed = needed;
     }
 
+    {
+      Lock lock(mutex);
+      asio_reading = false;
+    }
     run_reading();
   }
   catch(std::exception &ex)
