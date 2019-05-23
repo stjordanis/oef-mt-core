@@ -6,8 +6,6 @@ cc_library(
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.hpp"]),
     deps = [
-         "//basic_comms/src/cpp:lib",
-         "//mt-core/tasks-base/src/cpp:lib",
-         "@com_google_protobuf//:protobuf",
+         "//threading/src/cpp/lib:lib",
     ],
 )

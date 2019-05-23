@@ -7,10 +7,8 @@ cc_binary(
          "main.cpp",
     ],
     deps = [
-         "//mt-core/tasks/src/cpp:lib",
-         "//mt-core/auth/src/cpp:lib",
-         "//mt-core/comms/src/cpp:lib",
          "//mt-core/main/src/cpp:lib",
+         "@boost//:program_options",
     ],
 )
 
@@ -27,6 +25,9 @@ cc_library(
          "MtCore.hpp",
     ],
     deps = [
-         "@boost//:program_options",
+         "//mt-core/auth/src/cpp:lib",
+         "//mt-core/comms/src/cpp:lib",
+         "//mt-core/tasks-base/src/cpp:lib",
+         "//mt-core/tasks/src/cpp:lib",
     ],
 )

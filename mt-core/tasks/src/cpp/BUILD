@@ -8,5 +8,6 @@ cc_library(
     deps = [
          "//threading/src/cpp/lib:lib",
          "//mt-core/comms/src/cpp:lib",
-    ],
+         "//mt-core/tasks-base/src/cpp:lib",
+   ],
 )

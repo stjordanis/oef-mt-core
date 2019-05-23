@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mt-core/tasks/src/cpp/IMtCoreTask.hpp"
+#include "mt-core/tasks-base/src/cpp/IMtCoreTask.hpp"
 
 class OefFunctionsTask: public IMtCoreTask
 {

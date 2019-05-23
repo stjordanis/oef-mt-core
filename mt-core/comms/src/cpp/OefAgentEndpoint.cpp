@@ -1,3 +1,5 @@
 #include "OefAgentEndpoint.hpp"
 
-//std::ostream& operator<<(std::ostream& os, const OefAgentEndpoint &output) {}
+OefAgentEndpoint::OefAgentEndpoint(Core &core):Endpoint(core, 10000, 10000)
+{
+}
