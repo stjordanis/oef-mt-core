@@ -27,7 +27,7 @@ protected:
   {
     std::istream is(&chars);
     auto current = chars.remainingData();
-    auto result = proto -> ParseFromIstream(&is);
+    auto result = proto . ParseFromIstream(&is);
     auto eaten = current - chars.remainingData();
     if (!result)
     {

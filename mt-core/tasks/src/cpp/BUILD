@@ -9,5 +9,6 @@ cc_library(
          "//threading/src/cpp/lib:lib",
          "//mt-core/comms/src/cpp:lib",
          "//mt-core/tasks-base/src/cpp:lib",
+         "//protos/src/protos:cc_oef_core_pb",
    ],
 )

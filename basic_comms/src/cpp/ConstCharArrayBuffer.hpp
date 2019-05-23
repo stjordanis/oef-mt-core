@@ -224,10 +224,10 @@ public:
   {
   }
 
-  ConstCharArrayBuffer(const ConstCharArrayBuffer &other, int sizelimit)
-    : buffers(other . buffers)
-    , current(other . current)
-    , size(sizelimit)
+  ConstCharArrayBuffer(const ConstCharArrayBuffer &other, std::size_t sizelimit)
+    : buffers(other.buffers)
+    , current(other.current)
+    , size(other.current + sizelimit)
   {
   }
 
