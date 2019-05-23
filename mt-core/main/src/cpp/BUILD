@@ -27,5 +27,6 @@ cc_library(
          "MtCore.hpp",
     ],
     deps = [
+         "@boost//:program_options",
     ],
 )
