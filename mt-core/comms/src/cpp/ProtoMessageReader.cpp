@@ -20,6 +20,8 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
     {
       std::cout << "checkForMessage in " << chars.remainingData() << " bytes." << std::endl;
 
+      chars.diagnostic();
+
       uint32_t body_size_u32;
       std::size_t body_size;
       uint32_t head_size = sizeof(uint32_t);
@@ -30,7 +32,7 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
         break;
       }
 
-      chars.read(body_size_u32);
+      chars.read_little_endian(body_size_u32);
       body_size = body_size_u32;
 
       if (body_size > 10000) // TODO(kll)
@@ -51,12 +53,12 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
       consumed += head_size;
       consumed += body_size;
 
-      //std::cout << "MESSAGE = " << head_size << "+" << body_size << " bytes" << std::endl;
+      std::cout << "MESSAGE = " << head_size << "+" << body_size << " bytes" << std::endl;
 
 
       if (onComplete)
       {
-        //std::cout << "COMPLETE MESSAGE" << std::endl;
+        std::cout << "COMPLETE MESSAGE" << std::endl;
         onComplete(ConstCharArrayBuffer(chars, chars.current + body_size));
       }
       chars.advance(body_size);

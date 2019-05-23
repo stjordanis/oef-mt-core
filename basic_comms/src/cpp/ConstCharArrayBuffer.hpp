@@ -43,6 +43,23 @@ public:
     return *this;
   }
 
+  ConstCharArrayBuffer& read_little_endian(uint32_t &i)
+  {
+    union {
+      uint32_t i;
+      uint8_t c[4];
+    } buffer;
+
+    buffer.c[3] = (uint8_t)uflow();
+    buffer.c[2] = (uint8_t)uflow();
+    buffer.c[1] = (uint8_t)uflow();
+    buffer.c[0] = (uint8_t)uflow();
+    i = ntohl(buffer.i);
+    //i = buffer.i;
+
+    return *this;
+  }
+
   ConstCharArrayBuffer& read(int32_t &i)
   {
     union {

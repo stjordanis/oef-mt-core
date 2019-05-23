@@ -52,7 +52,28 @@ protected:
     }
   }
 
+  template<class PROTO>
+  void read(PROTO &proto, ConstCharArrayBuffer &chars)
+  {
+    std::istream is(&chars);
+    auto result = proto . ParseFromIstream(&is);
+    if (!result)
+    {
+      throw std::invalid_argument("Failed proto deserialisation.");
+    }
+    if (chars.remainingData() != 0)
+    {
+      throw std::invalid_argument(
+                                  std::string("Proto deserialisation left used ")
+                                  + std::to_string(chars.remainingData())
+                                  + "unused bytes.");
+    }
+  }
+
   void successor(std::shared_ptr<IOefAgentTaskFactory> factory);
+
+  std::shared_ptr<OefAgentEndpoint> getEndpoint() { return endpoint; }
+  
 private:
   std::shared_ptr<OefAgentEndpoint> endpoint;
 
