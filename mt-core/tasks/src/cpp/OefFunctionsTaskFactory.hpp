@@ -11,6 +11,9 @@ public:
   virtual ~OefFunctionsTaskFactory()
   {
   }
+
+  virtual void processMessage(const buffers &data);
+  // Process the message, throw exceptions if they're bad.
 protected:
 private:
   OefFunctionsTaskFactory(const OefFunctionsTaskFactory &other) = delete;
@@ -18,6 +21,4 @@ private:
   bool operator==(const OefFunctionsTaskFactory &other) = delete;
   bool operator<(const OefFunctionsTaskFactory &other) = delete;
 
-  virtual void processMessage(const google::protobuf::Message &msg);
-  // Process the message, throw exceptions if they're bad.
 };

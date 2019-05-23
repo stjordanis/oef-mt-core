@@ -6,5 +6,7 @@ cc_library(
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.hpp"]),
     deps = [
+         "//threading/src/cpp/lib:lib",
+         "//mt-core/comms/src/cpp:lib",
     ],
 )

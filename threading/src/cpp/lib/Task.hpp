@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <chrono>
 
 #include "threading/src/cpp/lib/ExitState.hpp"
 
