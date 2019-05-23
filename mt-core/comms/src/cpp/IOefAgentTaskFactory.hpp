@@ -18,7 +18,7 @@ public:
   {
   }
 
-  virtual void processMessage(const buffers &data) = 0;
+  virtual void processMessage(ConstCharArrayBuffer &data) = 0;
   // Process the message, throw exceptions if they're bad.
 protected:
 

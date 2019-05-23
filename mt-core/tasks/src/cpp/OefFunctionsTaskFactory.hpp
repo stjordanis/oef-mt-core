@@ -12,7 +12,7 @@ public:
   {
   }
 
-  virtual void processMessage(const buffers &data);
+  virtual void processMessage(ConstCharArrayBuffer &data);
   // Process the message, throw exceptions if they're bad.
 protected:
 private:

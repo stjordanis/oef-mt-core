@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-void OefFunctionsTaskFactory::processMessage(const buffers &data)
+void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
 {
   // Process the message, throw exceptions if they're bad.
 
