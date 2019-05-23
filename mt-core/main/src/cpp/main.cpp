@@ -1,8 +1,13 @@
 #include "main.hpp"
 
-#include <iostream>
+#include "mt-core/main/src/cpp/MtCore.hpp"
 
 int main(int argc, char *argv[])
 {
-  std::cout << "hello" << std::endl;
+  // parse args
+
+  MtCore::args args;
+
+  MtCore myCore;
+  myCore.run(args);
 }

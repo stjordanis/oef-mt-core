@@ -20,9 +20,11 @@ cc_library(
         "//visibility:public",
     ],
     srcs = [
+         "MtCore.cpp",
     ],
     hdrs = [
          "main.hpp",
+         "MtCore.hpp",
     ],
     deps = [
     ],
