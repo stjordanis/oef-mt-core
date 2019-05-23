@@ -216,10 +216,23 @@ public:
     current--;
     return traits_type::to_int_type(get_char_at(current));
   }
-private:
 
+  ConstCharArrayBuffer(const ConstCharArrayBuffer &other)
+    : buffers(other . buffers)
+    , current(other . current)
+    , size(other . size)
+  {
+  }
+
+  ConstCharArrayBuffer(const ConstCharArrayBuffer &other, int sizelimit)
+    : buffers(other . buffers)
+    , current(other . current)
+    , size(sizelimit)
+  {
+  }
+
+private:
   // copy ctor and assignment not implemented;
   // copying not allowed
-  ConstCharArrayBuffer(const ConstCharArrayBuffer &);
-  ConstCharArrayBuffer &operator= (const ConstCharArrayBuffer &);
+  ConstCharArrayBuffer &operator=(const ConstCharArrayBuffer &);
 };
