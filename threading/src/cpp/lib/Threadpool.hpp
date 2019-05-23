@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <iostream>
+#include <function>
 #include <vector>
 
 class Threadpool
