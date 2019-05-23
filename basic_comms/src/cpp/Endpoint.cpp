@@ -150,6 +150,8 @@ void Endpoint::error(const boost::system::error_code& ec)
 
 void Endpoint::proto_error(const std::string &msg)
 {
+  std::cout << "proto error: " << msg << std::endl;
+
   if (state & ERRORED_ENDPOINT)
   {
     return;
