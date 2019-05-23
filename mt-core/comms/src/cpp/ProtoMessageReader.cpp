@@ -6,7 +6,7 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::initial() {
 
 ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(const buffers &data)
   {
-    //std::cout << "ProtoTextLineMessageReader::checkForMessage" << std::endl;
+    std::cout << "ProtoMessageReader::checkForMessage" << std::endl;
 
     std::string s;
 
@@ -18,7 +18,7 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
 
     while(true)
     {
-      //std::cout << "checkForMessage in " << chars.remainingData() << " bytes." << std::endl;
+      std::cout << "checkForMessage in " << chars.remainingData() << " bytes." << std::endl;
 
       uint32_t body_size_u32;
       std::size_t body_size;

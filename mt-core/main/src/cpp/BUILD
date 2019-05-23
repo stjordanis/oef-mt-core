@@ -18,12 +18,12 @@ cc_library(
         "//visibility:public",
     ],
     srcs = [
-         "MtCore.cpp",
+         x
+         for x
+         in glob(["*.cpp"])
+         if x != "main.cpp"
     ],
-    hdrs = [
-         "main.hpp",
-         "MtCore.hpp",
-    ],
+    hdrs = glob(["*.hpp"]),
     deps = [
          "//mt-core/auth/src/cpp:lib",
          "//mt-core/comms/src/cpp:lib",

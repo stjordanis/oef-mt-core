@@ -1,20 +1,24 @@
 #pragma once
 
-// Delete bits as needed
+#include <functional>
+#include <memory>
 
-//#include <algorithm>
-//#include <utility>
-//#include <iostream>
+class IOefAgentTaskFactory;
+class OefAgentEndpoint;
 
 class IOefListener
 {
 public:
+  using FactoryCreator = std::function<std::shared_ptr<IOefAgentTaskFactory> (std::shared_ptr<OefAgentEndpoint>)>;
+
   IOefListener()
   {
   }
   virtual ~IOefListener()
   {
   }
+
+  FactoryCreator factoryCreator;
 
 protected:
 private:
@@ -23,4 +27,3 @@ private:
   bool operator==(const IOefListener &other) = delete;
   bool operator<(const IOefListener &other) = delete;
 };
-

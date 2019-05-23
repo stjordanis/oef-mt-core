@@ -19,6 +19,8 @@ int main(int argc, char *argv[])
   store(parse_command_line(argc, argv, desc), vm);
   notify(vm);
 
+  args.listen_ports.push_back(7200);
+
   // copy from VM to args.
 
   MtCore myCore;

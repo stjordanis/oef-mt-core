@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <iostream>
 #include <mutex>
 
 #include "mt-core/comms/src/cpp/IOefListener.hpp"
@@ -31,10 +32,12 @@ public:
   bool add(const ListenerId &id, ListenerP new_listener)
   {
     Lock lock(mutex);
-    if (store.find(id) == store.end())
+    if (store.find(id) != store.end())
     {
+      std::cout << "denied new listener "<< id << std::endl;
       return false;
     }
+    std::cout << "got new listener"<< std::endl;
     store[id] = new_listener;
     return true;
   }

@@ -1,16 +1,24 @@
 #pragma once
 
-#include <boost/asio.hpp>
 #include <vector>
+#include <memory>
+
+#include <boost/asio.hpp>
 
 #include "basic_comms/src/cpp/ConstCharArrayBuffer.hpp"
 
+class OefAgentEndpoint;
+
 class IOefAgentTaskFactory
 {
+  friend class OefAgentEndpoint;
 public:
   using buffer = boost::asio::const_buffer;
   using buffers = std::vector<buffer>;
 
+  IOefAgentTaskFactory(std::shared_ptr<OefAgentEndpoint> the_endpoint):endpoint(the_endpoint)
+  {
+  }
   IOefAgentTaskFactory()
   {
   }
@@ -43,7 +51,11 @@ protected:
                                   + ".");
     }
   }
+
+  void successor(std::shared_ptr<IOefAgentTaskFactory> factory);
 private:
+  std::shared_ptr<OefAgentEndpoint> endpoint;
+
   IOefAgentTaskFactory(const IOefAgentTaskFactory &other) = delete;
   IOefAgentTaskFactory &operator=(const IOefAgentTaskFactory &other) = delete;
   bool operator==(const IOefAgentTaskFactory &other) = delete;

@@ -2,16 +2,21 @@
 
 #include <vector>
 
+#include "basic_comms/src/cpp/Core.hpp"
+#include "mt-core/comms/src/cpp/OefListenerSet.hpp"
+#include "mt-core/comms/src/cpp/OefListenerStarterTask.hpp"
+#include "mt-core/main/src/cpp/MtCoreArgs.hpp"
+#include "threading/src/cpp/lib/Taskpool.hpp"
+#include "threading/src/cpp/lib/Threadpool.hpp"
+
 class OefListenerSet;
 class Core;
+
 
 class MtCore
 {
 public:
-  using args = struct
-  {
-    std::vector<int> listen_ports;
-  };
+  using args = MtCoreArgs;
 
   MtCore()
   {
@@ -25,6 +30,10 @@ protected:
 private:
   std::shared_ptr<OefListenerSet> listeners;
   std::shared_ptr<Core> core;
+  std::shared_ptr<Taskpool> tasks;
+
+  Threadpool comms_runners;
+  Threadpool tasks_runners;
 
   void startListeners(const std::vector<int> &ports);
 

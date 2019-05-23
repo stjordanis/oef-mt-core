@@ -20,5 +20,4 @@ private:
   OefFunctionsTaskFactory &operator=(const OefFunctionsTaskFactory &other) = delete;
   bool operator==(const OefFunctionsTaskFactory &other) = delete;
   bool operator<(const OefFunctionsTaskFactory &other) = delete;
-
 };

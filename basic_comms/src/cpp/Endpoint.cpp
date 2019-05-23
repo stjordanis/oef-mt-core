@@ -177,6 +177,7 @@ void Endpoint::proto_error(const std::string &msg)
 
 void Endpoint::go()
 {
+   std::cout << "Endpoint::go" << std::endl;
   if (onStart)
   {
     auto myStart = onStart;
@@ -201,7 +202,7 @@ void Endpoint::complete_sending(const boost::system::error_code& ec, const size_
   {
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
-      std::cout << "complete_sending EOFa:  " << ec << std::endl;
+      std::cout << "complete_sending EOF:  " << ec << std::endl;
       eof();
       return; // We are done with this thing!
     }

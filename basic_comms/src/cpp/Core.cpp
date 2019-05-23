@@ -1,8 +1,11 @@
 #include "Core.hpp"
 
+#include <iostream>
+
 Core::Core()
 {
   context = std::make_shared<boost::asio::io_context>();
+  work = new boost::asio::io_context::work(*context);
 }
 
 Core::~Core()
@@ -17,6 +20,7 @@ void Core::run()
 
 void Core::stop()
 {
+  delete work;
   context -> stop();
 }
 
