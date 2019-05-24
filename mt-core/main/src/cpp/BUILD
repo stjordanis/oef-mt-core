@@ -29,5 +29,6 @@ cc_library(
          "//mt-core/comms/src/cpp:lib",
          "//mt-core/tasks-base/src/cpp:lib",
          "//mt-core/tasks/src/cpp:lib",
+         "//mt-core/agents/src/cpp:lib",
     ],
 )
