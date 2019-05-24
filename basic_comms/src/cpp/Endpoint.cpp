@@ -39,11 +39,11 @@ void Endpoint::run_sending()
   }
   auto data = sendBuffer.getDataBuffers();
 
-  int i = 0;
-  for(auto &d : data)
-  {
-    std::cout << "Send buffer " << i << "=" << d.size() << " bytes on thr=" << std::this_thread::get_id() << std::endl;
-  }
+//  int i = 0;
+//  for(auto &d : data)
+//  {
+//    std::cout << "Send buffer " << i << "=" << d.size() << " bytes on thr=" << std::this_thread::get_id() << std::endl;
+//  }
 
   //std::cout << "run_sending: START" << std::endl;
 

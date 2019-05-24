@@ -20,8 +20,7 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
   while(true)
   {
     //std::cout << "checkForMessage in " << chars.remainingData() << " bytes." << std::endl;
-
-    chars.diagnostic();
+    //chars.diagnostic();
 
     uint32_t body_size_u32;
     std::size_t body_size;
@@ -89,7 +88,7 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
 
     if (onComplete)
     {
-      std::cout << "MESSAGE = " << head_size << "+" << body_size << " bytes" << std::endl;
+      //std::cout << "MESSAGE = " << head_size << "+" << body_size << " bytes" << std::endl;
       onComplete(ConstCharArrayBuffer(chars, chars.current + body_size));
     }
     else

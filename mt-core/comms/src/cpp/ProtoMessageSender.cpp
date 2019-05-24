@@ -41,26 +41,24 @@ ProtoMessageSender::consumed_needed_pair ProtoMessageSender::checkForSpace(const
       switch(endianness)
       {
       case DUNNO:
-        std::cout << "Rfusing to send when endianness is DUNNO." << std::endl;
-        throw std::invalid_argument("");
+        throw std::invalid_argument("Refusing to send when endianness is DUNNO.");
         break;
       case LITTLE:
-        std::cout << "send little-endian size " << body_size << std::endl;
+        //std::cout << "send little-endian size " << body_size << std::endl;
         chars.write_little_endian(body_size);
         break;
       case NETWORK:
-        std::cout << "send network-endian size" << body_size << std::endl;
+        //std::cout << "send network-endian size" << body_size << std::endl;
         chars.write(body_size);
         break;
       case BAD:
-        std::cout << "Rfusing to send when endianness is BAD." << std::endl;
-        throw std::invalid_argument("");
+        throw std::invalid_argument("Refusing to send when endianness is BAD.");
         break;
       }
 
       txq.front() -> SerializeToOstream(&os);
       txq.pop_front();
-      std::cout << "Ready for sending! bytes=" << mesg_size << std::endl;
+      //std::cout << "Ready for sending! bytes=" << mesg_size << std::endl;
       //chars.diagnostic();
 
       consumed += mesg_size;

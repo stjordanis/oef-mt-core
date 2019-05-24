@@ -20,7 +20,6 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
     case WAITING_FOR_Agent_Server_ID:
       {
         IOefAgentTaskFactory::read(id_pb, buff);
-        std::cout << "GOT Agent_Server_ID" << std::endl;
 
         auto phrase = std::make_shared<fetch::oef::pb::Server_Phrase>();
         phrase -> set_phrase("RandomlyGeneratedString");
@@ -33,9 +32,6 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
     case WAITING_FOR_Agent_Server_Answer:
       {
         IOefAgentTaskFactory::read(answer_pb, buff);
-
-        //std::cout << "SUCCESSFUL ident '" << answer_pb.answer()<< "'" << std::endl;
-
         auto connected_pb = std::make_shared<fetch::oef::pb::Server_Connected>();
         connected_pb -> set_status(true);
 
@@ -51,11 +47,12 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
     catch (std::exception &ex)
     {
       std::cout << "InitialHandshakeTaskFactory::processMessage  -- " << ex.what() << std::endl;
-      // ignore the error.
+      throw ex;
     }
   catch (...)
   {
     std::cout << "InitialHandshakeTaskFactory::processMessage exception" << std::endl;
+    throw;
     // ignore the error.
   }
 }

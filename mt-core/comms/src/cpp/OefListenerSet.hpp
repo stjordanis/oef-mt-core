@@ -37,7 +37,6 @@ public:
       std::cout << "denied new listener "<< id << std::endl;
       return false;
     }
-    std::cout << "got new listener"<< std::endl;
     store[id] = new_listener;
     return true;
   }

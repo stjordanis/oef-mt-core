@@ -8,7 +8,6 @@
 ExitState OefListenerStarterTask::run(void)
 {
   // open port here.
-  std::cout << "Listener on "<< p << "make.." << std::endl;
   auto result = std::make_shared<Oefv1Listener>(core, p);
 
   result -> factoryCreator = initialFactoryCreator;
