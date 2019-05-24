@@ -2,6 +2,7 @@
 
 #include "protos/src/protos/agent.pb.h"
 #include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
+#include "mt-core/tasks/src/cpp/OefFunctionsTaskFactory.hpp"
 #include "mt-core/tasks/src/cpp/TSendProtoTask.hpp"
 
 void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
@@ -33,7 +34,7 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
       {
         IOefAgentTaskFactory::read(answer_pb, buff);
 
-        std::cout << "SUCCESSFUL ident \"" << answer_pb.answer()<< "\"" << std::endl;
+        //std::cout << "SUCCESSFUL ident '" << answer_pb.answer()<< "'" << std::endl;
 
         auto connected_pb = std::make_shared<fetch::oef::pb::Server_Connected>();
         connected_pb -> set_status(true);
@@ -41,15 +42,17 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
         auto senderTask = std::make_shared<TSendProtoTask<fetch::oef::pb::Server_Connected>>(connected_pb, getEndpoint());
         senderTask -> submit();
         state = WAITING_FOR_Agent_Server_Answer;
+
+        successor(std::make_shared<OefFunctionsTaskFactory>());
       }
       break;
     }
   }
-  catch (std::exception &ex)
-  {
-    std::cout << "InitialHandshakeTaskFactory::processMessage  -- " << ex.what() << std::endl;
-    // ignore the error.
-  }
+    catch (std::exception &ex)
+    {
+      std::cout << "InitialHandshakeTaskFactory::processMessage  -- " << ex.what() << std::endl;
+      // ignore the error.
+    }
   catch (...)
   {
     std::cout << "InitialHandshakeTaskFactory::processMessage exception" << std::endl;
