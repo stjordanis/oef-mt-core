@@ -22,6 +22,12 @@ public:
   CompleteNotification onComplete;
 protected:
 private:
+  enum {
+    DUNNO,
+    LITTLE,
+    NETWORK,
+  } endianness = DUNNO;
+
   ProtoMessageReader(const ProtoMessageReader &other) = delete;
   ProtoMessageReader &operator=(const ProtoMessageReader &other) = delete;
   bool operator==(const ProtoMessageReader &other) = delete;

@@ -32,7 +32,37 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
         break;
       }
 
-      chars.read_little_endian(body_size_u32);
+      switch(endianness)
+      {
+      case DUNNO:
+        chars.read_little_endian(body_size_u32);
+        if (body_size_u32 < 65535)
+        {
+          std::cout << "detected LITTLE ENDIAN CONNECTION" << std::endl;
+          endianness = LITTLE;
+        }
+        else
+        {
+          chars.read(body_size_u32);
+          if (body_size_u32 < 65535)
+          {
+            std::cout << "detected NETWORK/BIG ENDIAN CONNECTION" << std::endl;
+            endianness = NETWORK;
+          }
+          else
+          {
+            throw std::invalid_argument("Could not determine endianness.");
+          }
+        }
+        break;
+      case LITTLE:
+        chars.read_little_endian(body_size_u32);
+        break;
+      case NETWORK:
+        chars.read(body_size_u32);
+        break;
+      }
+
       body_size = body_size_u32;
 
       if (body_size > 10000) // TODO(kll)
