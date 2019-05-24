@@ -244,8 +244,21 @@ public:
   ConstCharArrayBuffer(const ConstCharArrayBuffer &other, std::size_t sizelimit)
     : buffers(other.buffers)
     , current(other.current)
-    , size(other.current + sizelimit)
+    , size(sizelimit)
   {
+  }
+
+  std::size_t tell() const { return current; }
+
+  std::string copyOut()
+  {
+    std::cout << "copyOut" << current << "," << size << std::endl;
+    std::string r = "";
+    while(current < size)
+    {
+      r += get_char_at(current++);
+    }
+    return r;
   }
 
 private:

@@ -53,6 +53,16 @@ protected:
   }
 
   template<class PROTO>
+  void read(PROTO &proto, const std::string &s)
+  {
+    auto result = proto . ParseFromString(s);
+    if (!result)
+    {
+      throw std::invalid_argument("Failed proto deserialisation.");
+    }
+  }
+
+  template<class PROTO>
   void read(PROTO &proto, ConstCharArrayBuffer &chars)
   {
     std::istream is(&chars);

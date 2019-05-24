@@ -43,6 +43,23 @@ public:
     return *this;
   }
 
+  CharArrayBuffer& write_little_endian(const uint32_t &i)
+  {
+    union {
+      uint32_t i;
+      uint8_t c[4];
+    } buffer;
+
+    //buffer.i = i;
+    buffer.i = htonl(i);
+    oflow(buffer.c[3]);
+    oflow(buffer.c[2]);
+    oflow(buffer.c[1]);
+    oflow(buffer.c[0]);
+
+    return *this;
+  }
+
   CharArrayBuffer& read(uint32_t &i)
   {
     union {

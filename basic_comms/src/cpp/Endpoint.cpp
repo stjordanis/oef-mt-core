@@ -39,13 +39,14 @@ void Endpoint::run_sending()
   }
   auto data = sendBuffer.getDataBuffers();
 
-//  int i = 0;
-//  for(auto &d : data)
-//  {
-//    std::cout << "Send buffer " << i << "=" << d.size() << " bytes on thr=" << std::this_thread::get_id() << std::endl;
-//  }
+  int i = 0;
+  for(auto &d : data)
+  {
+    std::cout << "Send buffer " << i << "=" << d.size() << " bytes on thr=" << std::this_thread::get_id() << std::endl;
+  }
 
   //std::cout << "run_sending: START" << std::endl;
+
   boost::asio::async_write(
                            sock,
                            data,
@@ -150,7 +151,7 @@ void Endpoint::error(const boost::system::error_code& ec)
 
 void Endpoint::proto_error(const std::string &msg)
 {
-  std::cout << "proto error: " << msg << std::endl;
+  //std::cout << "proto error: " << msg << std::endl;
 
   if (state & ERRORED_ENDPOINT)
   {
@@ -179,7 +180,7 @@ void Endpoint::proto_error(const std::string &msg)
 
 void Endpoint::go()
 {
-   std::cout << "Endpoint::go" << std::endl;
+   //std::cout << "Endpoint::go" << std::endl;
   if (onStart)
   {
     auto myStart = onStart;
@@ -196,7 +197,6 @@ void Endpoint::go()
 
   run_reading();
 }
-
 
 void Endpoint::complete_sending(const boost::system::error_code& ec, const size_t &bytes)
 {
@@ -249,37 +249,46 @@ void Endpoint::complete_reading(const boost::system::error_code& ec, const size_
     
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
+      //std::cout << "complete_reading: eof" << std::endl;
       eof();
       return; // We are done with this thing!
     }
 
     if (ec)
     {
+      //std::cout << "complete_reading: error" << std::endl;
       error(ec);
       close();
       return; // We are done with this thing!
     }
 
 
+    //std::cout << "complete_reading: 1 " << std::endl;
     readBuffer.markSpaceUsed(bytes);
 
+    //std::cout << "complete_reading: 2" << std::endl;
     IMessageReader::consumed_needed_pair consumed_needed;
 
+    //std::cout << "complete_reading: 3" << std::endl;
     try
     {
+      //std::cout << "complete_reading: 4" << std::endl;
       consumed_needed = reader -> checkForMessage(readBuffer.getDataBuffers());
     }
     catch(std::exception &ex)
     {
+    //std::cout << "complete_reading: 5" << std::endl;
       proto_error(ex.what());
       return;
     }
     catch(...)
     {
+    //std::cout << "complete_reading: 6" << std::endl;
       proto_error("unknown protocol error");
       return;
     }
 
+    //std::cout << "complete_reading: 7" << std::endl;
     auto consumed = consumed_needed.first;
     auto needed = consumed_needed.second;
 
