@@ -67,7 +67,7 @@ namespace OEFURI {
         nspaces = nspaces.substr(0, nspaces.size() - 1);
       }
       std::string uri{""};
-      uri += "tcp://" + protocol + "/"
+      uri += protocol+"://"
           += coreURI + "/"
           += coreKey + "/"
           += nspaces + "/"
@@ -84,7 +84,7 @@ namespace OEFURI {
     void parse(const std::string &uri) {
       std::vector<std::string> vec;
       split(uri, vec, '/');
-      if (vec.size() < 6) {
+      if (vec.size() < 7) {
         std::cerr << "OEFURI parse failed! Invalid URI: " << uri << std::endl;
         return;
       }
