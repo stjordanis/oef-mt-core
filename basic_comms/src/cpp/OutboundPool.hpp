@@ -1,14 +1,20 @@
 #pragma once
 
-// Delete bits as needed
+#include <memory>
+#include <string>
 
-//#include <algorithm>
-//#include <utility>
-//#include <iostream>
+#include "mt-core/comms/src/cpp/ProtoMessageEndpoint.hpp"
+#include "cpp-utils/src/cpp/lib/Uri.hpp"
 
 class OutboundPool
 {
 public:
+  using Endpoint = ProtoMessageEndpoint;
+  using EndpointP = std::shared_ptr<Endpoint>;
+  using EndpointName = std::string;
+  using EndpointNameToUri = std::map<EndpointName, Uri>;
+  using EndpointNameToPtr = std::map<EndpointName, EndpointP>;
+
   OutboundPool()
   {
   }
@@ -16,12 +22,15 @@ public:
   {
   }
 
+  void add(const EndpointName &name, consr Uri &uri);
+
+  EndpointP get(
+
   void housekeeping();
 
-  template<class ENDPOINT_CLASS>
-  std::shared_ptr<ENDPOINT_CLASS>
-
 protected:
+  EndpointNameToUri nameToUri;
+  EndpointNameToPtr nameToPrt;
 private:
   OutboundPool(const OutboundPool &other) = delete; // { copy(other); }
   OutboundPool &operator=(const OutboundPool &other) = delete; // { copy(other); return *this; }
