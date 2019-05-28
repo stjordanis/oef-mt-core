@@ -13,14 +13,9 @@ void OefAgentEndpoint::setup(std::shared_ptr<OefAgentEndpoint> myself)
 {
   // can't do this in the constructor because shared_from_this doesn't work in there.
 
+  OefEndpoint::setup(myself);
+
   std::weak_ptr<OefAgentEndpoint> myself_wp = myself;
-
-  protoMessageSender = std::make_shared<ProtoMessageSender>(myself_wp);
-  writer = protoMessageSender;
-
-  protoMessageReader = std::make_shared<ProtoMessageReader>(myself_wp);
-  reader = protoMessageReader;
-
   auto completionHandler = [myself_wp](ConstCharArrayBuffer buffers){
     if (auto myself_sp = myself_wp.lock())
     {
@@ -50,12 +45,6 @@ void OefAgentEndpoint::go(void)
 {
   Endpoint::go();
   std::cout << "GO!" << std::endl;
-}
-
-void OefAgentEndpoint::setEndianness(Endianness newstate)
-{
-  protoMessageReader -> setEndianness(newstate);
-  protoMessageSender -> setEndianness(newstate);
 }
 
 Notification::NotificationBuilder OefAgentEndpoint::send(std::shared_ptr<google::protobuf::Message> s)

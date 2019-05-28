@@ -26,6 +26,7 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
          "//mt-core/auth/src/cpp:lib",
+         "//mt-core/threading/src/cpp:lib",
          "//mt-core/comms/src/cpp:lib",
          "//mt-core/tasks-base/src/cpp:lib",
          "//mt-core/tasks/src/cpp:lib",

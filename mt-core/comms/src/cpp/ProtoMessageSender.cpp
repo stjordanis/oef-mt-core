@@ -14,15 +14,8 @@ ProtoMessageSender::consumed_needed_pair ProtoMessageSender::checkForSpace(const
       Lock lock(mutex);
       if (txq.size() < BUFFER_SIZE_LIMIT)
       {
-        if (!waiting.empty())
-        {
-          std::cout << "wakem" << std::endl;
-          for(auto& waiter : waiting)
-          {
-            waiter -> Notify();
-          }
-          waiting.empty();
-        }
+        wake();
+
         if (txq.empty())
         {
           break;
@@ -77,9 +70,7 @@ Notification::NotificationBuilder ProtoMessageSender::send(std::shared_ptr<googl
   }
   else
   {
-    auto n = Notification::create();
-    waiting.push_back(n);
-    return Notification::NotificationBuilder(n);
+    return makeNotification();
   }
 }
 

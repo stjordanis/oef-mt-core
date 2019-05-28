@@ -58,14 +58,10 @@ public:
   void run_sending();
   void run_reading();
   void close();
-private:
+protected:
   Socket sock;
   RingBuffer sendBuffer;
   RingBuffer readBuffer;
-
-  void error(const boost::system::error_code& ec);
-  void proto_error(const std::string &msg);
-  void eof();
 
   Mutex mutex;
   std::size_t read_needed = 0;
@@ -74,6 +70,11 @@ private:
   std::atomic<bool> asio_reading;
 
   std::atomic<int> state;
+
+  void error(const boost::system::error_code& ec);
+  void proto_error(const std::string &msg);
+  void eof();
+
 
   void complete_sending(const boost::system::error_code& ec, const size_t &bytes);
   void create_messages();

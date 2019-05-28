@@ -4,7 +4,7 @@
 #include "basic_comms/src/cpp/ConstCharArrayBuffer.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
 
-class OefAgentEndpoint;
+class ProtoMessageEndpoint;
 
 class ProtoMessageReader : public IMessageReader
 
@@ -12,7 +12,7 @@ class ProtoMessageReader : public IMessageReader
 public:
   using CompleteNotification = std::function<void (ConstCharArrayBuffer buffer)>;
 
-  ProtoMessageReader(std::weak_ptr<OefAgentEndpoint> &endpoint)
+  ProtoMessageReader(std::weak_ptr<ProtoMessageEndpoint> &endpoint)
   {
     this -> endpoint = endpoint;
   }
@@ -28,7 +28,7 @@ public:
   void setEndianness(Endianness newstate);
 protected:
 private:
-  std::weak_ptr<OefAgentEndpoint> endpoint;
+  std::weak_ptr<ProtoMessageEndpoint> endpoint;
 
   void setDetectedEndianness(Endianness newstate);
 

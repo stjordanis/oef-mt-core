@@ -2,8 +2,7 @@
 
 #include <memory>
 
-#include "basic_comms/src/cpp/Endpoint.hpp"
-#include "basic_comms/src/cpp/Endpoint.hpp"
+#include "mt-core/comms/src/cpp/ProtoMessageEndpoint.hpp"
 
 class Core;
 
@@ -15,14 +14,19 @@ namespace google
   };
 };
 
-class OefEndpoint: public Endpoint, public std::enable_shared_from_this<OefEndpoint>
+class OefEndpoint: public ProtoMessageEndpoint, public std::enable_shared_from_this<OefEndpoint>
 {
 public:
-  OefEndpoint(Core &core):Endpoint(core, 10000, 10000)
+  OefEndpoint(Core &core):ProtoMessageEndpoint(core)
   {
   }
   virtual ~OefEndpoint()
   {
+  }
+
+  void setup(std::shared_ptr<OefEndpoint> myself)
+  {
+    ProtoMessageEndpoint::setup(myself);
   }
 protected:
 private:
