@@ -59,7 +59,7 @@ void AgentSession::process_unregister_description(uint32_t msg_id)
           send_error(msg_id, fetch::oef::pb::Server_AgentMessage_OEFError::UNREGISTER_DESCRIPTION);
         } else {
           DEBUG_(logger, "::processUnregisterDescription operation successful for msg {} of agent {}", msg_id, publicKey_);
-          description_ = stde::nullopt; // TOFIX should add a status answer, even in the case of no error
+          description_ = stde::none; // TOFIX should add a status answer, even in the case of no error
         }
       });
 }
