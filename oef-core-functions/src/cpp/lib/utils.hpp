@@ -67,7 +67,7 @@ namespace OEFURI {
         nspaces = nspaces.substr(0, nspaces.size() - 1);
       }
       std::string uri{""};
-      uri += protocol+"://"
+      uri += protocol + "://"
           += coreURI + "/"
           += coreKey + "/"
           += nspaces + "/"
@@ -78,7 +78,7 @@ namespace OEFURI {
 
     std::string agentPartAsString()
     {
-      return agentKey + "/" + agentAlias;
+      return agentKey + (agentAlias.size()>0 ? ("/" + agentAlias) : "");
     }
 
     void parse(const std::string &uri) {
