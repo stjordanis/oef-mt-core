@@ -46,8 +46,3 @@ void OefAgentEndpoint::go(void)
   Endpoint::go();
   std::cout << "GO!" << std::endl;
 }
-
-Notification::NotificationBuilder OefAgentEndpoint::send(std::shared_ptr<google::protobuf::Message> s)
-{
-  return protoMessageSender -> send(s);
-}

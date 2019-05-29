@@ -26,3 +26,8 @@ void ProtoMessageEndpoint::setEndianness(Endianness newstate)
   protoMessageReader -> setEndianness(newstate);
   protoMessageSender -> setEndianness(newstate);
 }
+
+Notification::NotificationBuilder ProtoMessageEndpoint::send(std::shared_ptr<google::protobuf::Message> s)
+{
+  return protoMessageSender -> send(s);
+}
