@@ -6,6 +6,7 @@
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
 #include "mt-core/comms/src/cpp/OefListenerStarterTask.hpp"
 #include "mt-core/tasks/src/cpp/InitialHandshakeTaskFactory.hpp"
+#include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 
 using namespace std::placeholders;
 
@@ -16,6 +17,7 @@ int MtCore::run(const MtCore::args &args)
   core = std::make_shared<Core>();
   auto tasks = std::make_shared<Taskpool>();
   tasks -> setDefault();
+  outbounds = std::make_shared<OutboundConversations>();
 
   std::function<void (void)> run_comms = std::bind(&Core::run, core.get());
   std::function<void (std::size_t thread_number)> run_tasks = std::bind(&Taskpool::run, tasks.get(), _1);
@@ -26,7 +28,7 @@ int MtCore::run(const MtCore::args &args)
   comms_runners.start(args.comms_thread_count, run_comms);
   tasks_runners.start(args.tasks_thread_count, run_tasks);
 
-  //outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(args.search_uri, *core));
+  outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(Uri(args.search_uri), *core));
   agents_ = std::make_shared<Agents>();
 
   startListeners(args.listen_ports);

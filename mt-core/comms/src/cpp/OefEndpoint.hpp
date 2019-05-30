@@ -6,6 +6,7 @@
 #include "fetch_teams/ledger/logger.hpp"
 
 class Core;
+class Uri;
 
 namespace google
 {
@@ -31,6 +32,8 @@ public:
   {
     ProtoMessageEndpoint::setup(myself);
   }
+
+  bool connect(const Uri &uri, Core &core);
 protected:
 private:
   OefEndpoint(const OefEndpoint &other) = delete;
