@@ -6,6 +6,7 @@
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
 #include "mt-core/comms/src/cpp/OefListenerStarterTask.hpp"
 #include "mt-core/tasks/src/cpp/InitialHandshakeTaskFactory.hpp"
+#include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 
 using namespace std::placeholders;
 
@@ -24,6 +25,8 @@ int MtCore::run(const MtCore::args &args)
 
   comms_runners.start(args.comms_thread_count, run_comms);
   tasks_runners.start(args.tasks_thread_count, run_tasks);
+
+  //outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(args.search_uri, *core));
 
   startListeners(args.listen_ports);
 

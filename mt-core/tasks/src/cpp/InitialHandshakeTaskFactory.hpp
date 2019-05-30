@@ -16,6 +16,8 @@ public:
 
   virtual void processMessage(ConstCharArrayBuffer &data);
   // Process the message, throw exceptions if they're bad.
+
+  virtual void endpointClosed(void) {}
 protected:
 private:
 

@@ -10,7 +10,7 @@ namespace google
 
 #include <memory>
 
-#include "mt-core/threading/src/cpp/Waitable.hpp"
+#include "threading/src/cpp/lib/Waitable.hpp"
 
 class Task;
 

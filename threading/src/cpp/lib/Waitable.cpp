@@ -21,3 +21,8 @@ void Waitable::wake(void)
     waiter -> Notify();
   }
 }
+
+
+void swap(Waitable& v1, Waitable& v2) {
+  v1.swap(v2);
+}

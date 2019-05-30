@@ -21,6 +21,13 @@ public:
   Notification::NotificationBuilder makeNotification(void);
   void wake(void);
 
+  void swap(Waitable &other)
+  {
+    Lock lock_other(other.mutex);
+    Lock lock(mutex);
+    std::swap(waiting, other.waiting);
+  }
+
 protected:
   Waiting waiting;
   mutable Mutex mutex;
@@ -30,3 +37,5 @@ private:
   bool operator==(const Waitable &other) = delete; // const { return compare(other)==0; }
   bool operator<(const Waitable &other) = delete; // const { return compare(other)==-1; }
 };
+
+void swap(Waitable& v1, Waitable& v2);

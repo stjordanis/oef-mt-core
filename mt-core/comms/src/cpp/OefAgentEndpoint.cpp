@@ -23,6 +23,10 @@ void OefAgentEndpoint::setup(std::shared_ptr<OefAgentEndpoint> myself)
     }
   };
   protoMessageReader -> onComplete = completionHandler;
+
+  onError = [this](const boost::system::error_code& ec) { if (factory) { factory -> endpointClosed(); factory.reset(); } };
+  onEof = [this]()                                      { if (factory) { factory -> endpointClosed(); factory.reset(); } };
+  onProtoError = [this](const std::string &message)     { if (factory) { factory -> endpointClosed(); factory.reset(); } };
 }
 
 void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_factory)
