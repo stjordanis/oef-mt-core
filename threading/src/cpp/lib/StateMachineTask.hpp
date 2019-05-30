@@ -15,6 +15,7 @@ public:
   StateMachineTask(StateMachineEntryPoint initialstate) : Task()
   {
     this -> state = initialstate;
+    runnable = true;
   }
   virtual ~StateMachineTask()
   {

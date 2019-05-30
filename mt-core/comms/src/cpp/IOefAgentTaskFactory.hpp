@@ -83,9 +83,7 @@ protected:
   void successor(std::shared_ptr<IOefAgentTaskFactory> factory);
 
   std::shared_ptr<OefAgentEndpoint> getEndpoint() { return endpoint; }
-
-  virtual void endpointClosed() {}
-  
+  virtual void endpointClosed(void) = 0;
 private:
   std::shared_ptr<OefAgentEndpoint> endpoint;
 

@@ -36,8 +36,8 @@ protected:
   std::shared_ptr<ProtoMessageReader> protoMessageReader;
   std::shared_ptr<ProtoMessageSender> protoMessageSender;
 private:
-  ProtoMessageEndpoint(const ProtoMessageEndpoint &other) = delete; // { copy(other); }
-  ProtoMessageEndpoint &operator=(const ProtoMessageEndpoint &other) = delete; // { copy(other); return *this; }
-  bool operator==(const ProtoMessageEndpoint &other) = delete; // const { return compare(other)==0; }
-  bool operator<(const ProtoMessageEndpoint &other) = delete; // const { return compare(other)==-1; }
+  ProtoMessageEndpoint(const ProtoMessageEndpoint &other) = delete;
+  ProtoMessageEndpoint &operator=(const ProtoMessageEndpoint &other) = delete;
+  bool operator==(const ProtoMessageEndpoint &other) = delete;
+  bool operator<(const ProtoMessageEndpoint &other) = delete;
 };

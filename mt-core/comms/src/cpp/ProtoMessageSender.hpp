@@ -6,7 +6,7 @@
 #include "basic_comms/src/cpp/IMessageWriter.hpp"
 #include "basic_comms/src/cpp/CharArrayBuffer.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
-#include "mt-core/threading/src/cpp/Waitable.hpp"
+#include "threading/src/cpp/lib/Waitable.hpp"
 #include "threading/src/cpp/lib/Notification.hpp"
 #include "fetch_teams/ledger/logger.hpp"
 
