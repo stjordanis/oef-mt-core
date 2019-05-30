@@ -38,11 +38,11 @@ void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_fact
 
 OefAgentEndpoint::~OefAgentEndpoint()
 {
-  std::cout << "~OefAgentEndpoint" << std::endl;
+  FETCH_LOG_INFO(LOGGING_NAME, "~OefAgentEndpoint");
 }
 
 void OefAgentEndpoint::go(void)
 {
   Endpoint::go();
-  std::cout << "GO!" << std::endl;
+  FETCH_LOG_INFO(LOGGING_NAME, "GO!");
 }

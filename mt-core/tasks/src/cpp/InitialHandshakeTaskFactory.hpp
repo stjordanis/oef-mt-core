@@ -2,11 +2,19 @@
 
 #include "mt-core/comms/src/cpp/IOefAgentTaskFactory.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
+#include "mt-core/agents/src/cpp/Agents.hpp"
+#include "fetch_teams/ledger/logger.hpp"
+
 
 class InitialHandshakeTaskFactory:public IOefAgentTaskFactory
 {
 public:
-  InitialHandshakeTaskFactory(std::shared_ptr<OefAgentEndpoint> the_endpoint):IOefAgentTaskFactory(the_endpoint)
+  static constexpr char const *LOGGING_NAME = "InitialHandshakeTaskFactory";
+
+  InitialHandshakeTaskFactory(std::shared_ptr<OefAgentEndpoint> the_endpoint, std::shared_ptr<Agents> agents)
+  : IOefAgentTaskFactory(the_endpoint)
+  , agents_{std::move(agents)}
+  , public_key_{""}
   {
     state = WAITING_FOR_Agent_Server_ID;
   }
@@ -28,4 +36,8 @@ private:
   InitialHandshakeTaskFactory &operator=(const InitialHandshakeTaskFactory &other) = delete;
   bool operator==(const InitialHandshakeTaskFactory &other) = delete;
   bool operator<(const InitialHandshakeTaskFactory &other) = delete;
+
+private:
+  std::shared_ptr<Agents> agents_;
+  std::string public_key_;
 };

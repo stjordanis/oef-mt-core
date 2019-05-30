@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "mt-core/comms/src/cpp/ProtoMessageEndpoint.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 
 class Core;
 
@@ -17,6 +18,8 @@ namespace google
 class OefEndpoint: public ProtoMessageEndpoint, public std::enable_shared_from_this<OefEndpoint>
 {
 public:
+  static constexpr char const *LOGGING_NAME = "OefEndpoint";
+
   OefEndpoint(Core &core):ProtoMessageEndpoint(core)
   {
   }

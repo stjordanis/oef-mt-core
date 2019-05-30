@@ -8,6 +8,7 @@
 #include "mt-core/comms/src/cpp/Endianness.hpp"
 #include "mt-core/threading/src/cpp/Waitable.hpp"
 #include "threading/src/cpp/lib/Notification.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 
 namespace google
 {
@@ -29,6 +30,7 @@ public:
   using consumed_needed_pair = IMessageWriter::consumed_needed_pair;
 
   static constexpr std::size_t BUFFER_SIZE_LIMIT = 50;
+  static constexpr char const *LOGGING_NAME = "ProtoMessageSender";
 
   ProtoMessageSender(std::weak_ptr<ProtoMessageEndpoint> &endpoint)
   {

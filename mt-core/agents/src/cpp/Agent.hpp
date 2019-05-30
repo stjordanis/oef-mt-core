@@ -28,6 +28,14 @@ public:
   }
 
   Notification::NotificationBuilder send(std::shared_ptr<google::protobuf::Message> s);
+
+  void run_sending();
+
+  std::string getPublicKey()
+  {
+    return key;
+  }
+
 protected:
 private:
   std::string key;

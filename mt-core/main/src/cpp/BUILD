@@ -1,3 +1,5 @@
+load("//:variables.bzl", "DEFINES")
+
 cc_binary(
     name = "app",
     visibility = [
@@ -24,6 +26,7 @@ cc_library(
          if x != "main.cpp"
     ],
     hdrs = glob(["*.hpp"]),
+    defines = DEFINES,
     deps = [
          "//mt-core/auth/src/cpp:lib",
          "//mt-core/threading/src/cpp:lib",

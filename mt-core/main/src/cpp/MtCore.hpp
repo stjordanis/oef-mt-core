@@ -9,6 +9,8 @@
 #include "mt-core/main/src/cpp/MtCoreArgs.hpp"
 #include "threading/src/cpp/lib/Taskpool.hpp"
 #include "threading/src/cpp/lib/Threadpool.hpp"
+#include "mt-core/agents/src/cpp/Agents.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 
 class OefListenerSet;
 class Core;
@@ -18,6 +20,8 @@ class MtCore
 {
 public:
   using args = MtCoreArgs;
+
+  static constexpr char const *LOGGING_NAME = "MtCore";
 
   MtCore()
   {
@@ -33,6 +37,7 @@ private:
   std::shared_ptr<Core> core;
   std::shared_ptr<Taskpool> tasks;
   std::shared_ptr<OutboundConversations> outbounds;
+  std::shared_ptr<Agents> agents_;
 
   Threadpool comms_runners;
   Threadpool tasks_runners;

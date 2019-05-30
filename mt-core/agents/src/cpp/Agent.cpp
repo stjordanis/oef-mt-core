@@ -6,3 +6,9 @@ Notification::NotificationBuilder Agent::send(std::shared_ptr<google::protobuf::
 {
   return endpoint -> send(s);
 }
+
+
+void Agent::run_sending()
+{
+  endpoint->run_sending();
+}

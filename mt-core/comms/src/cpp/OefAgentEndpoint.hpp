@@ -2,6 +2,8 @@
 
 #include <memory>
 #include "mt-core/comms/src/cpp/OefEndpoint.hpp"
+#include "fetch_teams/ledger/logger.hpp"
+
 
 class Core;
 class IOefAgentTaskFactory;
@@ -11,6 +13,9 @@ class ProtoMessageSender;
 class OefAgentEndpoint : public OefEndpoint
 {
 public:
+  static constexpr char const *LOGGING_NAME = "OefAgentEndpoint";
+
+
   OefAgentEndpoint(Core &core);
   virtual ~OefAgentEndpoint();
 

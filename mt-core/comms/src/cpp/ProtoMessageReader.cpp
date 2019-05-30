@@ -40,7 +40,7 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
       chars.read_little_endian(body_size_u32);
       if (body_size_u32 < 65535)
       {
-        std::cout << "detected LITTLE ENDIAN CONNECTION" << std::endl;
+        FETCH_LOG_INFO(LOGGING_NAME, "detected LITTLE ENDIAN CONNECTION");
         setDetectedEndianness(LITTLE);
       }
       else
@@ -48,7 +48,7 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
         chars.read(body_size_u32);
         if (body_size_u32 < 65535)
         {
-          std::cout << "detected NETWORK/BIG ENDIAN CONNECTION" << std::endl;
+          FETCH_LOG_INFO(LOGGING_NAME, "detected NETWORK/BIG ENDIAN CONNECTION");
           setDetectedEndianness(NETWORK);
         }
         else
@@ -93,7 +93,7 @@ ProtoMessageReader::consumed_needed_pair ProtoMessageReader::checkForMessage(con
     }
     else
     {
-      std::cout << "No onComplete handler set." << std::endl;
+      FETCH_LOG_WARN(LOGGING_NAME,  "No onComplete handler set.");
     }
     chars.advance(body_size);
   }

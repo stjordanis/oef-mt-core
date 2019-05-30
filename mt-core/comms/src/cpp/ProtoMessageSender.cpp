@@ -27,7 +27,7 @@ ProtoMessageSender::consumed_needed_pair ProtoMessageSender::checkForSpace(const
       uint32_t mesg_size = body_size + head_size;
       if (chars.remainingSpace() < mesg_size)
       {
-        std::cout << "out of space on write buffer." << std::endl;
+        FETCH_LOG_WARN(LOGGING_NAME, "out of space on write buffer.");
         break;
       }
 
