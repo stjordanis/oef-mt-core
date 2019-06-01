@@ -8,6 +8,7 @@
 #include "basic_comms/src/cpp/ConstCharArrayBuffer.hpp"
 
 class OefAgentEndpoint;
+class OutboundConversations;
 
 class IOefAgentTaskFactory
 {
@@ -16,10 +17,13 @@ public:
   using buffer = boost::asio::const_buffer;
   using buffers = std::vector<buffer>;
 
-  IOefAgentTaskFactory(std::shared_ptr<OefAgentEndpoint> the_endpoint):endpoint(the_endpoint)
+  IOefAgentTaskFactory(std::shared_ptr<OefAgentEndpoint> the_endpoint, std::shared_ptr<OutboundConversations> outbounds)
+    : outbounds(outbounds)
+    , endpoint(the_endpoint)
   {
   }
-  IOefAgentTaskFactory()
+  IOefAgentTaskFactory(std::shared_ptr<OutboundConversations> outbounds)
+    : outbounds(outbounds)
   {
   }
   virtual ~IOefAgentTaskFactory()
@@ -29,6 +33,7 @@ public:
   virtual void processMessage(ConstCharArrayBuffer &data) = 0;
   // Process the message, throw exceptions if they're bad.
 protected:
+   std::shared_ptr<OutboundConversations> outbounds;
 
   template<class PROTO>
   void read(PROTO &proto, ConstCharArrayBuffer &chars, std::size_t expected_size)

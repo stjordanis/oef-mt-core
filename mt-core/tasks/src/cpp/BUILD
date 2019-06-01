@@ -14,6 +14,6 @@ cc_library(
          "//mt-core/tasks-base/src/cpp:lib",
          "//protos/src/protos:cc_oef_core_pb",
          "//fetch_teams/ledger:lib",
-         "//mt-core/agents/src/cpp:lib"
+         "//mt-core/agents/src/cpp:lib",
    ],
 )

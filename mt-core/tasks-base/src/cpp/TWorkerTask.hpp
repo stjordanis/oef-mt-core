@@ -9,6 +9,7 @@
 #include <utility>
 #include <mutex>
 #include <algorithm>
+#include <iostream>
 
 template<class WORKLOAD>
 class TWorkerTask : public Task
@@ -16,7 +17,8 @@ class TWorkerTask : public Task
 public:
   using Workload = WORKLOAD;
   using WorkloadP = std::shared_ptr<Workload>;
-  using QueueEntry = std::pair<WorkloadP, Waitable>;
+  using WaitableP = std::shared_ptr<Waitable>;
+  using QueueEntry = std::pair<WorkloadP, WaitableP>;
   using Queue = std::queue<QueueEntry>;
 
   using Mutex = std::mutex;
@@ -25,6 +27,7 @@ public:
   using WorkloadProcessed = enum {
     COMPLETE,
     NOT_COMPLETE,
+    NOT_STARTED,
   };
 
   using WorkloadState = enum {
@@ -42,11 +45,15 @@ public:
   Notification::NotificationBuilder post(WorkloadP workload)
   {
     Lock lock(mutex);
-    queue.push_back(std::make_pair(workload, Waitable()));
+    WaitableP waitable = std::make_shared<Waitable>();
+    QueueEntry qe(workload, waitable);
+    queue.push(qe);
 
     // now make this task runnable.  
 
     this -> makeRunnable();
+
+    return waitable -> makeNotification();
   }
 
   virtual WorkloadProcessed process(WorkloadP workload, WorkloadState state) = 0;
@@ -68,6 +75,7 @@ public:
         Lock lock(mutex);
         if (queue.empty())
         {
+          std::cout << "No work, TWorkerTask sleeps" << std::endl;
           return DEFER;
         }
         state = START;
@@ -77,17 +85,25 @@ public:
       }
       else
       {
+        if (last_result == NOT_STARTED)
+        {
+          state = START;
+        }
         state = RESUME;
       }
 
+      std::cout << " TWorkerTask processes" << std::endl;
       auto result = process(current.first, state);
+      last_result = result;
       switch(result)
       {
       case COMPLETE:
-        current.second.wake();
+        current.second -> wake();
         current.first.reset();
         break;
       case NOT_COMPLETE:
+        return DEFER;
+      case NOT_STARTED:
         return DEFER;
       }
     }
@@ -95,6 +111,7 @@ public:
 
 protected:
   QueueEntry current;
+  WorkloadProcessed last_result;
 
   Queue queue;
   mutable Mutex mutex;

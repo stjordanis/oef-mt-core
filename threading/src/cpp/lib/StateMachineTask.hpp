@@ -7,20 +7,23 @@ template<class SUBCLASS>
 class StateMachineTask : public Task
 {
 public:
-  class StateMachineEntryPointResult;
-  using StateMachineEntryPoint =  StateMachineEntryPointResult (SUBCLASS::*)(void); 
+  using Result = std::pair<int, ExitState>;
+  using EntryPoint = Result (SUBCLASS::*)(void);
 
-  using StateMachineEntryPointResult = std::pair<StateMachineEntryPoint, ExitState>;
-
-  StateMachineTask(StateMachineEntryPoint initialstate) : Task()
+  StateMachineTask(SUBCLASS *ptr, const EntryPoint *const entrypoints)
+    : Task()
+    , entrypoints(entrypoints)
   {
-    this -> state = initialstate;
+    this -> ptr = ptr;
+    this -> state = entrypoints[0];
     runnable = true;
   }
   virtual ~StateMachineTask()
   {
   }
 
+  EntryPoint const *entrypoints;
+  static constexpr char const *LOGGING_NAME = "StateMachineTask";
 
   virtual bool isRunnable(void) const { return runnable; }
 
@@ -28,8 +31,9 @@ public:
   {
     while(true)
     {
-      auto result = this ->* state();
-      state = result.first;
+      Result result = (ptr ->* state)();
+      
+      state = entrypoints[result.first];
       switch(result.second)
       {
 
@@ -51,8 +55,9 @@ public:
   }
 
 protected:
-  StateMachineEntryPoint state;
+  EntryPoint state;
   std::atomic<bool> runnable;
+  SUBCLASS *ptr;
 private:
   StateMachineTask(const StateMachineTask &other) = delete; // { copy(other); }
   StateMachineTask &operator=(const StateMachineTask &other) = delete; // { copy(other); return *this; }

@@ -2,9 +2,12 @@
 
 #include <stdexcept>
 #include "protos/src/protos/agent.pb.h"
+#include "protos/src/protos/search_update.pb.h"
 #include "mt-core/tasks/src/cpp/AgentToAgentMessageTask.hpp"
 #include "fetch_teams/ledger/logger.hpp"
-
+#include "mt-core/comms/src/cpp/OutboundConversations.hpp"
+#include "cpp-utils/src/cpp/lib/Uri.hpp"
+#include "mt-core/conversations/src/cpp/SearchConversationTask.hpp"
 
 void OefFunctionsTaskFactory::endpointClosed()
 {
@@ -12,13 +15,12 @@ void OefFunctionsTaskFactory::endpointClosed()
   agents_->remove(agent_public_key_);
 }
 
-
 void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
 {
   auto envelope = fetch::oef::pb::Envelope();
   IOefAgentTaskFactory::read(envelope, data, data.size - data.current);
 
-  FETCH_LOG_INFO(LOGGING_NAME, "Got an Envelope");
+  FETCH_LOG_INFO(LOGGING_NAME, "2222222222222    Got an Envelope");
 
   auto payload_case = envelope.payload_case();
   int32_t msg_id = envelope.msg_id();
@@ -32,8 +34,21 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
       senderTask->submit();
       break;
     }
-    case fetch::oef::pb::Envelope::kRegisterService:
+
+  case fetch::oef::pb::Envelope::kRegisterService:
       //process_register_service(msg_id, envelope.register_service(), envelope.agent_uri());
+
+      {
+        auto update = std::make_shared<fetch::oef::pb::Update>();
+        update -> set_key("core_name");
+        fetch::oef::pb::Update_DataModelInstance* dm = update -> add_data_models();
+        dm->set_key(envelope.agent_uri());
+        dm->mutable_model()->CopyFrom(envelope.register_service().description().model());
+        dm->mutable_values()->CopyFrom(envelope.register_service().description().values());
+
+        auto convTask = std::make_shared<SearchConversationTask>(update, outbounds);
+        convTask -> submit();
+      }
       break;
     case fetch::oef::pb::Envelope::kUnregisterService:
       //process_unregister_service(msg_id, envelope.unregister_service(), envelope.agent_uri());
@@ -51,6 +66,16 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
       //process_search_service(msg_id, envelope.search_services());
       break;
     case fetch::oef::pb::Envelope::kSearchServicesWide:
+//       {
+//         auto bare_register_service = envelope.search_services_wide();
+//              std::shared_ptr<google::protobuf::Message> register_service_message(bare_register_service);
+//
+//         outbounds -> startConversation(
+//                                        Uri("outbound://search/update"),
+//                                        register_service_message
+//                                        );
+//      }
+      break;
       //process_search_service_wide(msg_id, envelope.search_services_wide());
       break;
     case fetch::oef::pb::Envelope::PAYLOAD_NOT_SET:

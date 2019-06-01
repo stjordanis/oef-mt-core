@@ -10,10 +10,12 @@ cc_library(
     defines = DEFINES,
     deps = [
          "//threading/src/cpp/lib:lib",
-         "//mt-core/tasks-base/src/cpp:lib",
          "//mt-core/comms/src/cpp:lib",
+         "//mt-core/tasks/src/cpp:lib",
+         "//mt-core/conversations/src/cpp:lib",
+         "//mt-core/tasks-base/src/cpp:lib",
          "//protos/src/protos:cc_oef_core_pb",
-         "@com_google_protobuf//:protobuf",
-         "//fetch_teams/ledger:lib"
-    ],
+         "//fetch_teams/ledger:lib",
+         "//mt-core/agents/src/cpp:lib",
+   ],
 )

@@ -14,6 +14,7 @@ namespace google
 
 class OutboundConversation;
 class IOutboundConversationCreator;
+class Uri;
 
 class OutboundConversations
 {
@@ -25,7 +26,7 @@ public:
   void addConversationCreator(const std::string &target, std::shared_ptr<IOutboundConversationCreator> creator);
   void delConversationCreator(const std::string &target);
 
-  std::shared_ptr<OutboundConversation> startConversation(const std::string &target, std::shared_ptr<google::protobuf::Message> initiator);
+  std::shared_ptr<OutboundConversation> startConversation(const Uri &target, std::shared_ptr<google::protobuf::Message> initiator);
 protected:
   std::map<std::string, std::shared_ptr<IOutboundConversationCreator>> creators;
 private:

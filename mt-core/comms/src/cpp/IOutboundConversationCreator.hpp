@@ -2,6 +2,7 @@
 
 #include <memory>
 
+class Uri;
 class OutboundConversation;
 
 namespace google
@@ -22,7 +23,7 @@ public:
   {
   }
 
-  virtual std::shared_ptr<OutboundConversation> start(std::shared_ptr<google::protobuf::Message> initiator) = 0;
+  virtual std::shared_ptr<OutboundConversation> start(const Uri &target_path, std::shared_ptr<google::protobuf::Message> initiator) = 0;
 protected:
 private:
   IOutboundConversationCreator(const IOutboundConversationCreator &other) = delete;

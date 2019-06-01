@@ -9,6 +9,8 @@
 #include "basic_comms/src/cpp/IMessageWriter.hpp"
 #include <iostream>
 
+class Uri;
+
 class Endpoint:public ISocketOwner
 {
 public:
@@ -58,6 +60,7 @@ public:
   void run_sending();
   void run_reading();
   void close();
+  bool connect(const Uri &uri, Core &core);
 protected:
   Socket sock;
   RingBuffer sendBuffer;

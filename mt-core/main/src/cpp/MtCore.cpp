@@ -5,7 +5,7 @@
 #include "basic_comms/src/cpp/Core.hpp"
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
 #include "mt-core/comms/src/cpp/OefListenerStarterTask.hpp"
-#include "mt-core/tasks/src/cpp/InitialHandshakeTaskFactory.hpp"
+#include "mt-core/oef-functions/src/cpp/InitialHandshakeTaskFactory.hpp"
 #include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 
 using namespace std::placeholders;
@@ -46,7 +46,7 @@ void MtCore::startListeners(const std::vector<int> &ports)
   IOefListener::FactoryCreator initialFactoryCreator =
     [this](std::shared_ptr<OefAgentEndpoint> endpoint)
     {
-      return std::make_shared<InitialHandshakeTaskFactory>(endpoint, agents_);
+      return std::make_shared<InitialHandshakeTaskFactory>(endpoint, outbounds, agents_);
     };
   for(auto &p : ports)
   {
