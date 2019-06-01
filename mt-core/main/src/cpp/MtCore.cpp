@@ -35,8 +35,16 @@ int MtCore::run(const MtCore::args &args)
 
   while(1)
   {
-    FETCH_LOG_INFO(LOGGING_NAME, "ok");
-    sleep(10);
+    auto s = tasks -> getStatus();
+
+    FETCH_LOG_INFO(LOGGING_NAME,
+                   "  pending_tasks=", s.pending_tasks,
+                   "  running_tasks=", s.running_tasks,
+                   "  suspended_tasks=", s.suspended_tasks,
+                   "  future_tasks=", s.future_tasks
+                   );
+
+    sleep(3);
   }
   return 0;
 }

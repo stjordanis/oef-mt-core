@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <map>
+
 #include "mt-core/comms/src/cpp/IOutboundConversationCreator.hpp"
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 
@@ -8,6 +10,7 @@ class OutboundSearchConversationWorkerTask;
 class ProtoMessageEndpoint;
 class Core;
 class OutboundSearchConnectorTask;
+class OutboundSearchConversation;
 
 class OutboundSearchConversationCreator : public IOutboundConversationCreator
 {

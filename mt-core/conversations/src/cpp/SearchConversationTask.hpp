@@ -4,8 +4,10 @@
 #include <utility>
 
 #include "threading/src/cpp/lib/StateMachineTask.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 
 class OutboundConversations;
+class OutboundConversation;
 
 namespace google
 {
@@ -33,6 +35,7 @@ public:
 protected:
   std::shared_ptr<google::protobuf::Message> initiator;
   std::shared_ptr<OutboundConversations> outbounds;
+  std::shared_ptr<OutboundConversation> conversation;
 private:
   SearchConversationTask(const SearchConversationTask &other) = delete; // { copy(other); }
   SearchConversationTask &operator=(const SearchConversationTask &other) = delete; // { copy(other); return *this; }

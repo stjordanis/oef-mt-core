@@ -2,6 +2,7 @@
 
 #include "threading/src/cpp/lib/Task.hpp"
 #include "threading/src/cpp/lib/ExitState.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 
 template<class SUBCLASS>
 class StateMachineTask : public Task
@@ -31,20 +32,29 @@ public:
   {
     while(true)
     {
+      FETCH_LOG_INFO(LOGGING_NAME, "Call state function");
       Result result = (ptr ->* state)();
-      
-      state = entrypoints[result.first];
+
+      if (result.first)
+      {
+        state = entrypoints[result.first];
+      }
+      else
+      {
+        state = 0;
+      }
+      FETCH_LOG_INFO(LOGGING_NAME, "Reply was ", result.first, ":", exitStateNames[result.second]);
       switch(result.second)
       {
 
       case COMPLETE:
-        if (state == 0)
+        if (0 == state)
+        {
           return COMPLETE;
+        }
         break;
 
       case DEFER:
-        if (state == 0)
-          return COMPLETE;
         return DEFER;
 
       case CANCELLED:

@@ -7,6 +7,7 @@
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 #include "mt-core/comms/src/cpp/OutboundConversation.hpp"
 #include "fetch_teams/ledger/logger.hpp"
+#include "basic_comms/src/cpp/ConstCharArrayBuffer.hpp"
 
 #include "mt-core/conversations/src/cpp/ProtoPathMessageSender.hpp"
 #include "mt-core/conversations/src/cpp/ProtoPathMessageReader.hpp"
@@ -31,16 +32,26 @@ public:
   Uri uri;
   std::shared_ptr<google::protobuf::Message> initiator;
   std::size_t ident;
+  std::size_t mcount = 0;
+
+  virtual void handleMessage(ConstCharArrayBuffer buffer)
+  {
+    // need to handle the messages here.
+    mcount++;
+    wake();
+  }
 
   virtual std::size_t getAvailableReplyCount() const
   {
-    return 0;
+    return mcount;
   }
   virtual std::shared_ptr<google::protobuf::Message> getReply(std::size_t replynumber)
   {
     return std::shared_ptr<google::protobuf::Message>();
   }
 };
+
+std::map<int, std::shared_ptr<OutboundSearchConversation>> ident2conversation;
 
 class OutboundSearchConnectorTask;
 
@@ -99,10 +110,23 @@ public:
       ep -> connect(uri, core);
       ep_send = std::make_shared<ProtoPathMessageSender>(ep);
       ep_read = std::make_shared<ProtoPathMessageReader>(ep);
-      std::cout << " OutboundSearchConnectorTask  READ=" << ep_read.get() << std::endl;
-      std::cout << " OutboundSearchConnectorTask  SEND=" << ep_send.get() << std::endl;
+      FETCH_LOG_INFO(LOGGING_NAME,"READ=", ep_read.get());
+      FETCH_LOG_INFO(LOGGING_NAME,"SEND=", ep_send.get());
 
-      ep_read -> onComplete = [this](bool success, int id, ConstCharArrayBuffer buffer){
+      ep_read -> onComplete = [](bool success, int id, ConstCharArrayBuffer buffer){
+        FETCH_LOG_INFO(LOGGING_NAME,"complete message ", id);
+
+        auto iter = ident2conversation.find(id);
+
+        if (iter != ident2conversation.end())
+        {
+          FETCH_LOG_INFO(LOGGING_NAME,"wakeup!!");
+          iter -> second -> handleMessage(buffer);
+        }
+        else
+        {
+          FETCH_LOG_INFO(LOGGING_NAME,"complete message not handled");
+        }
       };
 
       ep -> writer = ep_send;
@@ -134,25 +158,20 @@ public:
 
 OutboundSearchConversationWorkerTask::WorkloadProcessed OutboundSearchConversationWorkerTask::process(WorkloadP workload, WorkloadState state)
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "Starting search conversation...");
+  FETCH_LOG_INFO(LOGGING_NAME, "process search conversation...");
   if (!searchConnector -> connected)
   {
     FETCH_LOG_INFO(LOGGING_NAME, "no search conn");
     return NOT_COMPLETE;
   }
 
-  FETCH_LOG_INFO(LOGGING_NAME, "Starting search conversation...");
+  FETCH_LOG_INFO(LOGGING_NAME, "Send initiator...");
   searchConnector -> ep_send -> send(workload -> ident, workload -> uri, workload -> initiator);
   FETCH_LOG_INFO(LOGGING_NAME, "Starting search ep send loop...");
   searchConnector -> ep -> run_sending();
   FETCH_LOG_INFO(LOGGING_NAME, "done..");
   return COMPLETE;
 }
-
-
-
-
-// , StateMachineTask<OutboundSearchConversationWorkerTask>>
 
 OutboundSearchConversationCreator::OutboundSearchConversationCreator(const Uri &search_uri, Core &core)
 {
@@ -179,7 +198,9 @@ OutboundSearchConversationCreator::~OutboundSearchConversationCreator()
 std::shared_ptr<OutboundConversation> OutboundSearchConversationCreator::start(const Uri &target_path, std::shared_ptr<google::protobuf::Message> initiator)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Starting search conversation...");
-  auto conv = std::make_shared<OutboundSearchConversation>(searchConnector, ident++, target_path, initiator);
+  auto this_id = ident++;
+  auto conv = std::make_shared<OutboundSearchConversation>(searchConnector, this_id, target_path, initiator);
+  ident2conversation[this_id] = conv;
   worker -> post(conv);
   return conv;
 }
