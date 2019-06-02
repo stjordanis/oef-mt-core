@@ -12,18 +12,29 @@
 #include "mt-core/conversations/src/cpp/ProtoPathMessageSender.hpp"
 #include "mt-core/conversations/src/cpp/ProtoPathMessageReader.hpp"
 
+#include "mt-core/conversations/src/cpp/SearchConversationTypes.hpp"
+
+#include "protos/src/protos/search_message.pb.h"
+#include "protos/src/protos/search_query.pb.h"
+#include "protos/src/protos/search_remove.pb.h"
+#include "protos/src/protos/search_response.pb.h"
+#include "protos/src/protos/search_update.pb.h"
+#include "protos/src/protos/search_transport.pb.h"
+
 class OutboundSearchConversation
   : public OutboundConversation
 {
 public:
   OutboundSearchConversation(
+                             SearchConversationType type,
                              std::shared_ptr<OutboundSearchConnectorTask> connector,
                              std::size_t ident,
                              const Uri &uri,
                              std::shared_ptr<google::protobuf::Message> initiator)
     : OutboundConversation()
     , uri(uri)
-    ,ident (ident)
+    , ident(ident)
+    , type(type)
   {
     this -> initiator = initiator;
   }
@@ -33,21 +44,48 @@ public:
   std::shared_ptr<google::protobuf::Message> initiator;
   std::size_t ident;
   std::size_t mcount = 0;
+  SearchConversationType type;
+};
+
+template<class PROTOCLASS>
+class OutboundTypedSearchConversation
+  : public OutboundSearchConversation
+{
+public:
+  OutboundTypedSearchConversation(
+                             SearchConversationType type,
+                             std::shared_ptr<OutboundSearchConnectorTask> connector,
+                             std::size_t ident,
+                             const Uri &uri,
+                             std::shared_ptr<google::protobuf::Message> initiator)
+    : OutboundSearchConversation(
+                                 type,
+                                 connector,
+                                 ident,
+                                 uri,
+                                 initiator
+                                 )
+  {
+  }
+
+  std::vector<std::shared_ptr<PROTOCLASS>> responses;
 
   virtual void handleMessage(ConstCharArrayBuffer buffer)
   {
-    // need to handle the messages here.
-    mcount++;
+    auto r = std::make_shared<PROTOCLASS>();
+    std::istream is(&buffer);
+    r -> ParseFromIstream(&is);
+    responses.push_back(r);
     wake();
   }
 
   virtual std::size_t getAvailableReplyCount() const
   {
-    return mcount;
+    return responses.size();
   }
   virtual std::shared_ptr<google::protobuf::Message> getReply(std::size_t replynumber)
   {
-    return std::shared_ptr<google::protobuf::Message>();
+    return responses[replynumber];
   }
 };
 
@@ -199,7 +237,35 @@ std::shared_ptr<OutboundConversation> OutboundSearchConversationCreator::start(c
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Starting search conversation...");
   auto this_id = ident++;
-  auto conv = std::make_shared<OutboundSearchConversation>(searchConnector, this_id, target_path, initiator);
+
+  std::shared_ptr<OutboundSearchConversation> conv;
+
+  SearchConversationType type;
+  if (target_path.path == "/update")
+  {
+    type = UPDATE;
+    conv = std::make_shared<OutboundTypedSearchConversation<fetch::oef::pb::UpdateResponse>>(type, searchConnector, this_id, target_path, initiator);
+  }
+  else if (target_path.path == "/remove")
+  {
+    type = REMOVE;
+    conv = std::make_shared<OutboundTypedSearchConversation<fetch::oef::pb::RemoveResponse>>(type, searchConnector, this_id, target_path, initiator);
+  }
+  else if (target_path.path == "/search-local")
+  {
+    type = UPDATE;
+    conv = std::make_shared<OutboundTypedSearchConversation<fetch::oef::pb::SearchResponse>>(type, searchConnector, this_id, target_path, initiator);
+  }
+  else if (target_path.path == "/search-wide")
+  {
+    type = UPDATE;
+    conv = std::make_shared<OutboundTypedSearchConversation<fetch::oef::pb::SearchResponse>>(type, searchConnector, this_id, target_path, initiator);
+  }
+  else
+  {
+    throw std::invalid_argument(target_path.path + " is not a valid target.");
+  }
+
   ident2conversation[this_id] = conv;
   worker -> post(conv);
   return conv;

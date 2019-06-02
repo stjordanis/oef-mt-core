@@ -6,6 +6,14 @@
 
 #include "protos/src/protos/agent.pb.h"
 
+namespace google
+{
+  namespace protobuf
+  {
+    class Message;
+  };
+};
+
 class OefFunctionsTaskFactory:public IOefAgentTaskFactory
 {
 public:

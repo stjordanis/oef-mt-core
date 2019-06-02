@@ -10,7 +10,6 @@ class OutboundSearchConversationWorkerTask;
 class ProtoMessageEndpoint;
 class Core;
 class OutboundSearchConnectorTask;
-class OutboundSearchConversation;
 
 class OutboundSearchConversationCreator : public IOutboundConversationCreator
 {

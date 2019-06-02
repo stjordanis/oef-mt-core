@@ -5,9 +5,11 @@
 
 #include "threading/src/cpp/lib/StateMachineTask.hpp"
 #include "fetch_teams/ledger/logger.hpp"
+#include "mt-core/conversations/src/cpp/SearchConversationTypes.hpp"
 
 class OutboundConversations;
 class OutboundConversation;
+class OefAgentEndpoint;
 
 namespace google
 {
@@ -17,14 +19,18 @@ namespace google
   };
 };
 
+
 class SearchConversationTask
   : public StateMachineTask<SearchConversationTask>
 {
 public:
   using StateResult = StateMachineTask<SearchConversationTask>::Result;
 
-  SearchConversationTask(std::shared_ptr<google::protobuf::Message> initiator,
-                         std::shared_ptr<OutboundConversations> outbounds);
+  SearchConversationTask(SearchConversationType type,
+                         std::shared_ptr<google::protobuf::Message> initiator,
+                         std::shared_ptr<OutboundConversations> outbounds,
+                         std::shared_ptr<OefAgentEndpoint> endpoint
+                         );
   virtual ~SearchConversationTask();
 
   StateResult createConv(void);
@@ -32,10 +38,19 @@ public:
 
   static constexpr char const *LOGGING_NAME = "SearchConversationTask";
 
+  std::shared_ptr<google::protobuf::Message> createUpdateApiResponse(std::shared_ptr<google::protobuf::Message> search_response);
+  std::shared_ptr<google::protobuf::Message> createRemoveApiResponse(std::shared_ptr<google::protobuf::Message> search_response);
+  std::shared_ptr<google::protobuf::Message> createWideSearchApiResponse(std::shared_ptr<google::protobuf::Message> search_response);
+  std::shared_ptr<google::protobuf::Message> createSearchApiResponse(std::shared_ptr<google::protobuf::Message> search_response);
+
+  using SendFunc = std::function<void (std::shared_ptr<google::protobuf::Message>, std::shared_ptr<OefAgentEndpoint> endpoint)>;
+  SendFunc sendReply;
 protected:
   std::shared_ptr<google::protobuf::Message> initiator;
   std::shared_ptr<OutboundConversations> outbounds;
   std::shared_ptr<OutboundConversation> conversation;
+  std::shared_ptr<OefAgentEndpoint> endpoint;
+  SearchConversationType type;
 private:
   SearchConversationTask(const SearchConversationTask &other) = delete; // { copy(other); }
   SearchConversationTask &operator=(const SearchConversationTask &other) = delete; // { copy(other); return *this; }
