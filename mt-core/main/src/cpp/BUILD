@@ -35,5 +35,6 @@ cc_library(
          "//mt-core/tasks/src/cpp:lib",
          "//mt-core/agents/src/cpp:lib",
          "//mt-core/conversations/src/cpp:lib",
+         "//mt-core/oef-functions/src/cpp:lib",
     ],
 )

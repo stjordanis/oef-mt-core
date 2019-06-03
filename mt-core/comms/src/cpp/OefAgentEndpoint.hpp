@@ -4,7 +4,6 @@
 #include "mt-core/comms/src/cpp/OefEndpoint.hpp"
 #include "fetch_teams/ledger/logger.hpp"
 
-
 class Core;
 class IOefAgentTaskFactory;
 class ProtoMessageReader;

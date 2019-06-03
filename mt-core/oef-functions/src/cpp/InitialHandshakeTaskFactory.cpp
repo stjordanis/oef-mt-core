@@ -2,7 +2,7 @@
 
 #include "protos/src/protos/agent.pb.h"
 #include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
-#include "mt-core/tasks/src/cpp/OefFunctionsTaskFactory.hpp"
+#include "mt-core/oef-functions/src/cpp/OefFunctionsTaskFactory.hpp"
 #include "mt-core/tasks/src/cpp/TSendProtoTask.hpp"
 
 void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
@@ -43,7 +43,7 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
         state = WAITING_FOR_Agent_Server_Answer;
 
         agents_->add(public_key_, getEndpoint());
-        successor(std::make_shared<OefFunctionsTaskFactory>(agents_, public_key_));
+        successor(std::make_shared<OefFunctionsTaskFactory>(agents_, public_key_, outbounds));
       }
       break;
     }

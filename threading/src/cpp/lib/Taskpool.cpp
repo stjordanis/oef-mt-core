@@ -81,7 +81,7 @@ void Taskpool::run(std::size_t thread_idx)
     {
       status = mytask -> run();
     }
-    catch(std::exception ex)
+    catch(std::exception &ex)
     {
       std::cerr << "Threadpool caught:" << ex.what() << std::endl;
       status = ERRORED;

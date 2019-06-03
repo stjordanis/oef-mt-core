@@ -6,6 +6,7 @@
 #include "fetch_teams/ledger/logger.hpp"
 
 class Core;
+class Uri;
 
 namespace google
 {

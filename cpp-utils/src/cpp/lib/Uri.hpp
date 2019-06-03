@@ -23,7 +23,7 @@ public:
   std::string proto;
   std::string host;
   std::string path;
-  int port;
+  std::size_t port;
   bool valid;
 
   void diagnostic()

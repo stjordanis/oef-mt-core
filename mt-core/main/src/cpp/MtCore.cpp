@@ -5,7 +5,8 @@
 #include "basic_comms/src/cpp/Core.hpp"
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
 #include "mt-core/comms/src/cpp/OefListenerStarterTask.hpp"
-#include "mt-core/tasks/src/cpp/InitialHandshakeTaskFactory.hpp"
+#include "mt-core/oef-functions/src/cpp/InitialHandshakeTaskFactory.hpp"
+#include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 
 using namespace std::placeholders;
 
@@ -16,6 +17,7 @@ int MtCore::run(const MtCore::args &args)
   core = std::make_shared<Core>();
   auto tasks = std::make_shared<Taskpool>();
   tasks -> setDefault();
+  outbounds = std::make_shared<OutboundConversations>();
 
   std::function<void (void)> run_comms = std::bind(&Core::run, core.get());
   std::function<void (std::size_t thread_number)> run_tasks = std::bind(&Taskpool::run, tasks.get(), _1);
@@ -26,15 +28,23 @@ int MtCore::run(const MtCore::args &args)
   comms_runners.start(args.comms_thread_count, run_comms);
   tasks_runners.start(args.tasks_thread_count, run_tasks);
 
-  //outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(args.search_uri, *core));
+  outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(Uri(args.search_uri), *core));
   agents_ = std::make_shared<Agents>();
 
   startListeners(args.listen_ports);
 
   while(1)
   {
-    FETCH_LOG_INFO(LOGGING_NAME, "ok");
-    sleep(10);
+    auto s = tasks -> getStatus();
+
+    FETCH_LOG_INFO(LOGGING_NAME,
+                   "  pending_tasks=", s.pending_tasks,
+                   "  running_tasks=", s.running_tasks,
+                   "  suspended_tasks=", s.suspended_tasks,
+                   "  future_tasks=", s.future_tasks
+                   );
+
+    sleep(3);
   }
   return 0;
 }
@@ -44,7 +54,7 @@ void MtCore::startListeners(const std::vector<int> &ports)
   IOefListener::FactoryCreator initialFactoryCreator =
     [this](std::shared_ptr<OefAgentEndpoint> endpoint)
     {
-      return std::make_shared<InitialHandshakeTaskFactory>(endpoint, agents_);
+      return std::make_shared<InitialHandshakeTaskFactory>(endpoint, outbounds, agents_);
     };
   for(auto &p : ports)
   {

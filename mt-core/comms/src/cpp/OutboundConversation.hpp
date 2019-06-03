@@ -11,6 +11,7 @@ namespace google
 #include <memory>
 
 #include "threading/src/cpp/lib/Waitable.hpp"
+class ConstCharArrayBuffer;
 
 class Task;
 
@@ -18,7 +19,7 @@ class OutboundConversation : public Waitable
 {
 protected:
   friend class OutboundConversations;
-  OutboundConversation(std::weak_ptr<Task> task)
+  OutboundConversation()
   {
   }
 public:
@@ -26,8 +27,9 @@ public:
   {
   }
 
-  std::size_t getAvailableReplyCount() const;
-  std::shared_ptr<google::protobuf::Message> getReply(std::size_t replynumber);
+  virtual void handleMessage(ConstCharArrayBuffer buffer) = 0;
+  virtual std::size_t getAvailableReplyCount() const = 0;
+  virtual std::shared_ptr<google::protobuf::Message> getReply(std::size_t replynumber) = 0;
 protected:
 private:
   OutboundConversation(const OutboundConversation &other) = delete; // { copy(other); }

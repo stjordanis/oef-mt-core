@@ -6,15 +6,24 @@
 
 #include "protos/src/protos/agent.pb.h"
 
+namespace google
+{
+  namespace protobuf
+  {
+    class Message;
+  };
+};
+
 class OefFunctionsTaskFactory:public IOefAgentTaskFactory
 {
 public:
 
   static constexpr char const *LOGGING_NAME = "OefFunctionsTaskFactory";
 
-  OefFunctionsTaskFactory(std::shared_ptr<Agents> agents, std::string agent_public_key)
-  : agents_{std::move(agents)}
-  , agent_public_key_{std::move(agent_public_key)}
+  OefFunctionsTaskFactory(std::shared_ptr<Agents> agents, std::string agent_public_key, std::shared_ptr<OutboundConversations> outbounds)
+    : IOefAgentTaskFactory(outbounds)
+    , agents_{std::move(agents)}
+    , agent_public_key_{std::move(agent_public_key)}
   {
   }
   virtual ~OefFunctionsTaskFactory()
