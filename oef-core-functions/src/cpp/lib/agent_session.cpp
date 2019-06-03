@@ -124,7 +124,9 @@ void AgentSession::process_search_agents(uint32_t msg_id, const fetch::oef::pb::
           answer.set_answer_id(msg_id);
           auto answer_agents = answer.mutable_agents();
           for(auto &a : response.agents) {
-            answer_agents->add_agents(a);
+            OEFURI::URI uri;
+            uri.parseAgent(a);
+            answer_agents->add_agents(uri.agentPartAsString());
           }
           logger.trace("AgentSession::processSearchAgents sending {} agents to {}", answer_agents->agents().size(), publicKey_);
           send(answer);
@@ -149,7 +151,9 @@ void AgentSession::process_search_service(uint32_t msg_id, const fetch::oef::pb:
           answer.set_answer_id(msg_id);
           auto answer_agents = answer.mutable_agents();
           for(auto &a : response.agents) {
-            answer_agents->add_agents(a);
+            OEFURI::URI uri;
+            uri.parseAgent(a);
+            answer_agents->add_agents(uri.agentPartAsString());
           }
           logger.trace("AgentSession::processQuery sending {} agents to {}", answer_agents->agents().size(), publicKey_);
           send(answer);

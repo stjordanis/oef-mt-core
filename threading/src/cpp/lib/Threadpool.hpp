@@ -16,6 +16,11 @@ public:
   }
   virtual ~Threadpool()
   {
+    try {
+      stop();
+    } catch (std::exception& e) {
+      std::cerr << " Exception while shuting down threads: " << e.what() << std::endl;
+    }
   }
 
   void start(std::size_t threadcount, std::function<void (void)> runnable)
