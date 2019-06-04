@@ -2,16 +2,56 @@
 
 #include <atomic>
 #include <vector>
+#include <map>
+#include <mutex>
+#include <iostream>
 
-std::vector<std::atomic<Monitoring::CountType>> counts;
-std::map<Monitoring::NameType, Monitoring::IdType> names;
+class CounterSet
+{
+public:
+  std::size_t size = 0;
 
-std::mutex mutex;
+  using CounterSubSet = std::vector<std::atomic<std::size_t>>;
+  static constexpr std::size_t SUBSET_SIZE = 128;
+
+  std::vector<CounterSubSet*> counterSubSets;
+
+  std::size_t extend()
+  {
+    if (size >= SUBSET_SIZE * counterSubSets.size())
+    {
+      auto newCounterSubSet = new CounterSubSet(SUBSET_SIZE);
+      counterSubSets.push_back(newCounterSubSet);
+    }
+    auto r = size++;
+    return r;
+  }
+
+  std::atomic<std::size_t> &access(std::size_t index)
+  {
+    CounterSubSet *set = counterSubSets[index/SUBSET_SIZE];
+    return (*set)[index%SUBSET_SIZE];
+  }
+};
+
+
+class MonitoringInner
+{
+public:
+  std::map<Monitoring::NameType, Monitoring::IdType> names;
+  std::mutex mutex;
+  CounterSet counterSet;
+};
 
 using Lock = std::lock_guard<std::mutex>;
+MonitoringInner *Monitoring::inner = 0;
 
 Monitoring::Monitoring()
 {
+  if (!inner)
+  {
+    inner = new MonitoringInner;
+  }
 }
 
 Monitoring::~Monitoring()
@@ -19,37 +59,48 @@ Monitoring::~Monitoring()
 }
 
 
-IdType Monitoring::find(const NameType &name)
+Monitoring::IdType Monitoring::find(const NameType &name)
 {
-  Lock lock(mutex);
-
-  auto iter = names.find(name);
-  if (iter == names.end())
+  if (!inner)
   {
-    auto x = counts.size();
-    names[name] = x;
-    counts.push_back(0);
+    inner = new MonitoringInner;
+  }
+  Lock lock(inner -> mutex);
+  auto iter = inner -> names.find(name);
+  if (iter == inner -> names.end())
+  {
+    auto x = inner -> counterSet.extend();
+    inner -> names[name] = x;
     return x;
   }
-  return iter.second;
+  
+  return iter -> second;
 }
 
 void Monitoring::add(IdType id, CountType delta)
 {
-  counts[id] += delta;
+  if (!Monitoring::inner)
+  {
+    Monitoring::inner = new MonitoringInner;
+  }
+  Monitoring::inner -> counterSet.access(id) += delta;
 }
 
 void Monitoring::sub(IdType id, CountType delta)
 {
-  counts[id] -= delta;
+  if (!Monitoring::inner)
+  {
+    Monitoring::inner = new MonitoringInner;
+  }
+  Monitoring::inner -> counterSet.access(id) -= delta;
 }
 
 
-void Monitoring::report(std::function<void (const char *name, std::size_t value)> func)
+void Monitoring::report(ReportFunc func)
 {
-  Lock lock(mutex);
-  for(const auto &name2id : names)
+  Lock lock(inner -> mutex);
+  for(const auto &name2id : inner -> names)
     {
-      func(name2id.first, counts[name2id.second]);
+      func(name2id.first, inner -> counterSet.access(name2id.second));
     }
 }

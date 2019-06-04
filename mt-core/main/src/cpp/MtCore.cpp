@@ -7,6 +7,7 @@
 #include "mt-core/comms/src/cpp/OefListenerStarterTask.hpp"
 #include "mt-core/oef-functions/src/cpp/InitialHandshakeTaskFactory.hpp"
 #include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
+#include "monitoring/src/cpp/lib/Monitoring.hpp"
 
 using namespace std::placeholders;
 
@@ -33,17 +34,15 @@ int MtCore::run(const MtCore::args &args)
 
   startListeners(args.listen_ports);
 
+  Monitoring mon;
+
   while(1)
   {
-    auto s = tasks -> getStatus();
+    //auto s = tasks -> getStatus();
 
-    FETCH_LOG_INFO(LOGGING_NAME,
-                   "  pending_tasks=", s.pending_tasks,
-                   "  running_tasks=", s.running_tasks,
-                   "  suspended_tasks=", s.suspended_tasks,
-                   "  future_tasks=", s.future_tasks
-                   );
-
+    mon.report([](const std::string &name, std::size_t value){
+        FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
+      });
     sleep(3);
   }
   return 0;
