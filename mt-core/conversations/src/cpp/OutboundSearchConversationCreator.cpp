@@ -69,27 +69,57 @@ public:
   }
 
   std::vector<std::shared_ptr<PROTOCLASS>> responses;
+  int status_code;
+  std::string error_message;
 
-  virtual void handleMessage(ConstCharArrayBuffer buffer)
+  virtual void handleMessage(ConstCharArrayBuffer buffer) override
   {
+    status_code = 0;
     auto r = std::make_shared<PROTOCLASS>();
     std::istream is(&buffer);
-    r -> ParseFromIstream(&is);
+    if (!r -> ParseFromIstream(&is)){
+      status_code = 91;
+      error_message = "";
+      wake();
+      return;
+    }
     responses.push_back(r);
     wake();
   }
 
-  virtual std::size_t getAvailableReplyCount() const
+  virtual void handleError(int status_code, const std::string& message) override
+  {
+    this -> status_code = status_code;
+    error_message = message;
+  }
+
+  virtual std::size_t getAvailableReplyCount() const override
   {
     return responses.size();
   }
-  virtual std::shared_ptr<google::protobuf::Message> getReply(std::size_t replynumber)
+  virtual std::shared_ptr<google::protobuf::Message> getReply(std::size_t replynumber) override
   {
     return responses[replynumber];
   }
+
+  virtual bool success() const override
+  {
+    return status_code == 0;
+  }
+
+  virtual int getErrorCode() const override
+  {
+    return status_code;
+  }
+
+  virtual const std::string& getErrorMessage() const override
+  {
+    return error_message;
+  }
+
 };
 
-std::map<int, std::shared_ptr<OutboundSearchConversation>> ident2conversation;
+std::map<unsigned long, std::shared_ptr<OutboundSearchConversation>> ident2conversation;
 
 class OutboundSearchConnectorTask;
 
@@ -143,7 +173,6 @@ public:
   virtual ExitState run(void)
   {
     try {
-      std::cerr << "---> " << std::endl;
       uri.diagnostic();
       ep -> connect(uri, core);
       ep_send = std::make_shared<ProtoPathMessageSender>(ep);
@@ -151,7 +180,7 @@ public:
       FETCH_LOG_INFO(LOGGING_NAME,"READ=", ep_read.get());
       FETCH_LOG_INFO(LOGGING_NAME,"SEND=", ep_send.get());
 
-      ep_read -> onComplete = [](bool success, int id, ConstCharArrayBuffer buffer){
+      ep_read -> onComplete = [](bool success, unsigned long id, ConstCharArrayBuffer buffer){
         FETCH_LOG_INFO(LOGGING_NAME,"complete message ", id);
 
         auto iter = ident2conversation.find(id);
@@ -167,16 +196,31 @@ public:
         }
       };
 
+      ep_read -> onError = [](unsigned long id, int status_code, const std::string& message) {
+        FETCH_LOG_INFO(LOGGING_NAME,"error message ", id);
+        auto iter = ident2conversation.find(id);
+
+        if (iter != ident2conversation.end())
+        {
+          FETCH_LOG_INFO(LOGGING_NAME,"wakeup!!");
+          iter -> second -> handleError(status_code, message);
+        }
+        else
+        {
+          FETCH_LOG_INFO(LOGGING_NAME,"complete message not handled");
+        }
+      };
+
       ep -> writer = ep_send;
       ep -> reader = ep_read;
       ep -> go();
-      std::cerr << "---> " << "connected" << std::endl;
+      FETCH_LOG_WARN(LOGGING_NAME, "Connected");
       connected = true;
       worker -> makeRunnable();
     }
     catch(std::exception &ex)
     {
-      std::cerr << "---> " << ex.what() << std::endl;
+      FETCH_LOG_ERROR(LOGGING_NAME, ex.what());
     }
     return COMPLETE;
   }
@@ -251,19 +295,14 @@ std::shared_ptr<OutboundConversation> OutboundSearchConversationCreator::start(c
     type = REMOVE;
     conv = std::make_shared<OutboundTypedSearchConversation<fetch::oef::pb::RemoveResponse>>(type, searchConnector, this_id, target_path, initiator);
   }
-  else if (target_path.path == "/search-local")
-  {
-    type = UPDATE;
-    conv = std::make_shared<OutboundTypedSearchConversation<fetch::oef::pb::SearchResponse>>(type, searchConnector, this_id, target_path, initiator);
-  }
-  else if (target_path.path == "/search-wide")
+  else if (target_path.path == "/search")
   {
     type = UPDATE;
     conv = std::make_shared<OutboundTypedSearchConversation<fetch::oef::pb::SearchResponse>>(type, searchConnector, this_id, target_path, initiator);
   }
   else
   {
-    throw std::invalid_argument(target_path.path + " is not a valid target.");
+    throw std::invalid_argument(target_path.path + " is not a valid target, to start a OutboundSearchConversationCreator!");
   }
 
   ident2conversation[this_id] = conv;

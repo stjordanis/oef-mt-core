@@ -24,6 +24,7 @@ public:
     : IOefAgentTaskFactory(outbounds)
     , agents_{std::move(agents)}
     , agent_public_key_{std::move(agent_public_key)}
+    , core_key_{"oef-core"}
   {
   }
   virtual ~OefFunctionsTaskFactory()
@@ -44,4 +45,5 @@ private:
 private:
   std::shared_ptr<Agents> agents_;
   std::string agent_public_key_;
+  std::string core_key_;
 };

@@ -28,8 +28,12 @@ public:
   }
 
   virtual void handleMessage(ConstCharArrayBuffer buffer) = 0;
+  virtual void handleError(int status_code, const std::string& message) = 0;
   virtual std::size_t getAvailableReplyCount() const = 0;
   virtual std::shared_ptr<google::protobuf::Message> getReply(std::size_t replynumber) = 0;
+  virtual bool success() const = 0;
+  virtual int getErrorCode() const = 0;
+  virtual const std::string& getErrorMessage() const = 0;
 protected:
 private:
   OutboundConversation(const OutboundConversation &other) = delete; // { copy(other); }
