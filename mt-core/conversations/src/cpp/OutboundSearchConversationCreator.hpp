@@ -5,6 +5,7 @@
 
 #include "mt-core/comms/src/cpp/IOutboundConversationCreator.hpp"
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
+#include "mt-core/comms/src/cpp/OutboundConversations.hpp"
 
 class OutboundSearchConversationWorkerTask;
 class ProtoMessageEndpoint;
@@ -14,7 +15,7 @@ class OutboundSearchConnectorTask;
 class OutboundSearchConversationCreator : public IOutboundConversationCreator
 {
 public:
-  OutboundSearchConversationCreator(const Uri &search_uri, Core &core);
+  OutboundSearchConversationCreator(const Uri &search_uri, Core &core, std::shared_ptr<OutboundConversations> outbounds);
   virtual ~OutboundSearchConversationCreator();
   virtual std::shared_ptr<OutboundConversation> start(const Uri &target_path, std::shared_ptr<google::protobuf::Message> initiator);
 protected:

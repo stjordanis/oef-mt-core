@@ -28,7 +28,7 @@ int MtCore::run(const MtCore::args &args)
   comms_runners.start(args.comms_thread_count, run_comms);
   tasks_runners.start(args.tasks_thread_count, run_tasks);
 
-  outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(Uri(args.search_uri), *core));
+  outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(Uri(args.search_uri), *core, outbounds));
   agents_ = std::make_shared<Agents>();
 
   startListeners(args.listen_ports);

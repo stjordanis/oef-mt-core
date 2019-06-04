@@ -21,7 +21,7 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
 
   while(true)
   {
-    std::cout << "checkForMessage in " << chars.remainingData() << " bytes." << std::endl;
+    FETCH_LOG_INFO(LOGGING_NAME, "checkForMessage in ", chars.remainingData(), " bytes. Current: ", chars.current, ", size:", chars.size);
     //chars.diagnostic();
 
     uint32_t leader_head_size = sizeof(uint32_t);
@@ -61,16 +61,22 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
       break;
     }
 
+    chars.diagnostic();
     TransportHeader leader;
-    if (!leader . ParseFromIstream(&is)){
+
+    auto header_chars = ConstCharArrayBuffer(chars, chars.current + leader_size);
+    std::istream h_is(&header_chars);
+    if (!leader . ParseFromIstream(&h_is)){
       FETCH_LOG_WARN(LOGGING_NAME, "Failed to parse header!");
       throw std::invalid_argument("Proto deserialization refuses incoming invalid leader message!");
     }
+    chars.advance(leader_size);
 
     consumed += head_size;
     consumed += body_size;
 
-    if (!leader.status().success()){
+    if (!leader.status().success())
+    {
       std::string msg{""};
       for(auto& n : leader.status().narrative()) {
         msg += n;

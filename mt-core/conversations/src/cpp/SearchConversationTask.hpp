@@ -34,8 +34,8 @@ public:
       std::shared_ptr<OutboundConversations> outbounds,
       std::shared_ptr<OefAgentEndpoint> endpoint,
       uint32_t msg_id,
-      std::string agent_uri,
       std::string core_key,
+      std::string agent_uri,
       const EntryPoint * entryPoints,
       IMPL_CLASS* impl_class_ptr
   )

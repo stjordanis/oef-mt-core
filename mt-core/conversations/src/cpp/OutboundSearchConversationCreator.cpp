@@ -14,6 +14,8 @@
 
 #include "mt-core/conversations/src/cpp/SearchConversationTypes.hpp"
 
+#include "mt-core/conversations/src/cpp/SearchAddressUpdateTask.hpp"
+
 #include "protos/src/protos/search_message.pb.h"
 #include "protos/src/protos/search_query.pb.h"
 #include "protos/src/protos/search_remove.pb.h"
@@ -153,10 +155,11 @@ class OutboundSearchConnectorTask : public Task
 {
 public:
   static constexpr char const *LOGGING_NAME = "OutboundSearchConnectorTask";
-  OutboundSearchConnectorTask(Core &core, const Uri &search_uri)
+  OutboundSearchConnectorTask(Core &core, const Uri &search_uri, std::shared_ptr<OutboundConversations> outbounds)
     : uri(search_uri)
     , core(core)
     , connected(false)
+    , outbounds_(std::move(outbounds))
   {
     ep = std::make_shared<Endpoint>(core, 10000, 10000);
   }
@@ -168,6 +171,21 @@ public:
   virtual bool isRunnable(void) const
   {
     return true;
+  }
+
+  void register_address()
+  {
+    auto address = std::make_shared<fetch::oef::pb::Update_Address>();
+    address->set_ip("127.0.0.1");
+    address->set_port(3333);
+    address->set_key("oef-core");
+    address->set_signature("Sign");
+
+    auto convTask = std::make_shared<SearchAddressUpdateTask>(
+        address,
+        outbounds_,
+        nullptr);
+    convTask -> submit();
   }
 
   virtual ExitState run(void)
@@ -215,6 +233,7 @@ public:
       ep -> reader = ep_read;
       ep -> go();
       FETCH_LOG_WARN(LOGGING_NAME, "Connected");
+      register_address();
       connected = true;
       worker -> makeRunnable();
     }
@@ -229,6 +248,7 @@ public:
 
   std::shared_ptr<ProtoPathMessageSender> ep_send;
   std::shared_ptr<ProtoPathMessageReader> ep_read;
+  std::shared_ptr<OutboundConversations> outbounds_;
   std::shared_ptr<Endpoint> ep;
   Uri uri;
   Core &core;
@@ -255,12 +275,12 @@ OutboundSearchConversationWorkerTask::WorkloadProcessed OutboundSearchConversati
   return COMPLETE;
 }
 
-OutboundSearchConversationCreator::OutboundSearchConversationCreator(const Uri &search_uri, Core &core)
+OutboundSearchConversationCreator::OutboundSearchConversationCreator(const Uri &search_uri, Core &core, std::shared_ptr<OutboundConversations> outbounds)
 {
   endpoint = std::make_shared<ProtoMessageEndpoint>(core);
 
   worker = std::make_shared<OutboundSearchConversationWorkerTask>();
-  searchConnector = std::make_shared<OutboundSearchConnectorTask>(core, search_uri);
+  searchConnector = std::make_shared<OutboundSearchConnectorTask>(core, search_uri, outbounds);
 
   worker -> searchConnector = searchConnector;
   searchConnector -> worker = worker;
