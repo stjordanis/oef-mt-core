@@ -7,5 +7,6 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
         "@boost//:asio",
+        "//cpp-utils/src/cpp/lib:lib",
     ],
 )

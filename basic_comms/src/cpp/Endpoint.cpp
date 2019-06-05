@@ -1,6 +1,31 @@
 #include "Endpoint.hpp"
 
-//std::ostream& operator<<(std::ostream& os, const Endpoint &output) {}
+#include "cpp-utils/src/cpp/lib/Uri.hpp"
+
+bool Endpoint::connect(const Uri &uri, Core &core)
+{
+  boost::asio::ip::tcp::resolver resolver( core );
+  boost::asio::ip::tcp::resolver::query query( uri.host, std::to_string( uri.port ));
+  auto results = resolver.resolve( query );
+  boost::system::error_code ec;
+
+  for(auto &endpoint : results)
+  {
+    socket().connect( endpoint );
+    if (ec)
+    {
+      // An error occurred.
+      std::cout << ec.value() << std::endl;
+    }
+    else
+    {
+      state = RUNNING_ENDPOINT;
+      return true;
+    }
+  }
+  return false;
+}
+
 Endpoint::Endpoint(
       Core &core
       ,std::size_t sendBufferSize
@@ -25,10 +50,12 @@ void Endpoint::run_sending()
     Lock lock(mutex);
     if (asio_sending || state != RUNNING_ENDPOINT)
     {
+      std::cout << "early exit 1 sending=" << asio_sending << " state=" << state << std::endl;
       return;
     }
     if (sendBuffer.getDataAvailable() == 0)
     {
+      std::cout << "create messages" << std::endl;
       create_messages();
     }
     if (sendBuffer.getDataAvailable() == 0)
@@ -37,15 +64,17 @@ void Endpoint::run_sending()
     }
     asio_sending = true;
   }
+  std::cout << "ok data available" << std::endl;
   auto data = sendBuffer.getDataBuffers();
 
-//  int i = 0;
-//  for(auto &d : data)
-//  {
-//    std::cout << "Send buffer " << i << "=" << d.size() << " bytes on thr=" << std::this_thread::get_id() << std::endl;
-//  }
+  int i = 0;
+  for(auto &d : data)
+  {
+    std::cout << "Send buffer " << i << "=" << d.size() << " bytes on thr=" << std::this_thread::get_id() << std::endl;
+  }
 
-  //std::cout << "run_sending: START" << std::endl;
+  std::cout << "run_sending: START" << std::endl;
+
   boost::asio::async_write(
                            sock,
                            data,
@@ -58,14 +87,17 @@ void Endpoint::run_reading()
 {
   std::size_t read_needed_local = 0;
 
+  //std::cout << reader.get() << ":Endpoint::run_reading" << std::endl;
   {
     Lock lock(mutex);
     if (asio_reading || state != RUNNING_ENDPOINT)
     {
+      std::cout << reader.get() << ":early exit 1 reading=" << asio_sending << " state=" << state << std::endl;
       return;
     }
     if (read_needed == 0)
     {
+      std::cout << reader.get() << ":early exit 1 read_needed=" << read_needed << " state=" << state << std::endl;
       return;
     }
     read_needed_local = read_needed;
@@ -77,7 +109,7 @@ void Endpoint::run_reading()
     asio_reading = true;
   }
 
-  //std::cout << "start_reading:" << read_needed_local << " bytes." << std::endl;
+  std::cout << reader.get() << ":start_reading:" << read_needed_local << " bytes." << std::endl;
   auto space = readBuffer.getSpaceBuffers();
   boost::asio::async_read(
                           sock,
@@ -150,6 +182,8 @@ void Endpoint::error(const boost::system::error_code& ec)
 
 void Endpoint::proto_error(const std::string &msg)
 {
+  //std::cout << "proto error: " << msg << std::endl;
+
   if (state & ERRORED_ENDPOINT)
   {
     return;
@@ -177,6 +211,7 @@ void Endpoint::proto_error(const std::string &msg)
 
 void Endpoint::go()
 {
+   //std::cout << "Endpoint::go" << std::endl;
   if (onStart)
   {
     auto myStart = onStart;
@@ -194,14 +229,13 @@ void Endpoint::go()
   run_reading();
 }
 
-
 void Endpoint::complete_sending(const boost::system::error_code& ec, const size_t &bytes)
 {
   try
   {
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
-      std::cout << "complete_sending EOFa:  " << ec << std::endl;
+      std::cout << "complete_sending EOF:  " << ec << std::endl;
       eof();
       return; // We are done with this thing!
     }
@@ -242,41 +276,52 @@ void Endpoint::complete_reading(const boost::system::error_code& ec, const size_
 {
   try
   {
-    //std::cout << "complete_reading:  " << ec << ", "<< bytes << std::endl;
+    //std::cout << reader.get() << ":  complete_reading:  " << ec << ", "<< bytes << std::endl;
     
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
+      //std::cout << "complete_reading: eof" << std::endl;
       eof();
       return; // We are done with this thing!
     }
 
     if (ec)
     {
+      //std::cout << "complete_reading: error" << std::endl;
       error(ec);
       close();
       return; // We are done with this thing!
     }
 
 
+    //std::cout << reader.get() << ":complete_reading: 1 " << std::endl;
     readBuffer.markSpaceUsed(bytes);
 
+    //std::cout << reader.get() << ":complete_reading: 2" << std::endl;
     IMessageReader::consumed_needed_pair consumed_needed;
 
+    //std::cout << reader.get() << ":complete_reading: 3" << std::endl;
     try
     {
-      consumed_needed = reader -> checkForMessage(readBuffer.getDataBuffers());
+      //std::cout << reader.get() << ":complete_reading: 4" << std::endl;
+      //std::cout << reader.get() << ": @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << reader.get() << std::endl;
+       consumed_needed = reader -> checkForMessage(readBuffer.getDataBuffers());
+       //std::cout << "     DONE." << std::endl;
     }
     catch(std::exception &ex)
     {
+    //std::cout << "complete_reading: 5" << std::endl;
       proto_error(ex.what());
       return;
     }
     catch(...)
     {
+    //std::cout << "complete_reading: 6" << std::endl;
       proto_error("unknown protocol error");
       return;
     }
 
+    //std::cout << "complete_reading: 7" << std::endl;
     auto consumed = consumed_needed.first;
     auto needed = consumed_needed.second;
 

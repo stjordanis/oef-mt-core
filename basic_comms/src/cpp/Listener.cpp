@@ -1,4 +1,5 @@
 #include <functional>
+#include <iostream>
 
 #include "Listener.hpp"
 #include "Core.hpp"
@@ -21,6 +22,10 @@ void Listener::handle_accept(std::shared_ptr<ISocketOwner> new_connection, const
   {
     new_connection->go();
     start_accept();
+  }
+  else
+  {
+    std::cout << "Listener::handle_accept " << error << std::endl;
   }
 }
 

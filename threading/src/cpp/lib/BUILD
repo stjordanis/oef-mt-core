@@ -6,5 +6,7 @@ cc_library(
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.hpp"]),
     deps = [
+         "//fetch_teams/ledger:lib",
+         "//monitoring/src/cpp/lib:lib",
     ],
 )

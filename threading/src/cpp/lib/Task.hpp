@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <chrono>
 
 #include "threading/src/cpp/lib/ExitState.hpp"
 
@@ -16,13 +17,8 @@ public:
     cancelled = true;
   }
 
-  Task():cancelled(false)
-  {
-  }
-
-  virtual ~Task()
-  {
-  }
+  Task();
+  virtual ~Task();
 
   bool submit(std::shared_ptr<Taskpool> pool,const std::chrono::milliseconds &delay);
   bool submit(const std::chrono::milliseconds &delay);

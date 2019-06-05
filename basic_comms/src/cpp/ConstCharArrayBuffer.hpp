@@ -43,6 +43,23 @@ public:
     return *this;
   }
 
+  ConstCharArrayBuffer& read_little_endian(uint32_t &i)
+  {
+    union {
+      uint32_t i;
+      uint8_t c[4];
+    } buffer;
+
+    buffer.c[3] = (uint8_t)uflow();
+    buffer.c[2] = (uint8_t)uflow();
+    buffer.c[1] = (uint8_t)uflow();
+    buffer.c[0] = (uint8_t)uflow();
+    i = ntohl(buffer.i);
+    //i = buffer.i;
+
+    return *this;
+  }
+
   ConstCharArrayBuffer& read(int32_t &i)
   {
     union {
@@ -216,10 +233,36 @@ public:
     current--;
     return traits_type::to_int_type(get_char_at(current));
   }
-private:
 
+  ConstCharArrayBuffer(const ConstCharArrayBuffer &other)
+    : buffers(other . buffers)
+    , current(other . current)
+    , size(other . size)
+  {
+  }
+
+  ConstCharArrayBuffer(const ConstCharArrayBuffer &other, std::size_t sizelimit)
+    : buffers(other.buffers)
+    , current(other.current)
+    , size(sizelimit)
+  {
+  }
+
+  std::size_t tell() const { return current; }
+
+  std::string copyOut()
+  {
+    std::cout << "copyOut" << current << "," << size << std::endl;
+    std::string r = "";
+    while(current < size)
+    {
+      r += get_char_at(current++);
+    }
+    return r;
+  }
+
+private:
   // copy ctor and assignment not implemented;
   // copying not allowed
-  ConstCharArrayBuffer(const ConstCharArrayBuffer &);
-  ConstCharArrayBuffer &operator= (const ConstCharArrayBuffer &);
+  ConstCharArrayBuffer &operator=(const ConstCharArrayBuffer &);
 };

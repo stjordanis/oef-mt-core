@@ -7,3 +7,5 @@ enum ExitState
     CANCELLED,
     ERRORED
   };
+
+extern const char *const exitStateNames[];
