@@ -8,6 +8,7 @@ class KarmaAccount;
 class IKarmaPolicy
 {
 public:
+  static constexpr char const *LOGGING_NAME = "IKarmaPolicy";
   IKarmaPolicy();
   virtual ~IKarmaPolicy();
 
@@ -16,7 +17,7 @@ public:
   // Returns True or throws
   virtual bool perform(const KarmaAccount &identifier, const std::string &action) = 0;
 
-  virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action) = 0;
+  virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action) const = 0;
 
   virtual void refreshCycle(const std::chrono::milliseconds delta)
   {

@@ -24,7 +24,7 @@ bool KarmaPolicyNone::perform(const KarmaAccount &identifier, const std::string 
   return true;
 }
 
-bool KarmaPolicyNone::couldPerform(const KarmaAccount &identifier, const std::string &action)
+bool KarmaPolicyNone::couldPerform(const KarmaAccount &identifier, const std::string &action) const
 {
   return true;
 }

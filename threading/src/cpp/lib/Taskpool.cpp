@@ -1,4 +1,5 @@
 #include "Taskpool.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 
 static std::weak_ptr<Taskpool> gDefaultTaskPool;
 
@@ -223,6 +224,7 @@ void Taskpool::submit(TaskP task)
 void Taskpool::after(TaskP task, const Milliseconds &delay)
 {
   Lock lock(mutex);
+  FETCH_LOG_INFO(LOGGING_NAME, "POSTING AFTER", delay.count());
 
   std::cout << "POSTING AFTER " << delay.count() << std::endl;
 

@@ -15,6 +15,8 @@
 class Taskpool: public std::enable_shared_from_this<Taskpool>
 {
 public:
+  static constexpr char const *LOGGING_NAME = "Taskpool";
+
   using Mutex = std::mutex;
   using Lock = std::unique_lock<Mutex>;
 

@@ -7,5 +7,6 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
          "//threading/src/cpp/lib:lib",
+         "//cpp-utils/src/cpp/lib:lib",
     ],
 )

@@ -26,6 +26,7 @@ public:
   virtual bool couldPerform(const std::string &action);
 
   friend void swap(KarmaAccount &a, KarmaAccount &b);
+  std::size_t operator*() const { return id; }
 protected:
 
   std::size_t id;
