@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <chrono>
 
 class KarmaAccount;
 
@@ -16,6 +17,10 @@ public:
   virtual bool perform(const KarmaAccount &identifier, const std::string &action) = 0;
 
   virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action) = 0;
+
+  virtual void refreshCycle(const std::chrono::milliseconds delta)
+  {
+  }
 protected:
 private:
   IKarmaPolicy(const IKarmaPolicy &other) = delete;
@@ -23,6 +28,3 @@ private:
   bool operator==(const IKarmaPolicy &other) = delete;
   bool operator<(const IKarmaPolicy &other) = delete;
 };
-
-//std::ostream& operator<<(std::ostream& os, const IKarmaPolicy &output) {}
-//void swap(IKarmaPolicy& v1, IKarmaPolicy& v2);

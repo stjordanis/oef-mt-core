@@ -1,7 +1,13 @@
 #include "KarmaPolicyNone.hpp"
 
-KarmaPolicyNone::KarmaPolicyNone()
+#include <unistd.h>
+
+KarmaPolicyNone::KarmaPolicyNone(int)
+  : IKarmaPolicy()
 {
+  FETCH_LOG_INFO(LOGGING_NAME, "KarmaPolicyNone created");
+  std::cout << "KarmaPolicyNone created" << std::endl;
+  sleep(2);
 }
 
 KarmaPolicyNone::~KarmaPolicyNone()

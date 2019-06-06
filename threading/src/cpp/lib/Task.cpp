@@ -36,16 +36,13 @@ void Task::makeRunnable()
 
 bool Task::submit(std::shared_ptr<Taskpool> pool,const std::chrono::milliseconds &delay)
 {
-  if (this -> pool == pool)
-  {
-    return true;
-  }
-
   if (this -> pool)
   {
+    std::cout << "removed from existing pool" << std::endl;
     this -> pool -> remove(shared_from_this());
   }
   this -> pool = pool;
+    std::cout << "set for after " << std::endl;
   this -> pool -> after(shared_from_this(), delay);
   return true;
 }

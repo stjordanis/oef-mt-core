@@ -61,6 +61,7 @@ void Taskpool::run(std::size_t thread_idx)
       if (!pending_tasks.empty())
       {
         mytask = pending_tasks.front();
+        mytask -> pool = 0;
         pending_tasks.pop_front();
       }
     }
@@ -222,6 +223,8 @@ void Taskpool::submit(TaskP task)
 void Taskpool::after(TaskP task, const Milliseconds &delay)
 {
   Lock lock(mutex);
+
+  std::cout << "POSTING AFTER " << delay.count() << std::endl;
 
   FutureTask ft;
   ft.task = task;
