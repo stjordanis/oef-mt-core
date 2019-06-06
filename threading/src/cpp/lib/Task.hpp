@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <chrono>
+#include <atomic>
 
 #include "threading/src/cpp/lib/ExitState.hpp"
 
