@@ -14,6 +14,7 @@
 
 class OefListenerSet;
 class Core;
+class IKarmaPolicy;
 
 
 class MtCore
@@ -33,6 +34,7 @@ public:
   int run(const args &args);
 protected:
 private:
+  std::shared_ptr<IKarmaPolicy> karma_policy;
   std::shared_ptr<OefListenerSet> listeners;
   std::shared_ptr<Core> core;
   std::shared_ptr<Taskpool> tasks;

@@ -8,6 +8,9 @@
 #include "mt-core/oef-functions/src/cpp/InitialHandshakeTaskFactory.hpp"
 #include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 
+#include "mt-core/karma/src/cpp/KarmaPolicyBasic.hpp"
+#include "mt-core/karma/src/cpp/KarmaPolicyNone.hpp"
+
 using namespace std::placeholders;
 
 int MtCore::run(const MtCore::args &args)
@@ -18,6 +21,15 @@ int MtCore::run(const MtCore::args &args)
   auto tasks = std::make_shared<Taskpool>();
   tasks -> setDefault();
   outbounds = std::make_shared<OutboundConversations>();
+
+  if (args.karma_policy.size())
+  {
+    karma_policy = std::make_shared<KarmaPolicyBasic>(args.karma_policy);
+  }
+  else
+  {
+    karma_policy = std::make_shared<KarmaPolicyNone>();
+  }
 
   std::function<void (void)> run_comms = std::bind(&Core::run, core.get());
   std::function<void (std::size_t thread_number)> run_tasks = std::bind(&Taskpool::run, tasks.get(), _1);

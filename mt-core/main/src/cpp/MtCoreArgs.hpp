@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 class MtCoreArgs
 {
@@ -15,6 +16,8 @@ public:
   std::size_t tasks_thread_count = 10;
 
   std::string search_uri;
+
+  std::map<std::string, std::string> karma_policy;
 
 protected:
 private:
