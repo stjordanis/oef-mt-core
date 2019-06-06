@@ -43,7 +43,7 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
         state = WAITING_FOR_Agent_Server_Answer;
 
         agents_->add(public_key_, getEndpoint());
-        successor(std::make_shared<OefFunctionsTaskFactory>(agents_, public_key_, outbounds));
+        successor(std::make_shared<OefFunctionsTaskFactory>(core_key_, agents_, public_key_, outbounds));
       }
       break;
     }

@@ -11,10 +11,12 @@ class InitialHandshakeTaskFactory:public IOefAgentTaskFactory
 public:
   static constexpr char const *LOGGING_NAME = "InitialHandshakeTaskFactory";
 
-  InitialHandshakeTaskFactory(std::shared_ptr<OefAgentEndpoint> the_endpoint, std::shared_ptr<OutboundConversations> outbounds, std::shared_ptr<Agents> agents)
+  InitialHandshakeTaskFactory(std::string core_key, std::shared_ptr<OefAgentEndpoint> the_endpoint,
+      std::shared_ptr<OutboundConversations> outbounds, std::shared_ptr<Agents> agents)
     : IOefAgentTaskFactory(the_endpoint, outbounds)
   , agents_{std::move(agents)}
   , public_key_{""}
+  , core_key_{std::move(core_key)}
   {
     state = WAITING_FOR_Agent_Server_ID;
   }
@@ -42,4 +44,5 @@ private:
 private:
   std::shared_ptr<Agents> agents_;
   std::string public_key_;
+  std::string core_key_;
 };

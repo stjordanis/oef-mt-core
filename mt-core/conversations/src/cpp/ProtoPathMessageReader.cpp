@@ -3,9 +3,11 @@
 #include "protos/src/protos/transport.pb.h"
 #include "basic_comms/src/cpp/Endpoint.hpp"
 
+
 ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::initial() {
   return consumed_needed_pair(0, 1);
 }
+
 
 ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMessage(const buffers &data)
 {

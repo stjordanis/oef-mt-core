@@ -2,19 +2,32 @@
 
 #include <vector>
 #include <string>
+#include "cpp-utils/src/cpp/lib/Uri.hpp"
 
 class MtCoreArgs
 {
 public:
 
-  MtCoreArgs()=default;
+  MtCoreArgs()= default;
   virtual ~MtCoreArgs()=default;
 
-  std::vector<int> listen_ports;
+  void init()
+  {
+    search_uri = Uri(search_uri_str);
+    core_uri = Uri(core_uri_str);
+    listen_ports.push_back(core_uri.port);
+  }
+
+  std::vector<uint16_t> listen_ports;
   std::size_t comms_thread_count = 10;
   std::size_t tasks_thread_count = 10;
 
-  std::string search_uri;
+  std::string search_uri_str;
+  std::string core_uri_str;
+  std::string core_key;
+
+  Uri core_uri;
+  Uri search_uri;
 
 protected:
 private:

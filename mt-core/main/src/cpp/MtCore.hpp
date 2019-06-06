@@ -42,7 +42,9 @@ private:
   Threadpool comms_runners;
   Threadpool tasks_runners;
 
-  void startListeners(const std::vector<int> &ports);
+  std::string core_key_;
+
+  void startListeners(const std::vector<uint16_t> &ports);
 
   MtCore(const MtCore &other) = delete;
   MtCore &operator=(const MtCore &other) = delete;

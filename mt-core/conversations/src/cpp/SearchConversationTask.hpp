@@ -12,9 +12,6 @@
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 #include "mt-core/tasks/src/cpp/TSendProtoTask.hpp"
 #include "protos/src/protos/agent.pb.h"
-//class OutboundConversations;
-//class OutboundConversation;
-//class OefAgentEndpoint;
 
 
 template <typename IN_PROTO, typename OUT_PROTO, typename REQUEST_PROTO, typename IMPL_CLASS>
