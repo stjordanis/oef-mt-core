@@ -14,6 +14,12 @@ using namespace std::placeholders;
 int MtCore::run(const MtCore::args &args)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Starting core...");
+  FETCH_LOG_INFO(LOGGING_NAME, "Core key: ", args.core_key);
+  FETCH_LOG_INFO(LOGGING_NAME, "Core URI: ", args.core_uri_str);
+  FETCH_LOG_INFO(LOGGING_NAME, "Search URI: ", args.search_uri_str);
+
+  core_key_ = args.core_key;
+
   listeners = std::make_shared<OefListenerSet>();
   core = std::make_shared<Core>();
   auto tasks = std::make_shared<Taskpool>();
@@ -29,7 +35,8 @@ int MtCore::run(const MtCore::args &args)
   comms_runners.start(args.comms_thread_count, run_comms);
   tasks_runners.start(args.tasks_thread_count, run_tasks);
 
-  outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(Uri(args.search_uri), *core));
+  outbounds -> addConversationCreator("search", std::make_shared<OutboundSearchConversationCreator>(args.core_key,
+      args.core_uri, args.search_uri, *core, outbounds));
   agents_ = std::make_shared<Agents>();
 
   startListeners(args.listen_ports);
@@ -48,12 +55,12 @@ int MtCore::run(const MtCore::args &args)
   return 0;
 }
 
-void MtCore::startListeners(const std::vector<int> &ports)
+void MtCore::startListeners(const std::vector<uint16_t> &ports)
 {
   IOefListener::FactoryCreator initialFactoryCreator =
     [this](std::shared_ptr<OefAgentEndpoint> endpoint)
     {
-      return std::make_shared<InitialHandshakeTaskFactory>(endpoint, outbounds, agents_);
+      return std::make_shared<InitialHandshakeTaskFactory>(core_key_, endpoint, outbounds, agents_);
     };
   for(auto &p : ports)
   {

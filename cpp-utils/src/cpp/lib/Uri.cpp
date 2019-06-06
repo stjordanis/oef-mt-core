@@ -50,7 +50,7 @@ void Uri::parse(const std::string &s)
         if (part.length() && part.str().front() == ':')
         {
           auto tmp = part.str().substr(1);
-          port = std::stoi( tmp );
+          port = static_cast<uint16_t>(std::stoi( tmp ));
           expectedpart = PATH;
           break;
         }

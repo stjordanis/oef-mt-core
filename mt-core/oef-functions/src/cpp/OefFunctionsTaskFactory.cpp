@@ -1,8 +1,12 @@
 #include "OefFunctionsTaskFactory.hpp"
 
 #include <stdexcept>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "protos/src/protos/agent.pb.h"
 #include "protos/src/protos/search_update.pb.h"
+#include "protos/src/protos/search_remove.pb.h"
+#include "protos/src/protos/search_query.pb.h"
+#include "protos/src/protos/search_response.pb.h"
 #include "mt-core/tasks/src/cpp/AgentToAgentMessageTask.hpp"
 #include "fetch_teams/ledger/logger.hpp"
 #include "mt-core/comms/src/cpp/OutboundConversations.hpp"
@@ -10,6 +14,10 @@
 #include "mt-core/conversations/src/cpp/SearchConversationTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchConversationTypes.hpp"
 #include "mt-core/tasks/src/cpp/TSendProtoTask.hpp"
+#include "mt-core/conversations/src/cpp/SearchUpdateTask.hpp"
+#include "mt-core/conversations/src/cpp/SearchRemoveTask.hpp"
+#include "mt-core/conversations/src/cpp/SearchQueryTask.hpp"
+
 
 void OefFunctionsTaskFactory::endpointClosed()
 {
@@ -26,9 +34,15 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
 
   auto payload_case = envelope.payload_case();
   int32_t msg_id = envelope.msg_id();
+
+  OEFURI::URI uri;
+  uri.parse(envelope.agent_uri());
+  uri.agentKey = agent_public_key_;
+
   switch(payload_case)
   {
-    case fetch::oef::pb::Envelope::kSendMessage: {
+    case fetch::oef::pb::Envelope::kSendMessage:
+    {
       FETCH_LOG_INFO(LOGGING_NAME, "kSendMessage");
       std::shared_ptr<fetch::oef::pb::Agent_Message> msg_ptr(envelope.release_send_message());
       FETCH_LOG_INFO(LOGGING_NAME, "Got agent message: ", msg_ptr->DebugString());
@@ -38,65 +52,108 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
       break;
     }
 
-  case fetch::oef::pb::Envelope::kRegisterService:
-      FETCH_LOG_INFO(LOGGING_NAME, "kRegisterService");
-      //process_register_service(msg_id, envelope.register_service(), envelope.agent_uri());
-
-      {
-        auto update = std::make_shared<fetch::oef::pb::Update>();
-        update -> set_key("core_name");
-        fetch::oef::pb::Update_DataModelInstance* dm = update -> add_data_models();
-        dm->set_key(envelope.agent_uri());
-        dm->mutable_model()->CopyFrom(envelope.register_service().description().model());
-        dm->mutable_values()->CopyFrom(envelope.register_service().description().values());
-
-        auto convTask = std::make_shared<SearchConversationTask>(UPDATE, update, outbounds, getEndpoint());
-        (*convTask).sendReply = [](std::shared_ptr<google::protobuf::Message> response, std::shared_ptr<OefAgentEndpoint> endpoint)
-          {
-            FETCH_LOG_INFO(LOGGING_NAME, "kRegisterService REPLY");
-            auto reply_sender = std::make_shared<TSendProtoTask<google::protobuf::Message>>(response, endpoint);
-            reply_sender -> submit();
-          };
+    case fetch::oef::pb::Envelope::kRegisterService:
+    {
+        FETCH_LOG_INFO(LOGGING_NAME, "kRegisterService", envelope.register_service().DebugString());
+        auto convTask = std::make_shared<SearchUpdateTask>(
+            std::shared_ptr<fetch::oef::pb::AgentDescription>(envelope.release_register_service()),
+            outbounds,
+            getEndpoint(),
+            envelope.msg_id(),
+            core_key_,
+            uri.agentPartAsString());
+        convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterService REPLY");
         convTask -> submit();
-      }
-      break;
+        break;
+    }
     case fetch::oef::pb::Envelope::kUnregisterService:
-      FETCH_LOG_INFO(LOGGING_NAME, "kUnregisterService");
-      //process_unregister_service(msg_id, envelope.unregister_service(), envelope.agent_uri());
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "kUnregisterService", envelope.unregister_service().DebugString());
+      auto convTask = std::make_shared<SearchRemoveTask>(
+          std::shared_ptr<fetch::oef::pb::AgentDescription>(envelope.release_unregister_service()),
+          outbounds,
+          getEndpoint(),
+          envelope.msg_id(),
+          core_key_,
+          uri.agentPartAsString());
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterService REPLY");
+      convTask -> submit();
       break;
+    }
     case fetch::oef::pb::Envelope::kRegisterDescription:
-      FETCH_LOG_INFO(LOGGING_NAME, "kRegisterDescription");
-      //process_register_description(msg_id, envelope.register_description());
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "kRegisterDescription", envelope.register_description().DebugString());
+      auto convTask = std::make_shared<SearchUpdateTask>(
+          std::shared_ptr<fetch::oef::pb::AgentDescription>(envelope.release_register_description()),
+          outbounds,
+          getEndpoint(),
+          envelope.msg_id(),
+          core_key_,
+          uri.agentPartAsString());
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterDescription REPLY");
+      convTask->submit();;
       break;
+    }
     case fetch::oef::pb::Envelope::kUnregisterDescription:
-      FETCH_LOG_INFO(LOGGING_NAME, "kUnregisterDescription");
-      //process_unregister_description(msg_id);
+    {
+      //TODO: hack because of nothing
+      //envelope.release_unregister_description()
+      auto description = std::make_shared<fetch::oef::pb::AgentDescription>();
+      FETCH_LOG_INFO(LOGGING_NAME, "kUnregisterDescription", envelope.unregister_description().DebugString());
+      auto convTask = std::make_shared<SearchRemoveTask>(
+          description,
+          outbounds,
+          getEndpoint(),
+          envelope.msg_id(),
+          core_key_,
+          uri.agentPartAsString());
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterDescription REPLY");
+      convTask -> submit();
       break;
+    }
     case fetch::oef::pb::Envelope::kSearchAgents:
-      FETCH_LOG_INFO(LOGGING_NAME, "kSearchAgents");
-      //process_search_agents(msg_id, envelope.search_agents());
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "kSearchAgents", envelope.search_agents().DebugString());
+      auto convTask = std::make_shared<SearchQueryTask>(
+          std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.release_search_agents()),
+          outbounds,
+          getEndpoint(),
+          envelope.msg_id(),
+          core_key_,
+          uri.toString(), 1);
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchAgents");
+      convTask -> submit();
       break;
+    }
     case fetch::oef::pb::Envelope::kSearchServices:
-      FETCH_LOG_INFO(LOGGING_NAME, "kSearchServices");
-      //process_search_service(msg_id, envelope.search_services());
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "kSearchServices", envelope.search_services().DebugString());
+      auto convTask = std::make_shared<SearchQueryTask>(
+          std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.release_search_services()),
+          outbounds,
+          getEndpoint(),
+          envelope.msg_id(),
+          core_key_,
+          uri.toString(), 1);
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServices");
+      convTask -> submit();
       break;
+    }
     case fetch::oef::pb::Envelope::kSearchServicesWide:
-      FETCH_LOG_INFO(LOGGING_NAME, "kSearchServicesWide");
-//       {
-//         auto bare_register_service = envelope.search_services_wide();
-//              std::shared_ptr<google::protobuf::Message> register_service_message(bare_register_service);
-//
-//         outbounds -> startConversation(
-//                                        Uri("outbound://search/update"),
-//                                        register_service_message
-//                                        );
-//      }
-      break;
-      //process_search_service_wide(msg_id, envelope.search_services_wide());
-      break;
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "kSearchServicesWide", envelope.search_services().DebugString());
+      auto convTask = std::make_shared<SearchQueryTask>(
+          std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.release_search_services()),
+          outbounds,
+          getEndpoint(),
+          envelope.msg_id(),
+          core_key_,
+          uri.toString(), 4);
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServicesWide");
+      convTask -> submit();
+    }
     case fetch::oef::pb::Envelope::PAYLOAD_NOT_SET:
-      FETCH_LOG_INFO(LOGGING_NAME, "PAYLOAD_NOT_SET");
-      //logger.error("AgentSession::process cannot process payload {} from {}", payload_case, publicKey_);
+      FETCH_LOG_ERROR(LOGGING_NAME, "Cannot process payload {} from {}", payload_case, agent_public_key_);
       break;
   }
 }

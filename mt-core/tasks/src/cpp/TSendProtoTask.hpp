@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mt-core/tasks/src/cpp/IMtCoreCommsTask.hpp"
-
 class OefEndpoint;
 
 template<class PROTOBUF>

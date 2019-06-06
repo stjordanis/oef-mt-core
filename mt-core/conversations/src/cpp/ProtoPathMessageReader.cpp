@@ -3,9 +3,11 @@
 #include "protos/src/protos/transport.pb.h"
 #include "basic_comms/src/cpp/Endpoint.hpp"
 
+
 ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::initial() {
   return consumed_needed_pair(0, 1);
 }
+
 
 ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMessage(const buffers &data)
 {
@@ -21,7 +23,7 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
 
   while(true)
   {
-    std::cout << "checkForMessage in " << chars.remainingData() << " bytes." << std::endl;
+    FETCH_LOG_INFO(LOGGING_NAME, "checkForMessage in ", chars.remainingData(), " bytes. Current: ", chars.current, ", size:", chars.size);
     //chars.diagnostic();
 
     uint32_t leader_head_size = sizeof(uint32_t);
@@ -61,31 +63,50 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
       break;
     }
 
+    chars.diagnostic();
     TransportHeader leader;
-    leader . ParseFromIstream(&is);
+
+    auto header_chars = ConstCharArrayBuffer(chars, chars.current + leader_size);
+    std::istream h_is(&header_chars);
+    if (!leader . ParseFromIstream(&h_is)){
+      FETCH_LOG_WARN(LOGGING_NAME, "Failed to parse header!");
+      throw std::invalid_argument("Proto deserialization refuses incoming invalid leader message!");
+    }
+    chars.advance(leader_size);
 
     consumed += head_size;
     consumed += body_size;
 
-    //std::cout << "MESSAGE = " << head_size << "+" << body_size << " bytes" << std::endl;
-    //std::cout << "leader.status.success=" << leader.status().success() << std::endl;
-    //std::cout << "leader.status.error_code=" << leader.status().error_code() << std::endl;
-
-    //for(int i=0;i<leader.status().narrative_size();i++)
-    //{
-    //  std::cout << "leader.status.narrative=" << leader.status().narrative(i) << std::endl;
-    //}
-    //std::cout << "leader.uri=" <<  leader.uri()<< std::endl;
-    //std::cout << "leader.id=" <<  leader.id()<< std::endl;
-    if (onComplete)
+    if (!leader.status().success())
     {
-      FETCH_LOG_WARN(LOGGING_NAME,  "+++++++++++++++++ onComplete.");
-      onComplete( leader.status().success(), leader.id(), ConstCharArrayBuffer(chars, chars.current + payload_size));
+      std::string msg{""};
+      for(auto& n : leader.status().narrative()) {
+        msg += n;
+      }
+      int error_code = leader.status().error_code();
+      if (error_code == 0) {
+        error_code = 132;
+      }
+      FETCH_LOG_WARN(LOGGING_NAME, "Got error message from search: error_code=",
+          error_code, ", message=\"", msg, "\"");
+      if (onError)
+      {
+        onError(leader.id(), error_code, msg);
+      }
     }
     else
     {
-      FETCH_LOG_WARN(LOGGING_NAME,  "+++++++++++++++++ No onComplete handler set.");
+      if (onComplete)
+      {
+        FETCH_LOG_WARN(LOGGING_NAME,  "+++++++++++++++++ onComplete.");
+        onComplete( leader.status().success(), leader.id(), ConstCharArrayBuffer(chars, chars.current + payload_size));
+      }
+      else
+      {
+        FETCH_LOG_WARN(LOGGING_NAME,  "+++++++++++++++++ No onComplete handler set.");
+      }
     }
+
     chars.advance(payload_size);
   }
   return consumed_needed_pair(consumed, needed);

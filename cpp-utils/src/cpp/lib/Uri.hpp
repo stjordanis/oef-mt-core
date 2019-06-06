@@ -1,16 +1,22 @@
 #pragma once
 
+#include "fetch_teams/ledger/logger.hpp"
+
 #include <string>
 #include <iostream>
 
 class Uri
 {
 public:
+  static constexpr char const *LOGGING_NAME = "Uri";
+
   Uri(const std::string &s)
   {
     this -> s = s;
     parse(s);
   }
+
+  Uri() = default;
 
   Uri(const Uri &other) { copy(other); }
   Uri &operator=(const Uri &other) { copy(other); return *this; }
@@ -23,18 +29,17 @@ public:
   std::string proto;
   std::string host;
   std::string path;
-  std::size_t port;
+  uint16_t port;
   bool valid;
 
   void diagnostic()
   {
-    std::cout
-      << "valid=" << valid
-      << " proto=\"" << proto
-      << "\" host=\"" << host
-      << "\" port=" << port
-      << " path=\"" << path
-      << "\"" << std::endl;
+    FETCH_LOG_INFO(LOGGING_NAME,
+        "valid=", valid,
+        " proto=\"", proto,
+        "\" host=\"", host,
+        "\" port=", port,
+        " path=\"", path, "\"");
   }
 
 protected:

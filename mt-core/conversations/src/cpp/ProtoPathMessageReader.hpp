@@ -11,7 +11,8 @@ class ProtoPathMessageReader : public IMessageReader
 
 {
 public:
-  using CompleteNotification = std::function<void (bool success, int id, ConstCharArrayBuffer buffer)>;
+  using CompleteNotification = std::function<void (bool success, unsigned long id, ConstCharArrayBuffer buffer)>;
+  using ErrorNotification = std::function<void(unsigned long id, int error_code, const std::string& message)>;
 
   static constexpr char const *LOGGING_NAME = "ProtoPathMessageReader";
 
@@ -28,6 +29,7 @@ public:
   consumed_needed_pair checkForMessage(const buffers &data);
 
   CompleteNotification onComplete;
+  ErrorNotification onError;
 protected:
 private:
   std::weak_ptr<Endpoint> endpoint;
