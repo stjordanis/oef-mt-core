@@ -59,23 +59,19 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
 
   auto response = std::static_pointer_cast<fetch::oef::pb::SearchResponse>(conversation->getReply(0));
 
-  FETCH_LOG_WARN(LOGGING_NAME, "Got response proto: ", response->DebugString(),
-      " , reply size=", conversation->getAvailableReplyCount());
-
   auto answer = std::make_shared<OUT_PROTO>();
-
   answer->set_answer_id(msg_id_);
 
   if (ttl_ == 1)
   {
     FETCH_LOG_INFO(LOGGING_NAME,  "Got search response: ", response->DebugString(), ", size: ", response->result_size());
+    auto answer_agents = answer->mutable_agents();
     if (response->result_size() < 1)
     {
-      FETCH_LOG_WARN(LOGGING_NAME, "Got empty search result!");
+      FETCH_LOG_WARN(LOGGING_NAME, "Got empty search result! Sending: ", answer->DebugString(), " to agent ", agent_uri_);
     }
     else
     {
-      auto answer_agents = answer->mutable_agents();
       for (auto &item : response->result())
       {
         auto agts = item.agents();
@@ -92,13 +88,13 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
   else
   {
     FETCH_LOG_INFO(LOGGING_NAME,  "Got wide search response: ", response->DebugString());
+    auto agents_wide = answer->mutable_agents_wide();
     if (response->result_size()<1)
     {
-      FETCH_LOG_WARN(LOGGING_NAME, "Got empty search result!");
+      FETCH_LOG_WARN(LOGGING_NAME, "Got empty search result! Sending: ", answer->DebugString(), " to agent ", agent_uri_);
     }
     else
     {
-      auto agents_wide = answer->mutable_agents_wide();
       int agents_nbr = 0;
       for (auto &item : response->result())
       {

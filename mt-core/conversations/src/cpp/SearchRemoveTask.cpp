@@ -46,7 +46,7 @@ SearchRemoveTask::StateResult SearchRemoveTask::handleResponse(void)
 
   // TODO should add a status answer, even in the case of no error
 
-  if (response->status() != fetch::oef::pb::UpdateResponse_ResponseType_SUCCESS)
+  if (response->status() != fetch::oef::pb::RemoveResponse_ResponseType_SUCCESS)
   {
     std::shared_ptr<OUT_PROTO> answer = std::make_shared<OUT_PROTO>();
     answer->set_answer_id(msg_id_);
@@ -74,6 +74,9 @@ std::shared_ptr<SearchRemoveTask::REQUEST_PROTO> SearchRemoveTask::make_request_
   auto remove = std::make_shared<fetch::oef::pb::Remove>();
   remove->set_key(core_key_);
   remove->set_all(false);
-  remove->add_data_models()->CopyFrom(initiator->description().model());
+  auto dmi = remove->add_data_models();
+  dmi->set_key(agent_uri_);
+  dmi->mutable_model()->CopyFrom(initiator->description().model());
+  dmi->mutable_values()->CopyFrom(initiator->description().values());
   return remove;
 }

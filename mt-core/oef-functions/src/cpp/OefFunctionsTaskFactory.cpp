@@ -89,7 +89,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           core_key_,
           uri.agentPartAsString());
       convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterDescription REPLY ");
-      convTask->submit();;
+      convTask->submit();
       break;
     }
     case fetch::oef::pb::Envelope::kUnregisterDescription:
