@@ -52,7 +52,7 @@ SearchUpdateTask::StateResult SearchUpdateTask::handleResponse(void)
     answer->set_answer_id(msg_id_);
     auto error = answer->mutable_oef_error();
     error->set_operation(fetch::oef::pb::Server_AgentMessage_OEFError::REGISTER_SERVICE);
-    FETCH_LOG_WARN(LOGGING_NAME, "Sending error {} to {}", error->operation(), agent_uri_);
+    FETCH_LOG_WARN(LOGGING_NAME, "Sending error ", error, " ", agent_uri_);
 
     if (sendReply)
     {

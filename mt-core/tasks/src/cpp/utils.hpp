@@ -85,7 +85,6 @@ namespace OEFURI {
       std::vector<std::string> vec;
       split(uri, vec, '/');
       if (vec.size() < 6) {
-        std::cerr << "OEFURI parse failed! Invalid URI: " << uri << std::endl;
         return;
       }
       std::cerr << "GOT: " << uri << std::endl;

@@ -57,10 +57,11 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
     return SearchQueryTask::StateResult(0, DEFER);
   }
 
-  auto proto = conversation->getReply(0);
-  FETCH_LOG_WARN(LOGGING_NAME, "Got proto: ", proto->DebugString(), " , reply size=", conversation->getAvailableReplyCount());
+  auto response = std::static_pointer_cast<fetch::oef::pb::SearchResponse>(conversation->getReply(0));
 
-  auto response = std::static_pointer_cast<fetch::oef::pb::SearchResponse>(proto);
+  FETCH_LOG_WARN(LOGGING_NAME, "Got response proto: ", response->DebugString(),
+      " , reply size=", conversation->getAvailableReplyCount());
+
   auto answer = std::make_shared<OUT_PROTO>();
 
   answer->set_answer_id(msg_id_);
@@ -85,7 +86,7 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
           answer_agents->add_agents(uri.agentPartAsString());
         }
       }
-      FETCH_LOG_INFO(LOGGING_NAME, "Sending {} agents to {}", answer_agents->agents().size(), agent_uri_);
+      FETCH_LOG_INFO(LOGGING_NAME, "Sending ", answer_agents->agents().size(), "agents to ", agent_uri_);
     }
   }
   else
@@ -116,7 +117,7 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
           aw->set_score(a.score());
         }
       }
-      FETCH_LOG_INFO(LOGGING_NAME, "Sending {} agents to {}", agents_nbr, agent_uri_);
+      FETCH_LOG_INFO(LOGGING_NAME, "Sending ", agents_nbr, "agents to ", agent_uri_);
     }
   }
 

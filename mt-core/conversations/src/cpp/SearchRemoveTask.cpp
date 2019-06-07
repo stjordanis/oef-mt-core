@@ -42,17 +42,17 @@ SearchRemoveTask::StateResult SearchRemoveTask::handleResponse(void)
                  conversation -> getAvailableReplyCount()
   );
 
-  auto response = std::static_pointer_cast<fetch::oef::pb::UpdateResponse>(conversation->getReply(0));
+  auto response = std::static_pointer_cast<fetch::oef::pb::RemoveResponse>(conversation->getReply(0));
 
   // TODO should add a status answer, even in the case of no error
 
   if (response->status() != fetch::oef::pb::UpdateResponse_ResponseType_SUCCESS)
   {
-    std::shared_ptr<OUT_PROTO> answer;
+    std::shared_ptr<OUT_PROTO> answer = std::make_shared<OUT_PROTO>();
     answer->set_answer_id(msg_id_);
     auto error = answer->mutable_oef_error();
-    error->set_operation(fetch::oef::pb::Server_AgentMessage_OEFError::REGISTER_SERVICE);
-    FETCH_LOG_WARN(LOGGING_NAME, "Sending error {} to {}", error->operation(), agent_uri_);
+    error->set_operation(fetch::oef::pb::Server_AgentMessage_OEFError::UNREGISTER_SERVICE);
+    FETCH_LOG_WARN(LOGGING_NAME, "Sending error ", error, " to ", agent_uri_);
 
     if (sendReply)
     {

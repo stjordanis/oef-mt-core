@@ -30,8 +30,6 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
   auto envelope = fetch::oef::pb::Envelope();
   IOefAgentTaskFactory::read(envelope, data, data.size - data.current);
 
-  FETCH_LOG_INFO(LOGGING_NAME, "2222222222222    Got an Envelope");
-
   auto payload_case = envelope.payload_case();
   int32_t msg_id = envelope.msg_id();
 
@@ -62,7 +60,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
             envelope.msg_id(),
             core_key_,
             uri.agentPartAsString());
-        convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterService REPLY");
+        convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterService REPLY ");
         convTask -> submit();
         break;
     }
@@ -76,7 +74,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.agentPartAsString());
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterService REPLY");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterService REPLY ");
       convTask -> submit();
       break;
     }
@@ -90,7 +88,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.agentPartAsString());
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterDescription REPLY");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterDescription REPLY ");
       convTask->submit();;
       break;
     }
@@ -107,7 +105,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.agentPartAsString());
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterDescription REPLY");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterDescription REPLY ");
       convTask -> submit();
       break;
     }
@@ -121,7 +119,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.toString(), 1);
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchAgents");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchAgents ");
       convTask -> submit();
       break;
     }
@@ -135,7 +133,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.toString(), 1);
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServices");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServices ");
       convTask -> submit();
       break;
     }
@@ -149,11 +147,11 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.toString(), 4);
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServicesWide");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServicesWide ");
       convTask -> submit();
     }
     case fetch::oef::pb::Envelope::PAYLOAD_NOT_SET:
-      FETCH_LOG_ERROR(LOGGING_NAME, "Cannot process payload {} from {}", payload_case, agent_public_key_);
+      FETCH_LOG_ERROR(LOGGING_NAME, "Cannot process payload ", payload_case, " from ", agent_public_key_);
       break;
   }
 }
