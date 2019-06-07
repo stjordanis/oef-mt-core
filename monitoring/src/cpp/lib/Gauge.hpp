@@ -7,7 +7,7 @@ class Gauge
 public:
   Gauge(const char *name)
   {
-    id = Monitoring.find(name);
+    id = Monitoring::find(name);
   }
   virtual ~Gauge()
   {
@@ -15,18 +15,17 @@ public:
   Gauge(const Gauge &other) { copy(other); }
   Gauge &operator=(const Gauge &other) { copy(other); return *this; }
 
-  T& T::operator+=(std::size_t x) { Monitoring.add(id, x); return *this; }
-  T& add(std::size_t x) { Monitoring.add(id, x); return *this; }
+  Gauge& add(std::size_t x) { Monitoring::add(id, x); return *this; }
+  Gauge& sub(std::size_t x) { Monitoring::sub(id, x); return *this; }
 
-  T& T::operator-=(std::size_t x) { Monitoring.sub(id, x); return *this; }
-  T& sub(std::size_t x) { Monitoring.sub(id, x); return *this; }
-
-  T& T::operator++() { Monitoring.add(id, 1); return *this; }
-  T T::operator++(int) { Monitoring.add(id, 1); return *this; }
-  T& T::operator--() { Monitoring.sub(id, 1); return *this; }
-  T T::operator--(int) { Monitoring.sub(id, 1); return *this; }
+  Gauge& operator+=(std::size_t x) { Monitoring::add(id, x); return *this; }
+  Gauge& operator-=(std::size_t x) { Monitoring::sub(id, x); return *this; }
+  Gauge& operator++()              { Monitoring::add(id, 1); return *this; }
+  Gauge  operator++(int)           { Monitoring::add(id, 1); return *this; }
+  Gauge& operator--()              { Monitoring::sub(id, 1); return *this; }
+  Gauge  operator--(int)           { Monitoring::sub(id, 1); return *this; }
 protected:
-    std::size_t id;
+  std::size_t id;
   void copy(const Gauge &other)
   {
     id = other.id;

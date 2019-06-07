@@ -1,5 +1,7 @@
 #include "Notification.hpp"
 
+#include <cassert>
+
 void Notification::NotificationImplementation::DispatchCallbacks()
 {
   Callback *handler = nullptr;

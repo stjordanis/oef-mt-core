@@ -155,11 +155,14 @@ class OutboundSearchConnectorTask : public Task
 {
 public:
   static constexpr char const *LOGGING_NAME = "OutboundSearchConnectorTask";
-  OutboundSearchConnectorTask(Core &core, const Uri &search_uri, std::shared_ptr<OutboundConversations> outbounds)
+  OutboundSearchConnectorTask(Core &core, const std::string &core_key, const Uri &core_uri,
+      const Uri &search_uri, std::shared_ptr<OutboundConversations> outbounds)
     : uri(search_uri)
+    , core_uri(core_uri)
+    , core_key(core_key)
     , core(core)
-    , connected(false)
     , outbounds_(std::move(outbounds))
+    , connected(false)
   {
     ep = std::make_shared<Endpoint>(core, 10000, 10000);
   }
@@ -176,9 +179,9 @@ public:
   void register_address()
   {
     auto address = std::make_shared<fetch::oef::pb::Update_Address>();
-    address->set_ip("127.0.0.1");
-    address->set_port(3333);
-    address->set_key("oef-core");
+    address->set_ip(core_uri.host);
+    address->set_port(core_uri.port);
+    address->set_key(core_key);
     address->set_signature("Sign");
 
     auto convTask = std::make_shared<SearchAddressUpdateTask>(
@@ -251,6 +254,8 @@ public:
   std::shared_ptr<OutboundConversations> outbounds_;
   std::shared_ptr<Endpoint> ep;
   Uri uri;
+  Uri core_uri;
+  std::string core_key;
   Core &core;
   std::atomic<bool> connected;
 };
@@ -275,12 +280,13 @@ OutboundSearchConversationWorkerTask::WorkloadProcessed OutboundSearchConversati
   return COMPLETE;
 }
 
-OutboundSearchConversationCreator::OutboundSearchConversationCreator(const Uri &search_uri, Core &core, std::shared_ptr<OutboundConversations> outbounds)
+OutboundSearchConversationCreator::OutboundSearchConversationCreator(const std::string &core_key, const Uri &core_uri,
+    const Uri &search_uri, Core &core, std::shared_ptr<OutboundConversations> outbounds)
 {
   endpoint = std::make_shared<ProtoMessageEndpoint>(core);
 
   worker = std::make_shared<OutboundSearchConversationWorkerTask>();
-  searchConnector = std::make_shared<OutboundSearchConnectorTask>(core, search_uri, outbounds);
+  searchConnector = std::make_shared<OutboundSearchConnectorTask>(core, core_key, core_uri, search_uri, outbounds);
 
   worker -> searchConnector = searchConnector;
   searchConnector -> worker = worker;

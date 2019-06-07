@@ -1,6 +1,8 @@
 #include "Taskpool.hpp"
 #include "fetch_teams/ledger/logger.hpp"
 
+#include "monitoring/src/cpp/lib/Counter.hpp"
+
 static std::weak_ptr<Taskpool> gDefaultTaskPool;
 
 Taskpool::Taskpool(bool autoReapFinishedTasks):quit(false)
@@ -103,12 +105,14 @@ void Taskpool::run(std::size_t thread_idx)
       {
         Lock lock(mutex);
         suspended_tasks.insert(mytask);
+        Counter("mt-core.tasks.deferred")++;
       }
       break;
     case ERRORED:
       {
         Lock lock(mutex);
         finished_tasks.push_back(TaskDone(status, mytask));
+        Counter("mt-core.tasks.errored")++;
       }
       //std::cerr << "TASK " << mytask.get() << " ERRORED" << std::endl;
       break;
@@ -116,6 +120,7 @@ void Taskpool::run(std::size_t thread_idx)
       {
         Lock lock(mutex);
         finished_tasks.push_back(TaskDone(status, mytask));
+        Counter("mt-core.tasks.cancelled")++;
       }
       //std::cerr << "TASK " << mytask.get() << " CANCELLED" << std::endl;
       break;
@@ -125,6 +130,7 @@ void Taskpool::run(std::size_t thread_idx)
         {
           Lock lock(mutex);
           finished_tasks.push_back(TaskDone(status, mytask));
+          Counter("mt-core.tasks.completed")++;
         }
       }
       //std::cerr << "TASK " << mytask.get() << " COMPLETE" << std::endl;

@@ -14,17 +14,19 @@ namespace google
   };
 };
 
+
 class OefFunctionsTaskFactory:public IOefAgentTaskFactory
 {
 public:
 
   static constexpr char const *LOGGING_NAME = "OefFunctionsTaskFactory";
 
-  OefFunctionsTaskFactory(std::shared_ptr<Agents> agents, std::string agent_public_key, std::shared_ptr<OutboundConversations> outbounds)
+  OefFunctionsTaskFactory(const std::string &core_key, std::shared_ptr<Agents> agents, std::string agent_public_key,
+      std::shared_ptr<OutboundConversations> outbounds)
     : IOefAgentTaskFactory(outbounds)
     , agents_{std::move(agents)}
     , agent_public_key_{std::move(agent_public_key)}
-    , core_key_{"oef-core"}
+    , core_key_{core_key}
   {
   }
   virtual ~OefFunctionsTaskFactory()

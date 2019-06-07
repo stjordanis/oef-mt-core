@@ -16,6 +16,8 @@ public:
     parse(s);
   }
 
+  Uri() = default;
+
   Uri(const Uri &other) { copy(other); }
   Uri &operator=(const Uri &other) { copy(other); return *this; }
 
@@ -27,7 +29,7 @@ public:
   std::string proto;
   std::string host;
   std::string path;
-  std::size_t port;
+  uint16_t port;
   bool valid;
 
   void diagnostic()
