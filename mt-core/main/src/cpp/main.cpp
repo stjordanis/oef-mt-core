@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     ("core_key", boost::program_options::value<std::string>(&(args.core_key))->default_value("CoreKey"),
         "Public key for this node");
   desc.add_options()
-    ("core_uri", boost::program_options::value<std::string>(&(args.core_uri_str))->default_value("tcp://127.0.0.1:10000"),
+    ("core_uri", boost::program_options::value<std::string>(&(args.core_uri_str))->default_value("tcp://127.0.0.1:10001"),
         "URI for this node");
   desc.add_options()
     ("search_uri", boost::program_options::value<std::string>(&(args.search_uri_str))->default_value("tcp://127.0.0.1:20000/"),
