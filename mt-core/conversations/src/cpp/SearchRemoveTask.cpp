@@ -15,7 +15,8 @@ SearchRemoveTask::SearchRemoveTask(
     std::shared_ptr<OefAgentEndpoint> endpoint,
     uint32_t msg_id,
     std::string core_key,
-    std::string agent_uri)
+    std::string agent_uri,
+    bool remove_row)
     :  SearchConverstationTask(
         "remove",
         std::move(initiator),
@@ -26,6 +27,7 @@ SearchRemoveTask::SearchRemoveTask(
         std::move(agent_uri),
         searchRemoveTaskEntryPoints,
         this)
+    , remove_row_(remove_row)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Task created.");
 }
@@ -42,17 +44,17 @@ SearchRemoveTask::StateResult SearchRemoveTask::handleResponse(void)
                  conversation -> getAvailableReplyCount()
   );
 
-  auto response = std::static_pointer_cast<fetch::oef::pb::UpdateResponse>(conversation->getReply(0));
+  auto response = std::static_pointer_cast<fetch::oef::pb::RemoveResponse>(conversation->getReply(0));
 
   // TODO should add a status answer, even in the case of no error
 
-  if (response->status() != fetch::oef::pb::UpdateResponse_ResponseType_SUCCESS)
+  if (response->status() != fetch::oef::pb::RemoveResponse_ResponseType_SUCCESS)
   {
-    std::shared_ptr<OUT_PROTO> answer;
+    std::shared_ptr<OUT_PROTO> answer = std::make_shared<OUT_PROTO>();
     answer->set_answer_id(msg_id_);
     auto error = answer->mutable_oef_error();
-    error->set_operation(fetch::oef::pb::Server_AgentMessage_OEFError::REGISTER_SERVICE);
-    FETCH_LOG_WARN(LOGGING_NAME, "Sending error {} to {}", error->operation(), agent_uri_);
+    error->set_operation(fetch::oef::pb::Server_AgentMessage_OEFError::UNREGISTER_SERVICE);
+    FETCH_LOG_WARN(LOGGING_NAME, "Sending error ", error, " to ", agent_uri_);
 
     if (sendReply)
     {
@@ -73,7 +75,17 @@ std::shared_ptr<SearchRemoveTask::REQUEST_PROTO> SearchRemoveTask::make_request_
 {
   auto remove = std::make_shared<fetch::oef::pb::Remove>();
   remove->set_key(core_key_);
-  remove->set_all(false);
-  remove->add_data_models()->CopyFrom(initiator->description().model());
+  remove->set_all(remove_row_);
+  if (remove_row_)
+  {
+    remove->set_agent_key(agent_uri_);
+  }
+  if (initiator)
+  {
+    auto dmi = remove->add_data_models();
+    dmi->set_key(agent_uri_);
+    dmi->mutable_model()->CopyFrom(initiator->description().model());
+    dmi->mutable_values()->CopyFrom(initiator->description().values());
+  }
   return remove;
 }
