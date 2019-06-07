@@ -13,6 +13,11 @@ public:
   KarmaAccount &operator=(const KarmaAccount &other) { copy(other); return *this; }
   bool operator==(const KarmaAccount &other) const { return compare(other)==0; }
   bool operator<(const KarmaAccount &other) const { return compare(other)==-1; }
+  KarmaAccount(IKarmaPolicy *policy)
+  {
+    this -> id = 0;
+    this -> policy = policy;
+  }
   KarmaAccount(std::size_t id, IKarmaPolicy *policy)
   {
     this -> id = id;

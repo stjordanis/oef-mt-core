@@ -211,6 +211,8 @@ void Endpoint::proto_error(const std::string &msg)
 
 void Endpoint::go()
 {
+  remote_id = socket().remote_endpoint().address().to_string();
+  
    //std::cout << "Endpoint::go" << std::endl;
   if (onStart)
   {

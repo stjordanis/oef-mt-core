@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+#include "cpp-utils/src/cpp/lib/Uri.hpp"
+
 class MtCoreArgs
 {
 public:

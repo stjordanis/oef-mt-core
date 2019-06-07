@@ -21,6 +21,7 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
         public_key_ = id_pb.public_key();
 
         FETCH_LOG_INFO(LOGGING_NAME, "Sending phrase to agent: ", public_key_);
+        std::cout << "Sending phrase to agent: " <<  public_key_ << std::endl;
 
         auto phrase = std::make_shared<fetch::oef::pb::Server_Phrase>();
         phrase -> set_phrase("RandomlyGeneratedString");

@@ -57,6 +57,17 @@ public:
     return IDENT_TYPE(r);
   }
 
+  std::vector<std::pair<NAME_TYPE, IDENT_TYPE>> getNames()
+  {
+    std::vector<std::pair<NAME_TYPE, IDENT_TYPE>> result;
+    Lock lock(mutex);
+    for(const auto &name2id : names)
+    {
+      result.push_back(name2id);
+    }
+    return result;
+  }
+
   CONTENTS &access(std::size_t index)
   {
     return (*(buckets[index/BUCKET_SIZE]))[index%BUCKET_SIZE];
