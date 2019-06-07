@@ -9,4 +9,5 @@ message Remove {
     bool all = 2;
     repeated Update.Attribute attributes = 3;
     repeated Update.DataModelInstance data_models = 4;
+    bytes agent_key = 5;
 }

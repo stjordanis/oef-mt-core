@@ -15,7 +15,8 @@ SearchRemoveTask::SearchRemoveTask(
     std::shared_ptr<OefAgentEndpoint> endpoint,
     uint32_t msg_id,
     std::string core_key,
-    std::string agent_uri)
+    std::string agent_uri,
+    bool remove_row)
     :  SearchConverstationTask(
         "remove",
         std::move(initiator),
@@ -26,6 +27,7 @@ SearchRemoveTask::SearchRemoveTask(
         std::move(agent_uri),
         searchRemoveTaskEntryPoints,
         this)
+    , remove_row_(remove_row)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Task created.");
 }
@@ -73,10 +75,17 @@ std::shared_ptr<SearchRemoveTask::REQUEST_PROTO> SearchRemoveTask::make_request_
 {
   auto remove = std::make_shared<fetch::oef::pb::Remove>();
   remove->set_key(core_key_);
-  remove->set_all(false);
-  auto dmi = remove->add_data_models();
-  dmi->set_key(agent_uri_);
-  dmi->mutable_model()->CopyFrom(initiator->description().model());
-  dmi->mutable_values()->CopyFrom(initiator->description().values());
+  remove->set_all(remove_row_);
+  if (remove_row_)
+  {
+    remove->set_agent_key(agent_uri_);
+  }
+  if (initiator)
+  {
+    auto dmi = remove->add_data_models();
+    dmi->set_key(agent_uri_);
+    dmi->mutable_model()->CopyFrom(initiator->description().model());
+    dmi->mutable_values()->CopyFrom(initiator->description().values());
+  }
   return remove;
 }

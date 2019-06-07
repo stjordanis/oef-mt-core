@@ -17,12 +17,27 @@
 #include "mt-core/conversations/src/cpp/SearchUpdateTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchRemoveTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchQueryTask.hpp"
+#include <random>
 
 
 void OefFunctionsTaskFactory::endpointClosed()
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "Endpoint closed for agent: ", agent_public_key_);
+  FETCH_LOG_WARN(LOGGING_NAME, "Endpoint closed for agent: ", agent_public_key_, ". Sending removeRow to search...");
   agents_->remove(agent_public_key_);
+
+  std::random_device r;
+  std::default_random_engine e1(r());
+  std::uniform_int_distribution<uint32_t> uniform_dist(1000000, 1000000000);
+
+  auto convTask = std::make_shared<SearchRemoveTask>(
+      nullptr,
+      outbounds,
+      getEndpoint(),
+      uniform_dist(e1),
+      core_key_,
+      agent_public_key_,
+      true);
+  convTask -> submit();
 }
 
 void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
@@ -139,9 +154,9 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     }
     case fetch::oef::pb::Envelope::kSearchServicesWide:
     {
-      FETCH_LOG_INFO(LOGGING_NAME, "kSearchServicesWide", envelope.search_services().DebugString());
+      FETCH_LOG_INFO(LOGGING_NAME, "kSearchServicesWide", envelope.search_services_wide().DebugString());
       auto convTask = std::make_shared<SearchQueryTask>(
-          std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.release_search_services()),
+          std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.search_services_wide()),
           outbounds,
           getEndpoint(),
           envelope.msg_id(),
@@ -149,6 +164,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           uri.toString(), 4);
       convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServicesWide ");
       convTask -> submit();
+      break;
     }
     case fetch::oef::pb::Envelope::PAYLOAD_NOT_SET:
       FETCH_LOG_ERROR(LOGGING_NAME, "Cannot process payload ", payload_case, " from ", agent_public_key_);
