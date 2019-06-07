@@ -156,7 +156,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     {
       FETCH_LOG_INFO(LOGGING_NAME, "kSearchServicesWide", envelope.search_services_wide().DebugString());
       auto convTask = std::make_shared<SearchQueryTask>(
-          std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.search_services_wide()),
+          std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.release_search_services_wide()),
           outbounds,
           getEndpoint(),
           envelope.msg_id(),
