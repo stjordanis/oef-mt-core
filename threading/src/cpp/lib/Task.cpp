@@ -3,11 +3,7 @@
 #include "monitoring/src/cpp/lib/Counter.hpp"
 
 Counter created_count("mt-core.tasks.created");
-Counter destroyed_count("mt-core.tasks.created");
-Counter remove_count("mt-core.tasks.removed");
-Counter submit_count("mt-core.tasks.submitted");
-Counter set_defer_count("mt-core.tasks.set_defer");
-Counter set_run_count("mt-core.tasks.set_runnable");
+Counter destroyed_count("mt-core.tasks.destroyed");
 
 Task::Task():cancelled(false)
 {
@@ -23,15 +19,15 @@ bool Task::submit(std::shared_ptr<Taskpool> pool)
 {
   if (this -> pool == pool)
   {
+    Counter("mt-core.tasks.submit(pool).not-submitted.aleady-in-pool")++;
     return true;
   }
 
   if (this -> pool)
   {
     this -> pool -> remove(shared_from_this());
-    remove_count++;
+    Counter("mt-core.tasks.submit(pool).remove-from-pool")++;
   }
-  submit_count++;
   this -> pool = pool;
   this -> pool -> submit(shared_from_this());
   return true;
@@ -40,31 +36,47 @@ bool Task::submit(std::shared_ptr<Taskpool> pool)
 bool Task::submit()
 {
   auto x = Taskpool::getDefaultTaskpool().lock();
+  if (this -> pool == x)
+  {
+    Counter("mt-core.tasks.submit().not-submitted.aleady-in-pool")++;
+    return true;
+  }
   if (x)
   {
     return this -> submit( x );
+  }
+  else
+  {
+    Counter("mt-core.tasks.submit().not-submitted.no-default-taskpool")++;
   }
   return false;
 }
 
 void Task::makeRunnable()
 {
-  set_run_count++;
   if (this -> pool)
   {
     this -> pool -> makeRunnable(shared_from_this());
+  }
+  else
+  {
+    Counter("mt-core.tasks.makeRunnable.no-taskpool")++;
   }
 }
 
 bool Task::submit(std::shared_ptr<Taskpool> pool,const std::chrono::milliseconds &delay)
 {
+  if (this -> pool == pool)
+  {
+    Counter("mt-core.tasks.submit(pool,delay).not-submitted.aleady-in-pool")++;
+    return true;
+  }
   if (this -> pool)
   {
-    std::cout << "removed from existing pool" << std::endl;
+    Counter("mt-core.tasks.submit(pool,delay).remove-from-pool")++;
     this -> pool -> remove(shared_from_this());
   }
   this -> pool = pool;
-    std::cout << "set for after " << std::endl;
   this -> pool -> after(shared_from_this(), delay);
   return true;
 }
@@ -76,5 +88,6 @@ bool Task::submit(const std::chrono::milliseconds &delay)
   {
     return this -> submit( x, delay );
   }
+  Counter("mt-core.tasks.submit(delay).not-submitted.no-default-taskpool")++;
   return false;
 }

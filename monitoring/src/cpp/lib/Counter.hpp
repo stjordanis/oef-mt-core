@@ -9,9 +9,7 @@ class Counter
 public:
   Counter(const char *name)
   {
-    std::cout << "finding " << name << std::endl;
     id = Monitoring::find(name);
-    std::cout << "found " << id<< std::endl;
   }
   virtual ~Counter()
   {

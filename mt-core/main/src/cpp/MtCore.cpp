@@ -63,9 +63,11 @@ int MtCore::run(const MtCore::args &args)
   {
     //auto s = tasks -> getStatus();
 
+    FETCH_LOG_INFO(LOGGING_NAME, "----------------------------------------------");
     mon.report([](const std::string &name, std::size_t value){
         FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
       });
+    tasks -> getFinishedTasks();
     sleep(3);
   }
   return 0;
