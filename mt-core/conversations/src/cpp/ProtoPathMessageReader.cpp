@@ -11,7 +11,7 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::initial() {
 
 ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMessage(const buffers &data)
 {
-  std::cout << "==================================== ProtoPathMessageReader::checkForMessage" << std::endl;
+  FETCH_LOG_INFO(LOGGING_NAME, "checkForMessage");
 
   std::string s;
 
@@ -63,7 +63,6 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
       break;
     }
 
-    chars.diagnostic();
     TransportHeader leader;
 
     auto header_chars = ConstCharArrayBuffer(chars, chars.current + leader_size);

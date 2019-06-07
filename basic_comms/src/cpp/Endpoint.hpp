@@ -30,6 +30,8 @@ public:
     ERRORED_ENDPOINT = 8
   };
 
+  static constexpr char const *LOGGING_NAME = "Endpoint";
+
   Endpoint(const Endpoint &other) = delete;
   Endpoint &operator=(const Endpoint &other) = delete;
   bool operator==(const Endpoint &other) = delete;

@@ -1,4 +1,5 @@
 #include "Endpoint.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 
@@ -50,12 +51,12 @@ void Endpoint::run_sending()
     Lock lock(mutex);
     if (asio_sending || state != RUNNING_ENDPOINT)
     {
-      std::cout << "early exit 1 sending=" << asio_sending << " state=" << state << std::endl;
+      FETCH_LOG_INFO(LOGGING_NAME, "early exit 1 sending=", asio_sending, " state=", state);
       return;
     }
     if (sendBuffer.getDataAvailable() == 0)
     {
-      std::cout << "create messages" << std::endl;
+      FETCH_LOG_INFO(LOGGING_NAME, "create messages");
       create_messages();
     }
     if (sendBuffer.getDataAvailable() == 0)
@@ -64,16 +65,16 @@ void Endpoint::run_sending()
     }
     asio_sending = true;
   }
-  std::cout << "ok data available" << std::endl;
+  FETCH_LOG_INFO(LOGGING_NAME, "ok data available");
   auto data = sendBuffer.getDataBuffers();
 
   int i = 0;
   for(auto &d : data)
   {
-    std::cout << "Send buffer " << i << "=" << d.size() << " bytes on thr=" << std::this_thread::get_id() << std::endl;
+    FETCH_LOG_INFO(LOGGING_NAME, "Send buffer ", i, "=", d.size(), " bytes on thr=", std::this_thread::get_id());
   }
 
-  std::cout << "run_sending: START" << std::endl;
+  FETCH_LOG_INFO(LOGGING_NAME, "run_sending: START");
 
   boost::asio::async_write(
                            sock,
@@ -92,12 +93,12 @@ void Endpoint::run_reading()
     Lock lock(mutex);
     if (asio_reading || state != RUNNING_ENDPOINT)
     {
-      std::cout << reader.get() << ":early exit 1 reading=" << asio_sending << " state=" << state << std::endl;
+      FETCH_LOG_INFO(LOGGING_NAME, reader.get(), ":early exit 1 reading=", asio_sending, " state=", state);
       return;
     }
     if (read_needed == 0)
     {
-      std::cout << reader.get() << ":early exit 1 read_needed=" << read_needed << " state=" << state << std::endl;
+      FETCH_LOG_INFO(LOGGING_NAME, reader.get(), ":early exit 1 read_needed=", read_needed, " state=", state);
       return;
     }
     read_needed_local = read_needed;
@@ -109,7 +110,7 @@ void Endpoint::run_reading()
     asio_reading = true;
   }
 
-  std::cout << reader.get() << ":start_reading:" << read_needed_local << " bytes." << std::endl;
+  FETCH_LOG_INFO(LOGGING_NAME, reader.get(), ":start_reading:", read_needed_local, " bytes.");
   auto space = readBuffer.getSpaceBuffers();
   boost::asio::async_read(
                           sock,
@@ -235,14 +236,14 @@ void Endpoint::complete_sending(const boost::system::error_code& ec, const size_
   {
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
-      std::cout << "complete_sending EOF:  " << ec << std::endl;
+      FETCH_LOG_INFO(LOGGING_NAME, "complete_sending EOF:  ", ec);
       eof();
       return; // We are done with this thing!
     }
 
     if (ec)
     {
-      std::cout << "complete_sending ERR:  " << ec << std::endl;
+      FETCH_LOG_INFO(LOGGING_NAME, "complete_sending ERR:  ", ec);
       error(ec);
       return; // We are done with this thing!
     }
