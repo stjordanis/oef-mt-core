@@ -110,8 +110,8 @@ mem_usage_result process_mem_usage(const std::string filename)
    stat_stream.close();
 
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
-   r.vsize     = vsize / 1024.0;
-   r.rss = rss * page_size_kb;
+   r.vsize     = vsize * 1024.0;
+   r.rss = rss * page_size_kb * 1024;
    r.ok = true;
    return r;
 }
