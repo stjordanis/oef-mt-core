@@ -63,6 +63,8 @@ public:
   void run_reading();
   void close();
   bool connect(const Uri &uri, Core &core);
+
+  const std::string &getRemoteId() const { return remote_id; }
 protected:
   Socket sock;
   RingBuffer sendBuffer;
@@ -70,6 +72,8 @@ protected:
 
   Mutex mutex;
   std::size_t read_needed = 0;
+
+  std::string remote_id;
 
   std::atomic<bool> asio_sending;
   std::atomic<bool> asio_reading;

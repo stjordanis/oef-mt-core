@@ -1,3 +1,5 @@
+load("//:variables.bzl", "DEFINES")
+
 cc_library(
     name = "lib",
     visibility = [
@@ -5,8 +7,9 @@ cc_library(
     ],
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.hpp"]),
+    defines = DEFINES,
     deps = [
-        "//cpp-utils/src/cpp/lib:lib",
-        "//fetch_teams/ledger:lib",
+         "//threading/src/cpp/lib:lib",
+         "//cpp-utils/src/cpp/lib:lib",
     ],
 )

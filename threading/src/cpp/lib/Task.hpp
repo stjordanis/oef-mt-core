@@ -10,6 +10,7 @@ class Taskpool;
 
 class Task: public std::enable_shared_from_this<Task>
 {
+  friend class Taskpool;
 public:
   virtual bool isRunnable(void) const =0;
   virtual ExitState run(void)=0;

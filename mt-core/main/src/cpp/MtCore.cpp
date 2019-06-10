@@ -9,6 +9,9 @@
 #include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 #include "monitoring/src/cpp/lib/Monitoring.hpp"
 
+#include "mt-core/karma/src/cpp/KarmaPolicyBasic.hpp"
+#include "mt-core/karma/src/cpp/KarmaPolicyNone.hpp"
+
 using namespace std::placeholders;
 
 int MtCore::run(const MtCore::args &args)
@@ -26,6 +29,7 @@ int MtCore::run(const MtCore::args &args)
   tasks -> setDefault();
   outbounds = std::make_shared<OutboundConversations>();
 
+
   std::function<void (void)> run_comms = std::bind(&Core::run, core.get());
   std::function<void (std::size_t thread_number)> run_tasks = std::bind(&Taskpool::run, tasks.get(), _1);
 
@@ -39,6 +43,18 @@ int MtCore::run(const MtCore::args &args)
       args.core_uri, args.search_uri, *core, outbounds));
   agents_ = std::make_shared<Agents>();
 
+  if (args.karma_policy.size())
+  {
+    FETCH_LOG_INFO(LOGGING_NAME, "KARMA = BASIC");
+    karma_policy = std::make_shared<KarmaPolicyBasic>(args.karma_policy);
+  }
+  else
+  {
+    FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE");
+    karma_policy = std::make_shared<KarmaPolicyNone>(77);
+    FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE!!");
+  }
+
   startListeners(args.listen_ports);
 
   Monitoring mon;
@@ -47,9 +63,11 @@ int MtCore::run(const MtCore::args &args)
   {
     //auto s = tasks -> getStatus();
 
+    FETCH_LOG_INFO(LOGGING_NAME, "----------------------------------------------");
     mon.report([](const std::string &name, std::size_t value){
         FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
       });
+    tasks -> getFinishedTasks();
     sleep(3);
   }
   return 0;

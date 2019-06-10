@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 
 class MtCoreArgs
@@ -29,6 +30,7 @@ public:
   Uri core_uri;
   Uri search_uri;
 
+    std::map<std::string, std::string> karma_policy;
 protected:
 private:
   MtCoreArgs(const MtCoreArgs &other) = delete;

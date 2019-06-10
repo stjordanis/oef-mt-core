@@ -1,10 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <atomic>
 #include <functional>
 #include <string>
 
-class MonitoringInner;
+//class MonitoringInner;
+
+#include "cpp-utils/src/cpp/lib/BucketsOf.hpp"
 
 class Monitoring
 {
@@ -12,6 +15,13 @@ public:
   using IdType = std::size_t;
   using CountType = std::size_t;
   using NameType = std::string;
+
+  using MonitoringInner = BucketsOf<
+    std::atomic<std::size_t>,
+    std::string,
+    std::size_t,
+    256
+  >;
 
   using ReportFunc = std::function<void (const std::string &name, std::size_t value)>;
 

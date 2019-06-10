@@ -1,4 +1,5 @@
 #include "Taskpool.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 
 #include "monitoring/src/cpp/lib/Counter.hpp"
 
@@ -7,6 +8,14 @@ static std::weak_ptr<Taskpool> gDefaultTaskPool;
 Taskpool::Taskpool(bool autoReapFinishedTasks):quit(false)
 {
   this -> autoReapFinishedTasks = autoReapFinishedTasks;
+
+  Counter("mt-core.tasks.popped-for-run");
+  Counter("mt-core.tasks.run.std::exception");
+  Counter("mt-core.tasks.run.exception");
+  Counter("mt-core.tasks.run.deferred");
+  Counter("mt-core.tasks.run.errored");
+  Counter("mt-core.tasks.run.cancelled");
+  Counter("mt-core.tasks.run.completed");
 }
 
 void Taskpool::setDefault()
@@ -63,7 +72,10 @@ void Taskpool::run(std::size_t thread_idx)
       if (!pending_tasks.empty())
       {
         mytask = pending_tasks.front();
+        mytask -> pool = 0;
         pending_tasks.pop_front();
+        Counter("mt-core.tasks.popped-for-run")++;
+        Counter("mt-core.immediate-tasks.popped-for-run")++;
       }
     }
 
@@ -85,11 +97,13 @@ void Taskpool::run(std::size_t thread_idx)
     }
     catch(std::exception &ex)
     {
+      Counter("mt-core.tasks.run.std::exception")++;
       std::cerr << "Threadpool caught:" << ex.what() << std::endl;
       status = ERRORED;
     }
     catch(...)
     {
+      Counter("mt-core.tasks.run.exception")++;
       std::cerr << "Threadpool caught: other exception" << std::endl;
       status = ERRORED;
     }
@@ -101,24 +115,23 @@ void Taskpool::run(std::size_t thread_idx)
     case DEFER:
       //std::cerr << "TASK " << mytask.get() << " DEFER" << std::endl;
       {
-        Lock lock(mutex);
-        suspended_tasks.insert(mytask);
-        Counter("mt-core.tasks.deferred")++;
+        Counter("mt-core.tasks.run.deferred")++;
+        suspend(mytask);
       }
       break;
     case ERRORED:
       {
+        Counter("mt-core.tasks.run.errored")++;
         Lock lock(mutex);
         finished_tasks.push_back(TaskDone(status, mytask));
-        Counter("mt-core.tasks.errored")++;
       }
       //std::cerr << "TASK " << mytask.get() << " ERRORED" << std::endl;
       break;
     case CANCELLED:
       {
+        Counter("mt-core.tasks.run.cancelled")++;
         Lock lock(mutex);
         finished_tasks.push_back(TaskDone(status, mytask));
-        Counter("mt-core.tasks.cancelled")++;
       }
       //std::cerr << "TASK " << mytask.get() << " CANCELLED" << std::endl;
       break;
@@ -126,9 +139,9 @@ void Taskpool::run(std::size_t thread_idx)
       {
         if (!autoReapFinishedTasks)
         {
+          Counter("mt-core.tasks.run.completed")++;
           Lock lock(mutex);
           finished_tasks.push_back(TaskDone(status, mytask));
-          Counter("mt-core.tasks.completed")++;
         }
       }
       //std::cerr << "TASK " << mytask.get() << " COMPLETE" << std::endl;
@@ -161,6 +174,7 @@ void Taskpool::makeRunnable(TaskP task)
   auto iter = suspended_tasks.find(task);
   if (iter != suspended_tasks.end())
   {
+    Counter("mt-core.tasks.made-runnable")++;
     auto task = *iter;
     suspended_tasks.erase(iter);
     pending_tasks.push_front(task);
@@ -208,6 +222,8 @@ void Taskpool::stop(void)
 
 void Taskpool::suspend(TaskP task)
 {
+  Counter("mt-core.tasks.suspended")++;
+  task -> pool = shared_from_this();
   suspended_tasks.insert(task);
 }
 
@@ -216,6 +232,7 @@ void Taskpool::submit(TaskP task)
   if (task -> isRunnable())
   {
     Lock lock(mutex);
+    Counter("mt-core.tasks.moved-to-runnable")++;
     pending_tasks.push_back(task);
     work_available.notify_one();
   }
@@ -228,12 +245,16 @@ void Taskpool::submit(TaskP task)
 void Taskpool::after(TaskP task, const Milliseconds &delay)
 {
   Lock lock(mutex);
+  FETCH_LOG_INFO(LOGGING_NAME, "POSTING AFTER", delay.count());
+
+  std::cout << "POSTING AFTER " << delay.count() << std::endl;
 
   FutureTask ft;
   ft.task = task;
   ft.due = Clock::now() + delay;
 
   future_tasks.push(ft);
+  Counter("mt-core.tasks.futured")++;
 }
 
 Taskpool::FinishedTasks Taskpool::getFinishedTasks()
@@ -264,7 +285,10 @@ Taskpool::TaskP Taskpool::lockless_getNextFutureWork(const Timestamp &current_ti
     if (future_tasks.top().due < current_time)
     {
       result = future_tasks.top().task;
+      result -> pool = 0;
       future_tasks.pop();
+      Counter("mt-core.tasks.popped-for-run")++;
+      Counter("mt-core.future-tasks.popped-for-run")++;
     }
   }
   return result;
