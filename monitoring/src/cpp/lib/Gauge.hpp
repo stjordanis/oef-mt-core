@@ -14,7 +14,9 @@ public:
   }
   Gauge(const Gauge &other) { copy(other); }
   Gauge &operator=(const Gauge &other) { copy(other); return *this; }
+  Gauge &operator=(std::size_t x) { Monitoring::set(id, x); return *this; }
 
+  Gauge& set(std::size_t x) { Monitoring::set(id, x); return *this; }
   Gauge& add(std::size_t x) { Monitoring::add(id, x); return *this; }
   Gauge& sub(std::size_t x) { Monitoring::sub(id, x); return *this; }
 
