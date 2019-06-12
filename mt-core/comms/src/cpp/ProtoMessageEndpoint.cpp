@@ -4,7 +4,7 @@
 #include "mt-core/comms/src/cpp/ProtoMessageReader.hpp"
 
 ProtoMessageEndpoint::ProtoMessageEndpoint(Core &core)
-  : Endpoint(core, 10000, 10000)
+  : Endpoint(core, 1000000, 1000000)
 {
 }
 
