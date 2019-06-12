@@ -31,6 +31,7 @@ public:
   static IdType find(const NameType &name);
   static void add(IdType id, CountType delta);
   static void sub(IdType id, CountType delta);
+  static void set(IdType id, CountType delta);
 
   void report(ReportFunc);
 

@@ -8,6 +8,7 @@
 #include "mt-core/oef-functions/src/cpp/InitialHandshakeTaskFactory.hpp"
 #include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 #include "monitoring/src/cpp/lib/Monitoring.hpp"
+#include "mt-core/status/src/cpp/MonitoringTask.hpp"
 
 #include "mt-core/karma/src/cpp/KarmaPolicyBasic.hpp"
 #include "mt-core/karma/src/cpp/KarmaPolicyNone.hpp"
@@ -28,7 +29,6 @@ int MtCore::run(const MtCore::args &args)
   auto tasks = std::make_shared<Taskpool>();
   tasks -> setDefault();
   outbounds = std::make_shared<OutboundConversations>();
-
 
   std::function<void (void)> run_comms = std::bind(&Core::run, core.get());
   std::function<void (std::size_t thread_number)> run_tasks = std::bind(&Taskpool::run, tasks.get(), _1);
@@ -58,6 +58,8 @@ int MtCore::run(const MtCore::args &args)
   startListeners(args.listen_ports);
 
   Monitoring mon;
+  auto mon_task = std::make_shared<MonitoringTask>();
+  mon_task -> submit();
 
   while(1)
   {
