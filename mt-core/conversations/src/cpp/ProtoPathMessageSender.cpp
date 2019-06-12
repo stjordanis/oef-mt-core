@@ -3,6 +3,12 @@
 #include <google/protobuf/message.h>
 #include "protos/src/protos/transport.pb.h"
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
+
+
+static Counter bytes_produced_counter("mt-core.comms.protopath.send.bytes_produced");
+static Counter bytes_requested_counter("mt-core.comms.protopath.send.bytes_requested");
+static Counter messages_handled_counter("mt-core.comms.protopath.send.messages_handled");
 
 ProtoPathMessageSender::consumed_needed_pair ProtoPathMessageSender::checkForSpace(const mutable_buffers &data)
 {
@@ -48,13 +54,19 @@ ProtoPathMessageSender::consumed_needed_pair ProtoPathMessageSender::checkForSpa
       leader.SerializeToOstream(&os);
       txq.front().second -> SerializeToOstream(&os);
 
+      bytes_produced_counter += 8;
+      bytes_produced_counter += leader_size;
+      bytes_produced_counter += payload_size;
+
       txq.pop_front();
+      messages_handled_counter++;
       //std::cout << "Ready for sending! bytes=" << mesg_size << std::endl;
       //chars.diagnostic();
 
       consumed += mesg_size;
     }
   }
+  bytes_requested_counter += consumed;
   return consumed_needed_pair(consumed, 0);
 }
 

@@ -108,7 +108,10 @@ void Taskpool::run(std::size_t thread_idx)
       status = ERRORED;
     }
 
-    running_tasks.erase(thread_idx);
+    {
+      Lock lock(mutex);
+      running_tasks.erase(thread_idx);
+    }
 
     switch(status)
     {
@@ -196,6 +199,7 @@ Taskpool::TaskpoolStatus Taskpool::getStatus() const
 
 void Taskpool::stop(void)
 {
+  Lock lock(mutex);
   quit = true;
 
   finished_tasks.clear();

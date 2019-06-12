@@ -2,6 +2,7 @@
 #include "fetch_teams/ledger/logger.hpp"
 
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
+#include <cstdlib>
 
 bool Endpoint::connect(const Uri &uri, Core &core)
 {
@@ -104,13 +105,16 @@ void Endpoint::run_reading()
     read_needed_local = read_needed;
     if (read_needed_local > readBuffer.getFreeSpace())
     {
+      FETCH_LOG_ERROR(LOGGING_NAME, "********** READ BUFFER FULL!");
       read_needed_local = readBuffer.getFreeSpace();
     }
     read_needed = 0;
     asio_reading = true;
   }
 
-  FETCH_LOG_INFO(LOGGING_NAME, reader.get(), ":start_reading:", read_needed_local, " bytes.");
+  if (read_needed_local == 0) {
+    return;
+  }
   auto space = readBuffer.getSpaceBuffers();
   boost::asio::async_read(
                           sock,

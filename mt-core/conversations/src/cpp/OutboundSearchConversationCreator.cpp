@@ -164,7 +164,7 @@ public:
     , outbounds_(std::move(outbounds))
     , connected(false)
   {
-    ep = std::make_shared<Endpoint>(core, 10000, 10000);
+    ep = std::make_shared<Endpoint>(core, 1000000, 1000000);
   }
 
   virtual ~OutboundSearchConnectorTask()
