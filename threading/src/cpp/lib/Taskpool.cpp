@@ -2,8 +2,14 @@
 #include "fetch_teams/ledger/logger.hpp"
 
 #include "monitoring/src/cpp/lib/Counter.hpp"
+#include "monitoring/src/cpp/lib/Gauge.hpp"
 
 static std::weak_ptr<Taskpool> gDefaultTaskPool;
+
+static Gauge gauge_pending("mt-core.taskpool.gauge.runnable_tasks");
+static Gauge gauge_running("mt-core.taskpool.gauge.running_tasks");
+static Gauge gauge_suspended("mt-core.taskpool.gauge.sleeping_tasks");
+static Gauge gauge_future("mt-core.taskpool.gauge.future_tasks");
 
 Taskpool::Taskpool(bool autoReapFinishedTasks):quit(false)
 {
@@ -185,16 +191,14 @@ void Taskpool::makeRunnable(TaskP task)
   }
 }
 
-Taskpool::TaskpoolStatus Taskpool::getStatus() const
+void Taskpool::updateStatus() const
 {
-  TaskpoolStatus r;
   Lock lock(mutex);
+  gauge_pending   = pending_tasks.size();
+  gauge_running   = running_tasks.size();
+  gauge_suspended = suspended_tasks.size();
+  gauge_future    = future_tasks.size();
 
-  r.pending_tasks  = pending_tasks.size();
-  r.running_tasks   = running_tasks.size();
-  r.suspended_tasks = suspended_tasks.size();
-  r.future_tasks    = future_tasks.size();
-  return r;
 }
 
 void Taskpool::stop(void)
@@ -249,9 +253,6 @@ void Taskpool::submit(TaskP task)
 void Taskpool::after(TaskP task, const Milliseconds &delay)
 {
   Lock lock(mutex);
-  FETCH_LOG_INFO(LOGGING_NAME, "POSTING AFTER", delay.count());
-
-  std::cout << "POSTING AFTER " << delay.count() << std::endl;
 
   FutureTask ft;
   ft.task = task;

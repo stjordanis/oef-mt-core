@@ -11,7 +11,7 @@ class OefAgentEndpoint;
 
 
 class SearchAddressUpdateTask
-: public SearchConverstationTask<
+: public SearchConversationTask<
     fetch::oef::pb::Update_Address,
     fetch::oef::pb::UpdateResponse,
     fetch::oef::pb::Update,
