@@ -11,7 +11,7 @@ class OefAgentEndpoint;
 
 
 class SearchRemoveTask
-: public SearchConverstationTask<
+: public SearchConversationTask<
     fetch::oef::pb::AgentDescription,
     fetch::oef::pb::Server_AgentMessage,
     fetch::oef::pb::Remove,
@@ -22,7 +22,7 @@ public:
   using IN_PROTO      = fetch::oef::pb::AgentDescription;
   using OUT_PROTO     = fetch::oef::pb::Server_AgentMessage;
   using REQUEST_PROTO = fetch::oef::pb::Remove;
-  using PARENT = SearchConverstationTask<
+  using PARENT = SearchConversationTask<
       fetch::oef::pb::AgentDescription,
       fetch::oef::pb::Server_AgentMessage,
       fetch::oef::pb::Update,

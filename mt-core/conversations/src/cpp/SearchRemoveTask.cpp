@@ -17,7 +17,7 @@ SearchRemoveTask::SearchRemoveTask(
     std::string core_key,
     std::string agent_uri,
     bool remove_row)
-    :  SearchConverstationTask(
+    :  SearchConversationTask(
         "remove",
         std::move(initiator),
         std::move(outbounds),

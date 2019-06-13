@@ -15,7 +15,7 @@
 
 
 template <typename IN_PROTO, typename OUT_PROTO, typename REQUEST_PROTO, typename IMPL_CLASS>
-class SearchConverstationTask
+class SearchConversationTask
     : public StateMachineTask<IMPL_CLASS>
 {
 public:
@@ -23,9 +23,9 @@ public:
   using StateResult = typename StateMachineTask<IMPL_CLASS>::Result;
   using EntryPoint  = typename StateMachineTask<IMPL_CLASS>::EntryPoint;
 
-  static constexpr char const *LOGGING_NAME = "SearchConverstationTask";
+  static constexpr char const *LOGGING_NAME = "SearchConversationTask";
 
-  SearchConverstationTask(
+  SearchConversationTask(
       std::string path,
       std::shared_ptr<IN_PROTO> initiator,
       std::shared_ptr<OutboundConversations> outbounds,
@@ -48,7 +48,7 @@ public:
     FETCH_LOG_INFO(LOGGING_NAME, "Task created.");
   }
 
-  virtual ~SearchConverstationTask()
+  virtual ~SearchConversationTask()
   {
     FETCH_LOG_INFO(LOGGING_NAME, "Task gone.");
   }
@@ -67,10 +67,10 @@ public:
     if (conversation -> makeNotification().Then( [this_wp](){ auto sp = this_wp.lock(); if (sp) { sp -> makeRunnable(); } } ).Waiting())
     {
       FETCH_LOG_INFO(LOGGING_NAME, "Sleeping");
-      return SearchConverstationTask::StateResult(1, DEFER);
+      return SearchConversationTask::StateResult(1, DEFER);
     }
     FETCH_LOG_INFO(LOGGING_NAME, "NOT Sleeping");
-    return SearchConverstationTask::StateResult(1, COMPLETE);
+    return SearchConversationTask::StateResult(1, COMPLETE);
   }
 
   virtual StateResult handleResponse(void) = 0;
@@ -100,8 +100,8 @@ protected:
   std::string agent_uri_;
   std::string path_;
 private:
-  SearchConverstationTask(const SearchConverstationTask &other) = delete; // { copy(other); }
-  SearchConverstationTask &operator=(const SearchConverstationTask &other) = delete; // { copy(other); return *this; }
-  bool operator==(const SearchConverstationTask &other) = delete; // const { return compare(other)==0; }
-  bool operator<(const SearchConverstationTask &other) = delete; // const { return compare(other)==-1; }
+  SearchConversationTask(const SearchConversationTask &other) = delete; // { copy(other); }
+  SearchConversationTask &operator=(const SearchConversationTask &other) = delete; // { copy(other); return *this; }
+  bool operator==(const SearchConversationTask &other) = delete; // const { return compare(other)==0; }
+  bool operator<(const SearchConversationTask &other) = delete; // const { return compare(other)==-1; }
 };

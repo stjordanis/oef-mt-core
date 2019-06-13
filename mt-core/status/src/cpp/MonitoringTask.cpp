@@ -136,7 +136,7 @@ ExitState MonitoringTask::run(void)
 
   if (r_self.ok)
   {
-    Counter(yes)++;
+    Gauge(yes)++;
     Gauge("status.core.vsize") = r_self.vsize;
     Gauge("status.core.vsize.mb") = r_self.vsize / 1024 / 1024;
     Gauge("status.core.rss") = r_self.rss;
