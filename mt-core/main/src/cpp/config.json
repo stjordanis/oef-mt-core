@@ -1,0 +1,9 @@
+{
+  "core_key": "CoreKey",
+  "core_uri": "tcp://127.0.0.1:10000",
+  "search_uri": "tcp://127.0.0.1:20000",
+  "comms_thread_count": 10,
+  "tasks_thread_count": 10,
+  "karma_policy": {
+  }
+}

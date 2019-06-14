@@ -11,5 +11,6 @@ cc_library(
     deps = [
          "//threading/src/cpp/lib:lib",
          "//cpp-utils/src/cpp/lib:lib",
+         "@com_google_protobuf//:protobuf",
     ],
 )

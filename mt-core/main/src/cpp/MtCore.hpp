@@ -12,6 +12,8 @@
 #include "mt-core/agents/src/cpp/Agents.hpp"
 #include "fetch_teams/ledger/logger.hpp"
 
+#include "protos/src/protos/config.pb.h"
+
 class OefListenerSet;
 class Core;
 class IKarmaPolicy;
@@ -31,7 +33,8 @@ public:
   {
   }
 
-  int run(const args &args);
+  bool configure(const std::string &config_file="", const std::string &config_json="");
+  int run();
 protected:
 private:
   std::shared_ptr<IKarmaPolicy> karma_policy;
@@ -40,13 +43,15 @@ private:
   std::shared_ptr<Taskpool> tasks;
   std::shared_ptr<OutboundConversations> outbounds;
   std::shared_ptr<Agents> agents_;
+  fetch::oef::pb::CoreConfig config_;
 
   Threadpool comms_runners;
   Threadpool tasks_runners;
 
-  std::string core_key_;
+  void startListeners();
+  bool configureFromJsonFile(const std::string &config_file);
+  bool configureFromJson(const std::string &config_json);
 
-  void startListeners(const std::vector<uint16_t> &ports);
 
   MtCore(const MtCore &other) = delete;
   MtCore &operator=(const MtCore &other) = delete;

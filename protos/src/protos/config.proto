@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package fetch.oef.pb;
+
+message CoreConfig {
+    string core_key = 1;
+    string core_uri = 2;
+    string search_uri = 3;
+
+    uint32 comms_thread_count = 4;
+    uint32 tasks_thread_count = 5;
+
+    map<string, string> karma_policy = 6;
+}
