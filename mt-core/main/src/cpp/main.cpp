@@ -9,31 +9,45 @@ int main(int argc, char *argv[])
 {
   // parse args
 
-  MtCore::args args;
-  std::string host, search_host;
-  int port, search_port;
+  std::string config_file, config_string;
 
   boost::program_options::options_description desc{"Options"};
+
   desc.add_options()
-    ("help,h", "Help screen")
-    ;
+      ("config_file", boost::program_options::value<std::string>(&config_file)->default_value(""),
+       "Path to the configuration file.");
+
   desc.add_options()
-    ("core_key", boost::program_options::value<std::string>(&(args.core_key))->default_value("CoreKey"),
-        "Public key for this node");
-  desc.add_options()
-    ("core_uri", boost::program_options::value<std::string>(&(args.core_uri_str))->default_value("tcp://127.0.0.1:10001"),
-        "URI for this node");
-  desc.add_options()
-    ("search_uri", boost::program_options::value<std::string>(&(args.search_uri_str))->default_value("tcp://127.0.0.1:20000/"),
-        "URI of the search node");
+    ("config_string", boost::program_options::value<std::string>(&config_string)->default_value(""),
+        "Configuration JSON.");
   boost::program_options::variables_map vm;
-  store(parse_command_line(argc, argv, desc), vm);
-  notify(vm);
-
-  args.init();
-
+  try
+  {
+    store(parse_command_line(argc, argv, desc), vm);
+    notify(vm);
+  }
+  catch (std::exception& ex)
+  {
+    FETCH_LOG_WARN("MAIN", "Failed to parse command line arguments: ", ex.what());
+    return 1;
+  }
   // copy from VM to args.
 
   MtCore myCore;
-  myCore.run(args);
+
+  if (!config_file.size() && !config_string.size())
+  {
+    FETCH_LOG_WARN("MAIN", "Configuration not provided!");
+    desc.print(std::cout);
+    return 1;
+  }
+
+
+  if (!myCore.configure(config_file, config_string))
+  {
+    FETCH_LOG_WARN("MAIN", "Configuration failed, shutting down...");
+    return 1;
+  }
+
+  myCore.run();
 }

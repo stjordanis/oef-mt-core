@@ -8,9 +8,11 @@ build:asan --copt -fsanitize=address
 build:asan --copt -fno-omit-frame-pointer
 build:asan --copt=-fno-limit-debug-info
 build:asan --features=debug_prefix_map_pwd_is_dot
+#build:asan --copt -ggdb
 
 build:asan --linkopt -fsanitize=address
 build:asan --linkopt -g
+#build:asan --linkopt -ggdb
 
 build:asan --action_env=ASAN_OPTIONS=symbolize=1
 build:asan --action_env=TSAN_OPTIONS=symbolize=1
@@ -22,9 +24,11 @@ build:tsan --copt -g
 build:tsan --copt -fsanitize=thread
 build:tsan --copt -fno-omit-frame-pointer
 build:tsan --copt=-fno-limit-debug-info
+#build:tsan --copt -ggdb
 
 build:tsan --linkopt -fsanitize=thread
 build:tsan --linkopt -g
+#build:tsan --linkopt -ggdb
 
 build:tsan --action_env=ASAN_OPTIONS=symbolize=1
 build:tsan --action_env=TSAN_OPTIONS=symbolize=1
