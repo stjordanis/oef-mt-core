@@ -55,7 +55,7 @@ public:
     std::size_t future_tasks;
   };
 
-  TaskpoolStatus getStatus() const;
+  void updateStatus() const;
 
 protected:
 private:

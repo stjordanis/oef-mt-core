@@ -3,7 +3,13 @@
 #include "mt-core/comms/src/cpp/OutboundConversation.hpp"
 #include "protos/src/protos/search_response.pb.h"
 #include "mt-core/tasks/src/cpp/utils.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
 
+static Counter tasks_created("mt-core.search.query.tasks_created");
+static Counter tasks_resolved("mt-core.search.query.tasks_resolved");
+static Counter tasks_replied("mt-core.search.query.tasks_replied");
+static Counter tasks_unreplied("mt-core.search.query.tasks_unreplied");
+static Counter tasks_succeeded("mt-core.search.query.tasks_succeeded");
 
 SearchQueryTask::EntryPoint searchQueryTaskEntryPoints[] = {
     &SearchQueryTask::createConv,
@@ -18,7 +24,7 @@ SearchQueryTask::SearchQueryTask(
     std::string core_key,
     std::string agent_uri,
     uint16_t ttl)
-    :  SearchConverstationTask(
+    :  SearchConversationTask(
         "search",
         std::move(initiator),
         std::move(outbounds),
@@ -30,12 +36,12 @@ SearchQueryTask::SearchQueryTask(
         this)
     , ttl_{ttl}
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "Task created.");
+  tasks_created++;
 }
 
 SearchQueryTask::~SearchQueryTask()
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "Task gone.");
+  tasks_resolved++;
 }
 
 SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
@@ -113,17 +119,19 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
           aw->set_score(a.score());
         }
       }
+      tasks_succeeded++;
       FETCH_LOG_INFO(LOGGING_NAME, "Sending ", agents_nbr, "agents to ", agent_uri_);
     }
   }
 
-
   if (sendReply)
   {
+    tasks_replied++;
     sendReply(answer, endpoint);
   }
   else
   {
+    tasks_unreplied++;
     FETCH_LOG_WARN(LOGGING_NAME, "No sendReply!!");
   }
 

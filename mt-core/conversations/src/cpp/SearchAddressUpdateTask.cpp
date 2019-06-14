@@ -13,7 +13,7 @@ SearchAddressUpdateTask::SearchAddressUpdateTask(
     std::shared_ptr<SearchAddressUpdateTask::IN_PROTO> initiator,
     std::shared_ptr<OutboundConversations> outbounds,
     std::shared_ptr<OefAgentEndpoint> endpoint)
-    :  SearchConverstationTask(
+    :  SearchConversationTask(
         "update",
         std::move(initiator),
         std::move(outbounds),

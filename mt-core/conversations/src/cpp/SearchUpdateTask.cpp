@@ -16,7 +16,7 @@ SearchUpdateTask::SearchUpdateTask(
     uint32_t msg_id,
     std::string core_key,
     std::string agent_uri)
-    :  SearchConverstationTask(
+    :  SearchConversationTask(
         "update",
         std::move(initiator),
         std::move(outbounds),

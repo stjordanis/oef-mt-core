@@ -65,7 +65,7 @@ int MtCore::run()
 
   while(1)
   {
-    //auto s = tasks -> getStatus();
+    tasks -> updateStatus();
 
     FETCH_LOG_INFO(LOGGING_NAME, "----------------------------------------------");
     mon.report([](const std::string &name, std::size_t value){
