@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
   MtCore myCore;
 
-  if (!config_file.size() && !config_string.size())
+  if (config_file.empty() && config_string.empty())
   {
     FETCH_LOG_WARN("MAIN", "Configuration not provided!");
     desc.print(std::cout);
