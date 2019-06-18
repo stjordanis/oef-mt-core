@@ -12,7 +12,9 @@
 
 class Uri;
 
-class Endpoint:public ISocketOwner
+class Endpoint
+  : public ISocketOwner
+  , public std::enable_shared_from_this<Endpoint>
 {
 public:
   using Mutex = std::mutex;
