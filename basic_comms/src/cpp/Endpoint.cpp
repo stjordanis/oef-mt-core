@@ -77,11 +77,12 @@ void Endpoint::run_sending()
 
   FETCH_LOG_INFO(LOGGING_NAME, "run_sending: START");
 
+  auto myself = shared_from_this();
   boost::asio::async_write(
                            sock,
                            data,
-                           [this](const boost::system::error_code& ec, const size_t &bytes){
-                             this -> complete_sending(ec, bytes);
+                           [myself](const boost::system::error_code& ec, const size_t &bytes){
+                             myself -> complete_sending(ec, bytes);
                            }
                            );
 }
@@ -116,12 +117,13 @@ void Endpoint::run_reading()
     return;
   }
   auto space = readBuffer.getSpaceBuffers();
+  auto myself = shared_from_this();
   boost::asio::async_read(
                           sock,
                           space,
                           boost::asio::transfer_at_least(read_needed_local),
-                          [this](const boost::system::error_code& ec, const size_t &bytes){
-                            this -> complete_reading(ec, bytes);
+                          [myself](const boost::system::error_code& ec, const size_t &bytes){
+                            myself -> complete_reading(ec, bytes);
                           }
                           );
 }
