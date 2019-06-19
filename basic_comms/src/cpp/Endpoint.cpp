@@ -3,6 +3,9 @@
 
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 #include <cstdlib>
+#include "monitoring/src/cpp/lib/Gauge.hpp"
+
+static Gauge count("mt-core.network.Endpoint");
 
 bool Endpoint::connect(const Uri &uri, Core &core)
 {
@@ -21,7 +24,7 @@ bool Endpoint::connect(const Uri &uri, Core &core)
     }
     else
     {
-      state = RUNNING_ENDPOINT;
+      *state = RUNNING_ENDPOINT;
       return true;
     }
   }
@@ -38,11 +41,14 @@ Endpoint::Endpoint(
     ,readBuffer(readBufferSize)
     ,asio_sending(false)
     ,asio_reading(false)
-    ,state(0)
 {
-  }
+  state = std::make_shared<StateType>(0);
+  count++;
+}
+
 Endpoint::~Endpoint()
 {
+  count--;
 }
 
 
@@ -50,9 +56,9 @@ void Endpoint::run_sending()
 {
   {
     Lock lock(mutex);
-    if (asio_sending || state != RUNNING_ENDPOINT)
+    if (asio_sending || *state != RUNNING_ENDPOINT)
     {
-      FETCH_LOG_INFO(LOGGING_NAME, "early exit 1 sending=", asio_sending, " state=", state);
+      FETCH_LOG_INFO(LOGGING_NAME, "early exit 1 sending=", asio_sending, " state=", *state);
       return;
     }
     if (sendBuffer.getDataAvailable() == 0)
@@ -77,12 +83,12 @@ void Endpoint::run_sending()
 
   FETCH_LOG_INFO(LOGGING_NAME, "run_sending: START");
 
-  auto myself = shared_from_this();
+  auto my_state = state;
   boost::asio::async_write(
                            sock,
                            data,
-                           [myself](const boost::system::error_code& ec, const size_t &bytes){
-                             myself -> complete_sending(ec, bytes);
+                           [this, my_state](const boost::system::error_code& ec, const size_t &bytes){
+                             this -> complete_sending(state, ec, bytes);
                            }
                            );
 }
@@ -93,14 +99,14 @@ void Endpoint::run_reading()
   //std::cout << reader.get() << ":Endpoint::run_reading" << std::endl;
   {
     Lock lock(mutex);
-    if (asio_reading || state != RUNNING_ENDPOINT)
+    if (asio_reading || *state != RUNNING_ENDPOINT)
     {
-      FETCH_LOG_INFO(LOGGING_NAME, reader.get(), ":early exit 1 reading=", asio_sending, " state=", state);
+      FETCH_LOG_INFO(LOGGING_NAME, reader.get(), ":early exit 1 reading=", asio_sending, " state=", *state);
       return;
     }
     if (read_needed == 0)
     {
-      FETCH_LOG_INFO(LOGGING_NAME, reader.get(), ":early exit 1 read_needed=", read_needed, " state=", state);
+      FETCH_LOG_INFO(LOGGING_NAME, reader.get(), ":early exit 1 read_needed=", read_needed, " state=", *state);
       return;
     }
     read_needed_local = read_needed;
@@ -117,13 +123,14 @@ void Endpoint::run_reading()
     return;
   }
   auto space = readBuffer.getSpaceBuffers();
-  auto myself = shared_from_this();
+  auto my_state = state;
+
   boost::asio::async_read(
                           sock,
                           space,
                           boost::asio::transfer_at_least(read_needed_local),
-                          [myself](const boost::system::error_code& ec, const size_t &bytes){
-                            myself -> complete_reading(ec, bytes);
+                          [this, my_state](const boost::system::error_code& ec, const size_t &bytes){
+                            this -> complete_reading(state, ec, bytes);
                           }
                           );
 }
@@ -131,13 +138,13 @@ void Endpoint::run_reading()
 void Endpoint::close()
 {
   Lock lock(mutex);
-  state |= CLOSED_ENDPOINT;
+  *state |= CLOSED_ENDPOINT;
   sock.close();
 }
 
 void Endpoint::eof()
 {
-  if (state & EOF_ENDPOINT)
+  if (*state & EOF_ENDPOINT)
   {
     return;
   }
@@ -145,8 +152,8 @@ void Endpoint::eof()
   EofNotification local_handler_copy;
   {
     Lock lock(mutex);
-    state |= EOF_ENDPOINT;
-    state |= CLOSED_ENDPOINT;
+    *state |= EOF_ENDPOINT;
+    *state |= CLOSED_ENDPOINT;
     sock.close();
 
     local_handler_copy = onEof;
@@ -163,7 +170,7 @@ void Endpoint::eof()
 
 void Endpoint::error(const boost::system::error_code& ec)
 {
-  if (state & ERRORED_ENDPOINT)
+  if (*state & ERRORED_ENDPOINT)
   {
     return;
   }
@@ -172,8 +179,8 @@ void Endpoint::error(const boost::system::error_code& ec)
 
   {
     Lock lock(mutex);
-    state |= ERRORED_ENDPOINT;
-    state |= CLOSED_ENDPOINT;
+    *state |= ERRORED_ENDPOINT;
+    *state |= CLOSED_ENDPOINT;
     sock.close();
 
     local_handler_copy = onError;
@@ -191,7 +198,7 @@ void Endpoint::proto_error(const std::string &msg)
 {
   //std::cout << "proto error: " << msg << std::endl;
 
-  if (state & ERRORED_ENDPOINT)
+  if (*state & ERRORED_ENDPOINT)
   {
     return;
   }
@@ -200,8 +207,8 @@ void Endpoint::proto_error(const std::string &msg)
 
   {
     Lock lock(mutex);
-    state |= ERRORED_ENDPOINT;
-    state |= CLOSED_ENDPOINT;
+    *state |= ERRORED_ENDPOINT;
+    *state |= CLOSED_ENDPOINT;
     sock.close();
 
     local_handler_copy = onProtoError;
@@ -228,7 +235,7 @@ void Endpoint::go()
     myStart();
   }
 
-  state |= RUNNING_ENDPOINT;
+  *state |= RUNNING_ENDPOINT;
 
   {
     Lock lock(mutex);
@@ -238,10 +245,16 @@ void Endpoint::go()
   run_reading();
 }
 
-void Endpoint::complete_sending(const boost::system::error_code& ec, const size_t &bytes)
+void Endpoint::complete_sending(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes)
 {
   try
   {
+    if (*state > RUNNING_ENDPOINT)
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "complete_sending on already dead socket", ec);
+      return;
+    }
+
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
     {
       FETCH_LOG_INFO(LOGGING_NAME, "complete_sending EOF:  ", ec);
@@ -281,10 +294,16 @@ void Endpoint::create_messages()
   sendBuffer.markSpaceUsed(consumed);
 }
 
-void Endpoint::complete_reading(const boost::system::error_code& ec, const size_t &bytes)
+void Endpoint::complete_reading(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes)
 {
   try
   {
+    if (*state > RUNNING_ENDPOINT)
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "complete_sending on already dead socket", ec);
+      return;
+    }
+
     //std::cout << reader.get() << ":  complete_reading:  " << ec << ", "<< bytes << std::endl;
     
     if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)

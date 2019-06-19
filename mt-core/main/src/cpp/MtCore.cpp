@@ -102,6 +102,7 @@ bool MtCore::configure(const std::string &config_file, const std::string &config
   {
     return configureFromJson(config_json);
   }
+  return false;
 }
 
 bool MtCore::configureFromJsonFile(const std::string &config_file)

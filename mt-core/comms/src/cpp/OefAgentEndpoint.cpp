@@ -4,9 +4,13 @@
 #include "mt-core/comms/src/cpp/ProtoMessageReader.hpp"
 #include "mt-core/comms/src/cpp/ProtoMessageSender.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
+#include "monitoring/src/cpp/lib/Gauge.hpp"
+
+static Gauge count("mt-core.network.OefAgentEndpoint");
 
 OefAgentEndpoint::OefAgentEndpoint(Core &core):OefEndpoint(core)
 {
+  count++;
 }
 
 void OefAgentEndpoint::setup(std::shared_ptr<OefAgentEndpoint> myself)
@@ -43,6 +47,7 @@ void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_fact
 OefAgentEndpoint::~OefAgentEndpoint()
 {
   FETCH_LOG_INFO(LOGGING_NAME, "~OefAgentEndpoint");
+  count--;
 }
 
 void OefAgentEndpoint::go(void)

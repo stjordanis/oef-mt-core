@@ -26,6 +26,10 @@ public:
   using StartNotification = std::function<void ()> ;
   using ProtoErrorNotification = std::function<void (const std::string &message)> ;
 
+  using StateType = std::atomic<int>;
+  using StateTypeP = std::shared_ptr<StateType>;
+  
+
   using EndpointState = enum {
     RUNNING_ENDPOINT = 1,
     CLOSED_ENDPOINT = 2,
@@ -88,14 +92,14 @@ protected:
   std::atomic<bool> asio_sending;
   std::atomic<bool> asio_reading;
 
-  std::atomic<int> state;
+  std::shared_ptr<StateType> state;
 
   void error(const boost::system::error_code& ec);
   void proto_error(const std::string &msg);
   void eof();
 
 
-  void complete_sending(const boost::system::error_code& ec, const size_t &bytes);
+  void complete_sending(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes);
   void create_messages();
-  void complete_reading(const boost::system::error_code& ec, const size_t &bytes);
+  void complete_reading(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes);
 };
