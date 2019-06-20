@@ -300,7 +300,7 @@ void Endpoint::complete_reading(StateTypeP state, const boost::system::error_cod
   {
     if (*state > RUNNING_ENDPOINT)
     {
-      FETCH_LOG_INFO(LOGGING_NAME, "complete_sending on already dead socket", ec);
+      FETCH_LOG_INFO(LOGGING_NAME, "complete_reading on already dead socket", ec);
       return;
     }
 
