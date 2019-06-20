@@ -18,6 +18,7 @@ void Listener::start_accept()
 
 void Listener::handle_accept(std::shared_ptr<ISocketOwner> new_connection, const boost::system::error_code& error)
 {
+  std::cout << "Listener::handle_accept " << std::endl;
   if (!error)
   {
     new_connection->go();

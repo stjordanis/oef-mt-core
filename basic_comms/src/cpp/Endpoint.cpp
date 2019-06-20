@@ -226,7 +226,6 @@ void Endpoint::proto_error(const std::string &msg)
 void Endpoint::go()
 {
   std::cout << "Endpoint::go" << std::endl;
-  exit(77);
 
   //remote_id = socket().remote_endpoint().address().to_string();
   //boost::asio::socket_base::linger option(false, 0);
