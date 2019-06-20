@@ -72,10 +72,10 @@ public:
   bool connect(const Uri &uri, Core &core);
   bool connected()
   {
-    if (state>RUNNING_ENDPOINT) {
+    if (*state>RUNNING_ENDPOINT) {
       FETCH_LOG_INFO(LOGGING_NAME, "STATE: ", state);
     }
-    return state == RUNNING_ENDPOINT;
+    return *state== RUNNING_ENDPOINT;
   }
 
   const std::string &getRemoteId() const { return remote_id; }

@@ -1,6 +1,6 @@
 #include "OutboundSearchConversationCreator.hpp"
 
-#include "mt-core/tasks-base/src/cpp/TWorkerTask.hpp"
+#include "mt-core/tasks-base/src/cpp/TNonBlockingWorkerTask.hpp"
 #include "mt-core/comms/src/cpp/ProtoMessageEndpoint.hpp"
 #include "threading/src/cpp/lib/StateMachineTask.hpp"
 #include "mt-core/comms/src/cpp/OefEndpoint.hpp"
@@ -98,6 +98,10 @@ public:
   }
   virtual std::shared_ptr<google::protobuf::Message> getReply(std::size_t replynumber) override
   {
+    if (responses.size()==0)
+    {
+      return nullptr;
+    }
     return responses[replynumber];
   }
 
@@ -123,16 +127,17 @@ std::map<unsigned long, std::shared_ptr<OutboundSearchConversation>> ident2conve
 
 // ------------------------------------------------------------------------------------------
 
+#define TNONBLOCKINGWORKERTASK_SIZE 5
+
 class OutboundSearchConversationWorkerTask
-  : public TWorkerTask<OutboundSearchConversation>
+  : public TNonBlockingWorkerTask<OutboundSearchConversation, TNONBLOCKINGWORKERTASK_SIZE>
 {
 public:
-  using Parent = TWorkerTask<OutboundSearchConversation>;
+  using Parent = TNonBlockingWorkerTask<OutboundSearchConversation, TNONBLOCKINGWORKERTASK_SIZE>;
   using Workload = Parent::Workload;
   using WorkloadP = Parent::WorkloadP;
-  using WorkloadProcessed = TWorkerTask<OutboundSearchConversation>::WorkloadProcessed;
+  using WorkloadProcessed = TNonBlockingWorkerTask<OutboundSearchConversation, TNONBLOCKINGWORKERTASK_SIZE>::WorkloadProcessed;
   static constexpr char const *LOGGING_NAME = "OutboundSearchConversationWorkerTask";
-  
   OutboundSearchConversationWorkerTask(Core &core, const std::string &core_key, const Uri &core_uri,
       const Uri &search_uri, std::shared_ptr<OutboundConversations> outbounds)
       : outbounds_(std::move(outbounds))

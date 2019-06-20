@@ -46,6 +46,7 @@ void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_fact
 
 OefAgentEndpoint::~OefAgentEndpoint()
 {
+  protoMessageReader -> onComplete = nullptr;
   FETCH_LOG_INFO(LOGGING_NAME, "~OefAgentEndpoint");
   count--;
 }
