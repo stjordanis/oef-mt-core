@@ -227,9 +227,9 @@ void Endpoint::go()
 {
   std::cout << "Endpoint::go" << std::endl;
 
-  //remote_id = socket().remote_endpoint().address().to_string();
-  //boost::asio::socket_base::linger option(false, 0);
-  //socket().set_option(option);
+  remote_id = socket().remote_endpoint().address().to_string();
+  boost::asio::socket_base::linger option(false, 0);
+  socket().set_option(option);
 
   if (onStart)
   {
