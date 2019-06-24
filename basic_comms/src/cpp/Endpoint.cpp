@@ -225,9 +225,12 @@ void Endpoint::proto_error(const std::string &msg)
 
 void Endpoint::go()
 {
+  std::cout << "Endpoint::go" << std::endl;
+
   remote_id = socket().remote_endpoint().address().to_string();
-  
-   //std::cout << "Endpoint::go" << std::endl;
+  boost::asio::socket_base::linger option(false, 0);
+  socket().set_option(option);
+
   if (onStart)
   {
     auto myStart = onStart;
