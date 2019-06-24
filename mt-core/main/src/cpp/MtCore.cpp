@@ -18,6 +18,8 @@
 
 using namespace std::placeholders;
 
+static const unsigned int minimum_thread_count = 1;
+
 int MtCore::run()
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Starting core...");
@@ -36,8 +38,8 @@ int MtCore::run()
   std::function<void (void)> run_comms = std::bind(&Core::run, core.get());
   std::function<void (std::size_t thread_number)> run_tasks = std::bind(&Taskpool::run, tasks.get(), _1);
 
-  comms_runners.start(config_.comms_thread_count(), run_comms);
-  tasks_runners.start(config_.tasks_thread_count(), run_tasks);
+  comms_runners.start(std::max(config_.comms_thread_count(), minimum_thread_count), run_comms);
+  tasks_runners.start(std::max(config_.tasks_thread_count(), minimum_thread_count), run_tasks);
 
   Uri core_uri(config_.core_uri());
   Uri search_uri(config_.search_uri());
