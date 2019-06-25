@@ -12,6 +12,7 @@ cc_library(
         "@boost//:asio",
         "//cpp-utils/src/cpp/lib:lib",
         "//fetch_teams/ledger:lib",
-         "//monitoring/src/cpp/lib:lib",
+        "//monitoring/src/cpp/lib:lib",
+        "@boost//:beast",
     ],
 )
