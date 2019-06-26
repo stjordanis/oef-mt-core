@@ -210,8 +210,10 @@ template <typename TXType>
 void EndpointBase<TXType>::go()
 {
   remote_id = socket().remote_endpoint().address().to_string();
-  
-   //std::cout << "Endpoint::go" << std::endl;
+  //std::cout << "Endpoint::go" << std::endl;
+  boost::asio::socket_base::linger option(false, 0);
+  socket().set_option(option);
+
   if (onStart)
   {
     auto myStart = onStart;

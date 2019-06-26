@@ -1,6 +1,10 @@
 #include "Core.hpp"
 
 #include <iostream>
+#include "monitoring/src/cpp/lib/Counter.hpp"
+
+static Counter loopstart("mt-core.network.asio.run");
+static Counter loopstop("mt-core.network.asio.ended");
 
 Core::Core()
 {
@@ -15,7 +19,9 @@ Core::~Core()
 
 void Core::run()
 {
+  loopstart++;
   context -> run();
+  loopstop++;
 }
 
 void Core::stop()
