@@ -65,5 +65,11 @@ void Endpoint<TXType>::async_read(const std::size_t& bytes_needed)
                           );
 }
 
+template <typename TXType>
+bool Endpoint<TXType>::is_eof(const boost::system::error_code& ec) const
+{
+  return ec == boost::asio::error::eof;
+}
+
 template class Endpoint<std::shared_ptr<google::protobuf::Message>>;
 template class Endpoint<std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>;

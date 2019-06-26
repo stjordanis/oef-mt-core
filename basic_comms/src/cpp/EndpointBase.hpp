@@ -87,6 +87,8 @@ protected:
   virtual void async_read(const std::size_t& bytes_needed) = 0;
   virtual void async_write() = 0;
 
+  virtual bool is_eof(const boost::system::error_code& ec) const = 0;
+
 protected:
   RingBuffer sendBuffer;
   RingBuffer readBuffer;

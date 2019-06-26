@@ -4,6 +4,7 @@
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 #include <cstdlib>
 #include "monitoring/src/cpp/lib/Gauge.hpp"
+#include "boost/beast/websocket/error.hpp"
 
 static Gauge count("mt-core.network.EndpointBase");
 
@@ -239,9 +240,10 @@ void EndpointBase<TXType>::complete_sending(StateTypeP state, const boost::syste
       return;
     }
 
-    if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
+    if (is_eof(ec) || ec == boost::asio::error::operation_aborted)
     {
       FETCH_LOG_INFO(LOGGING_NAME, "complete_sending EOF:  ", ec);
+      *state |= CLOSED_ENDPOINT;
       eof();
       return; // We are done with this thing!
     }
@@ -291,17 +293,19 @@ void EndpointBase<TXType>::complete_reading(StateTypeP state, const boost::syste
     }
 
     //std::cout << reader.get() << ":  complete_reading:  " << ec << ", "<< bytes << std::endl;
-    
-    if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
+
+    if (is_eof(ec) || ec == boost::asio::error::operation_aborted)
     {
       //std::cout << "complete_reading: eof" << std::endl;
+      *state |= CLOSED_ENDPOINT;
       eof();
       return; // We are done with this thing!
     }
 
     if (ec)
     {
-      //std::cout << "complete_reading: error" << std::endl;
+      //std::cout << "complete_reading: error: " << ec.message() << " "<< ec.value() << std::endl;
+      *state |= ERRORED_ENDPOINT;
       error(ec);
       close();
       return; // We are done with this thing!

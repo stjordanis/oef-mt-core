@@ -33,7 +33,14 @@ void EndpointWebSocket<TXType>::close()
 {
   Lock lock(this->mutex);
   *state |= this->CLOSED_ENDPOINT;
-  web_socket_.close(websocket::close_code::normal);
+  try
+  {
+    web_socket_.close(websocket::close_code::normal);
+  }
+  catch (std::exception &ec)
+  {
+    FETCH_LOG_INFO(LOGGING_NAME, "WebSocket already closed!");
+  }
 }
 
 template <typename TXType>
@@ -92,6 +99,10 @@ void EndpointWebSocket<TXType>::async_read_at_least(
     std::shared_ptr<StateType> my_state
 )
 {
+  if ( *state != this->RUNNING_ENDPOINT)
+  {
+    return;
+  }
   if (bytes_read >= bytes_needed)
   {
     return;
@@ -160,6 +171,13 @@ void EndpointWebSocket<TXType>::on_accept(const boost::system::error_code& ec)
 */
 
 }
+
+template <typename TXType>
+bool EndpointWebSocket<TXType>::is_eof(const boost::system::error_code& ec) const
+{
+  return ec == boost::beast::websocket::error::closed;
+}
+
 
 template class EndpointWebSocket<std::shared_ptr<google::protobuf::Message>>;
 template class EndpointWebSocket<std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>;

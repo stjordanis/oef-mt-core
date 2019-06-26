@@ -2,5 +2,5 @@
 
 bool Outbound::run(void)
 {
-  
+  return true;
 }

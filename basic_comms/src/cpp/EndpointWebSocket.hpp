@@ -52,6 +52,7 @@ public:
 protected:
   virtual void async_read(const std::size_t& bytes_needed) override;
   virtual void async_write() override;
+  virtual bool is_eof(const boost::system::error_code& ec) const override;
 
   void async_read_at_least(
       const std::size_t& bytes_needed,

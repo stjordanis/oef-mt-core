@@ -38,14 +38,15 @@ public:
 
   virtual ~Endpoint();
 
-  virtual Socket& socket()
+  virtual Socket& socket() override
   {
     return sock;
   }
 
 protected:
-  virtual void async_read(const std::size_t& bytes_needed);
-  virtual void async_write();
+  virtual void async_read(const std::size_t& bytes_needed) override;
+  virtual void async_write() override;
+  virtual bool is_eof(const boost::system::error_code& ec) const override;
 
 protected:
   Socket sock;
