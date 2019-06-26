@@ -39,6 +39,7 @@ void EndpointWebSocket<TXType>::close()
 template <typename TXType>
 void EndpointWebSocket<TXType>::go()
 {
+  FETCH_LOG_WARN(LOGGING_NAME, "Got new connection, probably WebSocket..");
   web_socket_.async_accept(
       boost::asio::bind_executor(
           strand_,
@@ -117,6 +118,7 @@ void EndpointWebSocket<TXType>::async_read_at_least(
 template <typename TXType>
 void EndpointWebSocket<TXType>::on_accept(const boost::system::error_code& ec)
 {
+  FETCH_LOG_WARN(LOGGING_NAME, "WebSocket accepted");
   EndpointBase<TXType>::go();
 /*
   using namespace std::chrono_literals;

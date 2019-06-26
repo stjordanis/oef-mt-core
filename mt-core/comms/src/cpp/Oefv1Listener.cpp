@@ -11,6 +11,7 @@ Oefv1Listener<EndpointType>::Oefv1Listener(std::shared_ptr<Core> core, int port)
 {
   this -> port = port;
   listener.creator = [this](Core &core) {
+    std::cout << "Create endpoint...." << std::endl;
     auto ep0 = std::make_shared<EndpointType<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000);
     auto ep1 = std::make_shared<ProtoMessageEndpoint>(std::move(ep0));
     ep1->setup(ep1);

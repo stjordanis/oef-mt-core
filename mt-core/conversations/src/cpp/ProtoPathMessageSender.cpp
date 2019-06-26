@@ -27,11 +27,9 @@ ProtoPathMessageSender::consumed_needed_pair ProtoPathMessageSender::checkForSpa
         FETCH_LOG_WARN(LOGGING_NAME, "No endpoint pointer, break..");
         break;
       }
-      FETCH_LOG_WARN(LOGGING_NAME, "is tx full?");
 
       if (!ep->IsTXQFull())
       {
-        FETCH_LOG_WARN(LOGGING_NAME, "wake");
         ep->wake();
 
         if (txq.empty())
@@ -41,10 +39,7 @@ ProtoPathMessageSender::consumed_needed_pair ProtoPathMessageSender::checkForSpa
         }
       }
 
-      FETCH_LOG_WARN(LOGGING_NAME, "MUTEX LOCK BEFORE");
       Lock lock(mutex);
-      FETCH_LOG_WARN(LOGGING_NAME, "MUTEX LOCK AFTER");
-
 
       TransportHeader leader;
       leader.set_uri(txq.front().first.path.substr(1));
