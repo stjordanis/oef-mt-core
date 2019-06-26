@@ -7,24 +7,26 @@
 
 static Gauge ep_count("mt-core.network.Endpoint");
 
-Endpoint::Endpoint(
+template <typename TXType>
+Endpoint<TXType>::Endpoint(
       Core &core
       ,std::size_t sendBufferSize
       ,std::size_t readBufferSize
   )
-    : EndpointBase(sendBufferSize, readBufferSize)
+    : EndpointBase<TXType>(sendBufferSize, readBufferSize)
     , sock(core)
 {
   ep_count++;
 }
 
-Endpoint::~Endpoint()
+template <typename TXType>
+Endpoint<TXType>::~Endpoint()
 {
   ep_count--;
 }
 
-
-void Endpoint::async_write()
+template <typename TXType>
+void Endpoint<TXType>::async_write()
 {
   auto data = sendBuffer.getDataBuffers();
 
@@ -41,13 +43,14 @@ void Endpoint::async_write()
   boost::asio::async_write(
                            sock,
                            data,
-                           [this, my_state](const boost::system::error_code& ec, const size_t &bytes){
-                             this -> complete_sending(state, ec, bytes);
+                           [this, my_state](const  boost::system::error_code& ec, const size_t &bytes){
+                             this -> complete_sending(my_state, ec, bytes);
                            }
                            );
 }
 
-void Endpoint::async_read(const std::size_t& bytes_needed)
+template <typename TXType>
+void Endpoint<TXType>::async_read(const std::size_t& bytes_needed)
 {
   auto space = readBuffer.getSpaceBuffers();
   auto my_state = state;
@@ -57,7 +60,10 @@ void Endpoint::async_read(const std::size_t& bytes_needed)
                           space,
                           boost::asio::transfer_at_least(bytes_needed),
                           [this, my_state](const boost::system::error_code& ec, const size_t &bytes){
-                            this -> complete_reading(state, ec, bytes);
+                            this -> complete_reading(my_state, ec, bytes);
                           }
                           );
 }
+
+template class Endpoint<std::shared_ptr<google::protobuf::Message>>;
+template class Endpoint<std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>;

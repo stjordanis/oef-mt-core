@@ -1,5 +1,8 @@
 #pragma once
 
+#include "threading/src/cpp/lib/Waitable.hpp"
+#include "threading/src/cpp/lib/Notification.hpp"
+
 #include "basic_comms/src/cpp/RingBuffer.hpp"
 #include "basic_comms/src/cpp/ISocketOwner.hpp"
 #include <boost/asio.hpp>
@@ -8,11 +11,14 @@
 #include "basic_comms/src/cpp/IMessageReader.hpp"
 #include "basic_comms/src/cpp/IMessageWriter.hpp"
 #include <iostream>
+#include <list>
 
 class Uri;
 
+template <typename TXType>
 class EndpointBase
   : public ISocketOwner
+  , public Waitable
 {
 public:
   using Mutex   = std::mutex;
@@ -35,6 +41,7 @@ public:
     ERRORED_ENDPOINT = 8
   };
 
+  static constexpr std::size_t BUFFER_SIZE_LIMIT = 50;
   static constexpr char const *LOGGING_NAME = "EndpointBase";
 
   EndpointBase(const EndpointBase &other) = delete;
@@ -53,7 +60,7 @@ public:
   virtual void go();
 
   std::shared_ptr<IMessageReader> reader;
-  std::shared_ptr<IMessageWriter> writer;
+  std::shared_ptr<IMessageWriter<TXType>> writer;
 
   ErrorNotification onError;
   EofNotification onEof;
@@ -65,7 +72,15 @@ public:
   virtual void close();
   virtual bool connect(const Uri &uri, Core &core);
 
-  const std::string &getRemoteId() const { return remote_id; }
+  virtual const std::string &getRemoteId() const { return remote_id; }
+
+  virtual Notification::NotificationBuilder send(TXType &s);
+
+  virtual bool IsTXQFull()
+  {
+    Lock lock(txq_mutex);
+    return txq.size() >= BUFFER_SIZE_LIMIT;
+  }
 
 protected:
 
@@ -77,6 +92,7 @@ protected:
   RingBuffer readBuffer;
 
   Mutex mutex;
+  Mutex txq_mutex;
   std::size_t read_needed = 0;
 
   std::string remote_id;
@@ -86,12 +102,16 @@ protected:
 
   std::shared_ptr<StateType> state;
 
-  void error(const boost::system::error_code& ec);
-  void proto_error(const std::string &msg);
-  void eof();
+  virtual void error(const boost::system::error_code& ec);
+  virtual void proto_error(const std::string &msg);
+  virtual void eof();
 
 
-  void complete_sending(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes);
-  void create_messages();
-  void complete_reading(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes);
+  virtual void complete_sending(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes);
+  virtual void create_messages();
+  virtual void complete_reading(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes);
+
+private:
+  std::vector<Notification::Notification> waiting;
+  std::list<TXType> txq;
 };

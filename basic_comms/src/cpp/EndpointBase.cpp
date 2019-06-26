@@ -7,7 +7,8 @@
 
 static Gauge count("mt-core.network.EndpointBase");
 
-bool EndpointBase::connect(const Uri &uri, Core &core)
+template <typename TXType>
+bool EndpointBase<TXType>::connect(const Uri &uri, Core &core)
 {
   boost::asio::ip::tcp::resolver resolver( core );
   boost::asio::ip::tcp::resolver::query query( uri.host, std::to_string( uri.port ));
@@ -31,7 +32,8 @@ bool EndpointBase::connect(const Uri &uri, Core &core)
   return false;
 }
 
-EndpointBase::EndpointBase(
+template <typename TXType>
+EndpointBase<TXType>::EndpointBase(
       std::size_t sendBufferSize
       ,std::size_t readBufferSize
   )
@@ -44,13 +46,14 @@ EndpointBase::EndpointBase(
   count++;
 }
 
-EndpointBase::~EndpointBase()
+template <typename TXType>
+EndpointBase<TXType>::~EndpointBase()
 {
   count--;
 }
 
-
-void EndpointBase::run_sending()
+template <typename TXType>
+void EndpointBase<TXType>::run_sending()
 {
   {
     Lock lock(mutex);
@@ -75,7 +78,8 @@ void EndpointBase::run_sending()
   async_write();
 }
 
-void EndpointBase::run_reading()
+template <typename TXType>
+void EndpointBase<TXType>::run_reading()
 {
   std::size_t read_needed_local = 0;
 
@@ -109,14 +113,16 @@ void EndpointBase::run_reading()
   async_read(read_needed_local);
 }
 
-void EndpointBase::close()
+template <typename TXType>
+void EndpointBase<TXType>::close()
 {
   Lock lock(mutex);
   *state |= CLOSED_ENDPOINT;
   socket().close();
 }
 
-void EndpointBase::eof()
+template <typename TXType>
+void EndpointBase<TXType>::eof()
 {
   if (*state & EOF_ENDPOINT)
   {
@@ -142,7 +148,8 @@ void EndpointBase::eof()
   }
 }
 
-void EndpointBase::error(const boost::system::error_code& ec)
+template <typename TXType>
+void EndpointBase<TXType>::error(const boost::system::error_code& ec)
 {
   if (*state & ERRORED_ENDPOINT)
   {
@@ -168,7 +175,8 @@ void EndpointBase::error(const boost::system::error_code& ec)
   }
 }
 
-void EndpointBase::proto_error(const std::string &msg)
+template <typename TXType>
+void EndpointBase<TXType>::proto_error(const std::string &msg)
 {
   //std::cout << "proto error: " << msg << std::endl;
 
@@ -197,7 +205,8 @@ void EndpointBase::proto_error(const std::string &msg)
   }
 }
 
-void EndpointBase::go()
+template <typename TXType>
+void EndpointBase<TXType>::go()
 {
   remote_id = socket().remote_endpoint().address().to_string();
   
@@ -219,7 +228,8 @@ void EndpointBase::go()
   run_reading();
 }
 
-void EndpointBase::complete_sending(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes)
+template <typename TXType>
+void EndpointBase<TXType>::complete_sending(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes)
 {
   try
   {
@@ -261,14 +271,16 @@ void EndpointBase::complete_sending(StateTypeP state, const boost::system::error
   }
 }
 
-void EndpointBase::create_messages()
+template <typename TXType>
+void EndpointBase<TXType>::create_messages()
 {
-  auto consumed_needed = writer -> checkForSpace(sendBuffer.getSpaceBuffers());
+  auto consumed_needed = writer -> checkForSpace(sendBuffer.getSpaceBuffers(), txq);
   auto consumed = consumed_needed.first;
   sendBuffer.markSpaceUsed(consumed);
 }
 
-void EndpointBase::complete_reading(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes)
+template <typename TXType>
+void EndpointBase<TXType>::complete_reading(StateTypeP state, const boost::system::error_code& ec, const size_t &bytes)
 {
   try
   {
@@ -346,3 +358,29 @@ void EndpointBase::complete_reading(StateTypeP state, const boost::system::error
     return;
   }
 }
+
+template <typename TXType>
+Notification::NotificationBuilder EndpointBase<TXType>::send(TXType &s)
+{
+  Lock lock(txq_mutex);
+  if (txq.size() < BUFFER_SIZE_LIMIT)
+  {
+    txq.push_back(s);
+    return Notification::NotificationBuilder();
+  }
+  else
+  {
+    return makeNotification();
+  }
+}
+
+namespace google
+{
+  namespace protobuf
+  {
+    class Message;
+  }
+}
+
+template class EndpointBase<std::shared_ptr<google::protobuf::Message>>;
+template class EndpointBase<std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>;

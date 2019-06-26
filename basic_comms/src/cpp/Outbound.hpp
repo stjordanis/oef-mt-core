@@ -3,14 +3,22 @@
 #include "basic_comms/src/cpp/Endpoint.hpp"
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 
-class Outbound:public Endpoint
+namespace google
+{
+  namespace protobuf
+  {
+    class Message;
+  }
+}
+
+class Outbound : public Endpoint<google::protobuf::Message>
 {
 public:
   Outbound(const Uri &uri
            , Core &core
            ,std::size_t sendBufferSize
            ,std::size_t readBufferSize)
-    : Endpoint(core, sendBufferSize, readBufferSize)
+    : Endpoint<google::protobuf::Message>(core, sendBufferSize, readBufferSize)
     , uri(uri)
     , core(core)
   {

@@ -16,12 +16,12 @@ namespace google
   };
 };
 
-class OefEndpoint: public ProtoMessageEndpoint, public std::enable_shared_from_this<OefEndpoint>
+class OefEndpoint:  public std::enable_shared_from_this<OefEndpoint>
 {
 public:
   static constexpr char const *LOGGING_NAME = "OefEndpoint";
 
-  OefEndpoint(Core &core):ProtoMessageEndpoint(core)
+  OefEndpoint(Core &core)
   {
   }
   virtual ~OefEndpoint()
@@ -30,7 +30,7 @@ public:
 
   void setup(std::shared_ptr<OefEndpoint> myself)
   {
-    ProtoMessageEndpoint::setup(myself);
+    //ProtoMessageEndpoint::setup(myself);
   }
 protected:
 private:

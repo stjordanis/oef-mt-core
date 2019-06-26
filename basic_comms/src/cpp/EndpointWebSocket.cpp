@@ -2,6 +2,7 @@
 
 #include "boost/asio/bind_executor.hpp"
 #include "monitoring/src/cpp/lib/Gauge.hpp"
+#include "cpp-utils/src/cpp/lib/Uri.hpp"
 
 #include <utility>
 
@@ -9,33 +10,34 @@ namespace websocket = boost::beast::websocket;
 
 static Gauge wsep_count("mt-core.network.EndpointWebSocket");
 
-
-EndpointWebSocket::EndpointWebSocket(
+template <typename TXType>
+EndpointWebSocket<TXType>::EndpointWebSocket(
     boost::asio::io_context& io_context,
     std::size_t sendBufferSize,
     std::size_t readBufferSize)
-  : EndpointBase(sendBufferSize, readBufferSize)
+  : EndpointBase<TXType>(sendBufferSize, readBufferSize)
   , web_socket_(io_context)
   , strand_(web_socket_.get_executor())
 {
   wsep_count ++;
 }
 
-EndpointWebSocket::~EndpointWebSocket()
+template <typename TXType>
+EndpointWebSocket<TXType>::~EndpointWebSocket()
 {
   wsep_count --;
 }
 
-
-void EndpointWebSocket::close()
+template <typename TXType>
+void EndpointWebSocket<TXType>::close()
 {
-  Lock lock(mutex);
-  *state |= CLOSED_ENDPOINT;
+  Lock lock(this->mutex);
+  *state |= this->CLOSED_ENDPOINT;
   web_socket_.close(websocket::close_code::normal);
 }
 
-
-void EndpointWebSocket::go()
+template <typename TXType>
+void EndpointWebSocket<TXType>::go()
 {
   web_socket_.async_accept(
       boost::asio::bind_executor(
@@ -49,7 +51,8 @@ void EndpointWebSocket::go()
   );
 }
 
-void EndpointWebSocket::async_write()
+template <typename TXType>
+void EndpointWebSocket<TXType>::async_write()
 {
   auto data = sendBuffer.getDataBuffers();
 
@@ -67,20 +70,21 @@ void EndpointWebSocket::async_write()
   web_socket_.async_write(
       data,
       [this, my_state](const boost::system::error_code& ec, const size_t &bytes){
-        this -> complete_sending(state, ec, bytes);
+        this -> complete_sending(my_state, ec, bytes);
       }
   );
 }
 
-void EndpointWebSocket::async_read(const std::size_t& bytes_needed)
+template <typename TXType>
+void EndpointWebSocket<TXType>::async_read(const std::size_t& bytes_needed)
 {
   auto space = readBuffer.getSpaceBuffers();
   auto my_state = state;
   async_read_at_least(bytes_needed, 0, space, my_state);
 }
 
-
-void EndpointWebSocket::async_read_at_least(
+template <typename TXType>
+void EndpointWebSocket<TXType>::async_read_at_least(
     const std::size_t& bytes_needed,
     std::size_t bytes_read,
     std::vector<RingBuffer::mutable_buffer>& space,
@@ -98,7 +102,7 @@ void EndpointWebSocket::async_read_at_least(
         bytes_read += bytes;
         if (bytes_read >= bytes_needed)
         {
-          this->complete_reading(state, ec, bytes);
+          this->complete_reading(my_state, ec, bytes);
         }
         else
         {
@@ -110,10 +114,10 @@ void EndpointWebSocket::async_read_at_least(
   );
 }
 
-
-void EndpointWebSocket::on_accept(const boost::system::error_code& ec)
+template <typename TXType>
+void EndpointWebSocket<TXType>::on_accept(const boost::system::error_code& ec)
 {
-  EndpointBase::go();
+  EndpointBase<TXType>::go();
 /*
   using namespace std::chrono_literals;
   if (ec)
@@ -154,3 +158,6 @@ void EndpointWebSocket::on_accept(const boost::system::error_code& ec)
 */
 
 }
+
+template class EndpointWebSocket<std::shared_ptr<google::protobuf::Message>>;
+template class EndpointWebSocket<std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>;

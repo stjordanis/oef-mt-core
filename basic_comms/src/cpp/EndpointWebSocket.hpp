@@ -11,14 +11,20 @@
 
 #include <memory>
 
+template <typename TXType>
 class EndpointWebSocket
-    : public EndpointBase
-    , public std::enable_shared_from_this<EndpointWebSocket>
+    : public EndpointBase<TXType>
+    , public std::enable_shared_from_this<EndpointWebSocket<TXType>>
 {
 public:
-  using Socket     = EndpointBase::Socket ;
-  using Lock       = EndpointBase::Lock;
-  using StateType  = EndpointBase::StateType;
+  using EndpointBase<TXType>::state;
+  using EndpointBase<TXType>::readBuffer;
+  using EndpointBase<TXType>::sendBuffer;
+  using std::enable_shared_from_this<EndpointWebSocket<TXType>>::shared_from_this;
+
+  using Socket     = typename EndpointBase<TXType>::Socket ;
+  using Lock       = typename EndpointBase<TXType>::Lock;
+  using StateType  = typename EndpointBase<TXType>::StateType;
   using WebSocket = boost::beast::websocket::stream<Socket>;
 
   static constexpr char const *LOGGING_NAME = "EndpointWebSocket";

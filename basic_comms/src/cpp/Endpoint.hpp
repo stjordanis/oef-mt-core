@@ -11,12 +11,17 @@
 #include <iostream>
 
 
+template <typename TXType>
 class Endpoint
-  : public EndpointBase
-  , public std::enable_shared_from_this<Endpoint>
+  : public EndpointBase<TXType>
+  , public std::enable_shared_from_this<Endpoint<TXType>>
 {
 public:
-  using Socket = EndpointBase::Socket;
+  using EndpointBase<TXType>::state;
+  using EndpointBase<TXType>::readBuffer;
+  using EndpointBase<TXType>::sendBuffer;
+
+  using Socket = typename EndpointBase<TXType>::Socket;
 
   static constexpr char const *LOGGING_NAME = "Endpoint";
 

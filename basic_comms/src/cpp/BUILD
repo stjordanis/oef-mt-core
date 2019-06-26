@@ -14,5 +14,6 @@ cc_library(
         "//fetch_teams/ledger:lib",
         "//monitoring/src/cpp/lib:lib",
         "@boost//:beast",
+        "//threading/src/cpp/lib:lib"
     ],
 )
