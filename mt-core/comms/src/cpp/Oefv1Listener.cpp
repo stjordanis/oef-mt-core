@@ -4,12 +4,14 @@
 
 #include "basic_comms/src/cpp/Core.hpp"
 #include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
+#include "basic_comms/src/cpp/EndpointWebSocket.hpp"
 
-Oefv1Listener::Oefv1Listener(std::shared_ptr<Core> core, int port):listener(*core, port)
+template <template <typename> class EndpointType>
+Oefv1Listener<EndpointType>::Oefv1Listener(std::shared_ptr<Core> core, int port):listener(*core, port)
 {
   this -> port = port;
-  listener.creator = [this](Core &core){
-    auto ep0 = std::make_shared<Endpoint<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000);
+  listener.creator = [this](Core &core) {
+    auto ep0 = std::make_shared<EndpointType<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000);
     auto ep1 = std::make_shared<ProtoMessageEndpoint>(std::move(ep0));
     ep1->setup(ep1);
     auto ep2 = std::make_shared<OefAgentEndpoint>(std::move(ep1));
@@ -20,7 +22,11 @@ Oefv1Listener::Oefv1Listener(std::shared_ptr<Core> core, int port):listener(*cor
   };
 }
 
-void Oefv1Listener::start(void)
+template <template <typename> class EndpointType>
+void Oefv1Listener<EndpointType>::start(void)
 {
   listener.start_accept();
 }
+
+template class Oefv1Listener<Endpoint>;
+template class Oefv1Listener<EndpointWebSocket>;

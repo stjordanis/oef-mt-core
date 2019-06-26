@@ -3,7 +3,6 @@
 #include "mt-core/tasks-base/src/cpp/TWorkerTask.hpp"
 #include "mt-core/comms/src/cpp/ProtoMessageEndpoint.hpp"
 #include "threading/src/cpp/lib/StateMachineTask.hpp"
-#include "mt-core/comms/src/cpp/OefEndpoint.hpp"
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 #include "mt-core/comms/src/cpp/OutboundConversation.hpp"
 #include "fetch_teams/ledger/logger.hpp"
@@ -162,11 +161,11 @@ public:
 
   OutboundSearchConnectorTask(Core &core, const std::string &core_key, const Uri &core_uri,
       const Uri &search_uri, std::shared_ptr<OutboundConversations> outbounds)
-    : uri(search_uri)
+    : outbounds_(std::move(outbounds))
+    , uri(search_uri)
     , core_uri(core_uri)
     , core_key(core_key)
     , core(core)
-    , outbounds_(std::move(outbounds))
     , connected(false)
   {
     ep = std::make_shared<EndpointType>(core, 1000000, 1000000);

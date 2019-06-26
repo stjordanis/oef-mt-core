@@ -4,11 +4,12 @@
 
 #include "mt-core/comms/src/cpp/Oefv1Listener.hpp"
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
+#include "basic_comms/src/cpp/Endpoint.hpp"
 
 ExitState OefListenerStarterTask::run(void)
 {
   // open port here.
-  auto result = std::make_shared<Oefv1Listener>(core, p);
+  auto result = std::make_shared<Oefv1Listener<Endpoint>>(core, p);
 
   result -> factoryCreator = initialFactoryCreator;
 
