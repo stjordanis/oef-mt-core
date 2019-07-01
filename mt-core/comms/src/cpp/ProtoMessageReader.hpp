@@ -17,8 +17,8 @@ public:
 
 
   ProtoMessageReader(std::weak_ptr<ProtoMessageEndpoint> &endpoint)
+    : endpoint(endpoint)
   {
-    this -> endpoint = endpoint;
   }
   virtual ~ProtoMessageReader()
   {

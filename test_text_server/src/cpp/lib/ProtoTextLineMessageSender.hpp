@@ -8,7 +8,7 @@
 
 #include "test_text_server/src/protos/message.pb.h"
 
-class ProtoTextLineMessageSender:public IMessageWriter
+class ProtoTextLineMessageSender:public IMessageWriter<TextLine>
 {
 public:
   using Mutex = std::mutex;

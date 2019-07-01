@@ -10,6 +10,7 @@ class Core;
 class OefAgentEndpoint;
 class IOefAgentTaskFactory;
 
+template <template <typename> class EndpointType>
 class Oefv1Listener:public IOefListener
 {
 public:
