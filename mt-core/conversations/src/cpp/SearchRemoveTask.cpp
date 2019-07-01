@@ -44,6 +44,10 @@ SearchRemoveTask::StateResult SearchRemoveTask::handleResponse(void)
                  conversation -> getAvailableReplyCount()
   );
 
+  if (conversation -> getAvailableReplyCount() == 0){
+    return SearchRemoveTask::StateResult(0, ERRORED);
+  }
+
   auto response = std::static_pointer_cast<fetch::oef::pb::RemoveResponse>(conversation->getReply(0));
 
   // TODO should add a status answer, even in the case of no error
