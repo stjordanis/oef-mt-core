@@ -11,10 +11,8 @@ static Gauge gauge_running("mt-core.taskpool.gauge.running_tasks");
 static Gauge gauge_suspended("mt-core.taskpool.gauge.sleeping_tasks");
 static Gauge gauge_future("mt-core.taskpool.gauge.future_tasks");
 
-Taskpool::Taskpool(bool autoReapFinishedTasks):quit(false)
+Taskpool::Taskpool():quit(false)
 {
-  this -> autoReapFinishedTasks = autoReapFinishedTasks;
-
   Counter("mt-core.tasks.popped-for-run");
   Counter("mt-core.tasks.run.std::exception");
   Counter("mt-core.tasks.run.exception");
@@ -122,38 +120,19 @@ void Taskpool::run(std::size_t thread_idx)
     switch(status)
     {
     case DEFER:
-      //std::cerr << "TASK " << mytask.get() << " DEFER" << std::endl;
       {
         Counter("mt-core.tasks.run.deferred")++;
         suspend(mytask);
       }
       break;
     case ERRORED:
-      {
-        Counter("mt-core.tasks.run.errored")++;
-        Lock lock(mutex);
-        finished_tasks.push_back(TaskDone(status, mytask));
-      }
-      //std::cerr << "TASK " << mytask.get() << " ERRORED" << std::endl;
+      Counter("mt-core.tasks.run.errored")++;
       break;
     case CANCELLED:
-      {
-        Counter("mt-core.tasks.run.cancelled")++;
-        Lock lock(mutex);
-        finished_tasks.push_back(TaskDone(status, mytask));
-      }
-      //std::cerr << "TASK " << mytask.get() << " CANCELLED" << std::endl;
+      Counter("mt-core.tasks.run.cancelled")++;
       break;
     case COMPLETE:
-      {
-        if (!autoReapFinishedTasks)
-        {
-          Counter("mt-core.tasks.run.completed")++;
-          Lock lock(mutex);
-          finished_tasks.push_back(TaskDone(status, mytask));
-        }
-      }
-      //std::cerr << "TASK " << mytask.get() << " COMPLETE" << std::endl;
+      Counter("mt-core.tasks.run.completed")++;
       break;
     }
   }
@@ -205,8 +184,6 @@ void Taskpool::stop(void)
 {
   Lock lock(mutex);
   quit = true;
-
-  finished_tasks.clear();
 
   for(auto const &t : pending_tasks)
   {
@@ -260,14 +237,6 @@ void Taskpool::after(TaskP task, const Milliseconds &delay)
 
   future_tasks.push(ft);
   Counter("mt-core.tasks.futured")++;
-}
-
-Taskpool::FinishedTasks Taskpool::getFinishedTasks()
-{
-  Lock lock(mutex);
-  FinishedTasks result;
-  result.swap(finished_tasks);
-  return result;
 }
 
 Taskpool::Timestamp Taskpool::lockless_getNextWakeTime(const Timestamp &current_time,

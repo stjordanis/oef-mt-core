@@ -23,7 +23,6 @@ public:
   using TaskP = std::shared_ptr<Task>;
   using Tasks = std::list<TaskP>;
   using TaskDone = std::pair<ExitState, TaskP>;
-  using FinishedTasks = std::list<TaskDone>;
   using RunningTasks = std::map<std::size_t, TaskP>;
   using SuspendedTasks = std::set<TaskP>;
 
@@ -31,7 +30,7 @@ public:
   using Timestamp = Clock::time_point;
   using Milliseconds = std::chrono::milliseconds;
 
-  Taskpool(bool autoReapFinishedTasks=true);
+  Taskpool();
   virtual ~Taskpool();
 
   virtual void submit(TaskP task);
@@ -40,7 +39,6 @@ public:
 
   virtual void run(std::size_t thread_number);
   virtual void setDefault();
-  virtual FinishedTasks getFinishedTasks();
   virtual void stop(void);
 
   static std::weak_ptr<Taskpool> getDefaultTaskpool();
@@ -67,10 +65,8 @@ private:
   std::atomic<bool> quit;
   std::condition_variable work_available;
   Tasks pending_tasks;
-  FinishedTasks finished_tasks;
   RunningTasks running_tasks;
   SuspendedTasks suspended_tasks;
-  bool autoReapFinishedTasks;
 
   struct FutureTask
   {

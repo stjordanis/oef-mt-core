@@ -11,4 +11,7 @@ message CoreConfig {
     uint32 tasks_thread_count = 5;
 
     map<string, string> karma_policy = 6;
+
+    string prometheus_log_file = 7;
+    uint32 prometheus_log_interval = 8;
 }
