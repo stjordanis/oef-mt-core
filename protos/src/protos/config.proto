@@ -6,12 +6,13 @@ message CoreConfig {
     string core_key = 1;
     string core_uri = 2;
     string search_uri = 3;
+    string ws_uri = 4;
 
-    uint32 comms_thread_count = 4;
-    uint32 tasks_thread_count = 5;
+    uint32 comms_thread_count = 10;
+    uint32 tasks_thread_count = 11;
 
-    map<string, string> karma_policy = 6;
+    map<string, string> karma_policy = 20;
 
-    string prometheus_log_file = 7;
-    uint32 prometheus_log_interval = 8;
+    string prometheus_log_file = 30;
+    uint32 prometheus_log_interval = 31;
 }

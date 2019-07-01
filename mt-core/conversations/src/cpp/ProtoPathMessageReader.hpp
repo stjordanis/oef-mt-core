@@ -4,20 +4,28 @@
 #include "basic_comms/src/cpp/ConstCharArrayBuffer.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
 #include "fetch_teams/ledger/logger.hpp"
+#include "basic_comms/src/cpp/EndpointBase.hpp"
 
-class Endpoint;
+namespace google
+{
+  namespace protobuf
+  {
+    class Message;
+  }
+}
 
 class ProtoPathMessageReader : public IMessageReader
 
 {
 public:
   using CompleteNotification = std::function<void (bool success, unsigned long id, ConstCharArrayBuffer buffer)>;
-  using ErrorNotification = std::function<void(unsigned long id, int error_code, const std::string& message)>;
+  using ErrorNotification    = std::function<void(unsigned long id, int error_code, const std::string& message)>;
+  using EndpointType         = EndpointBase<std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>;
 
   static constexpr char const *LOGGING_NAME = "ProtoPathMessageReader";
 
 
-  ProtoPathMessageReader(std::weak_ptr<Endpoint> endpoint)
+  ProtoPathMessageReader(std::weak_ptr<EndpointType> endpoint)
   {
     this -> endpoint = endpoint;
   }
@@ -32,7 +40,7 @@ public:
   ErrorNotification onError;
 protected:
 private:
-  std::weak_ptr<Endpoint> endpoint;
+  std::weak_ptr<EndpointType> endpoint;
 
   ProtoPathMessageReader(const ProtoPathMessageReader &other) = delete;
   ProtoPathMessageReader &operator=(const ProtoPathMessageReader &other) = delete;

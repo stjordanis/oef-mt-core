@@ -8,35 +8,49 @@
 
 static Gauge count("mt-core.network.OefAgentEndpoint");
 
-OefAgentEndpoint::OefAgentEndpoint(Core &core):OefEndpoint(core)
+OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoint)
+  : EndpointPipe(std::move(endpoint))
 {
   count++;
 }
 
-void OefAgentEndpoint::setup(std::shared_ptr<OefAgentEndpoint> myself)
+void OefAgentEndpoint::setup()
 {
   // can't do this in the constructor because shared_from_this doesn't work in there.
 
-  OefEndpoint::setup(myself);
+  std::weak_ptr<OefAgentEndpoint> myself_wp = shared_from_this();
 
-  std::weak_ptr<OefAgentEndpoint> myself_wp = myself;
-  auto completionHandler = [myself_wp](ConstCharArrayBuffer buffers){
+  endpoint->setOnCompleteHandler([myself_wp](ConstCharArrayBuffer buffers){
     if (auto myself_sp = myself_wp.lock())
     {
       myself_sp -> factory -> processMessage(buffers);
     }
-  };
-  protoMessageReader -> onComplete = completionHandler;
+  });
 
-  onError = [this](const boost::system::error_code& ec) { if (factory) { factory -> endpointClosed(); factory.reset(); } };
-  onEof = [this]()                                      { if (factory) { factory -> endpointClosed(); factory.reset(); } };
-  onProtoError = [this](const std::string &message)     { if (factory) { factory -> endpointClosed(); factory.reset(); } };
+  endpoint->setOnErrorHandler([myself_wp](const boost::system::error_code& ec) {
+    if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> factory -> endpointClosed();
+      myself_sp -> factory.reset();
+    }
+  });
+
+  endpoint->setOnEofHandler([myself_wp]() {
+    if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> factory -> endpointClosed();
+      myself_sp -> factory.reset();
+    }
+  });
+
+  endpoint->setOnProtoErrorHandler([myself_wp](const std::string &message) {
+    if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> factory -> endpointClosed();
+      myself_sp -> factory.reset();
+    }
+  });
 }
 
 void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_factory)
 {
-  Lock lock(mutex);
-
   if (factory)
   {
     new_factory -> endpoint = factory -> endpoint;
@@ -46,13 +60,10 @@ void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_fact
 
 OefAgentEndpoint::~OefAgentEndpoint()
 {
-  protoMessageReader -> onComplete = nullptr;
+  endpoint->setOnCompleteHandler(nullptr);
+  endpoint->setOnErrorHandler(nullptr);
+  endpoint->setOnEofHandler(nullptr);
+  endpoint->setOnProtoErrorHandler(nullptr);
   FETCH_LOG_INFO(LOGGING_NAME, "~OefAgentEndpoint");
   count--;
-}
-
-void OefAgentEndpoint::go(void)
-{
-  Endpoint::go();
-  FETCH_LOG_INFO(LOGGING_NAME, "GO!");
 }

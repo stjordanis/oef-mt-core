@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-class TextLineMessageSender:public IMessageWriter
+class TextLineMessageSender:public IMessageWriter<std::string>
 {
 public:
   using Mutex = std::mutex;

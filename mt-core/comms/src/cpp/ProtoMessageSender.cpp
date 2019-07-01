@@ -1,8 +1,8 @@
 #include "ProtoMessageSender.hpp"
-
+#include "mt-core/comms/src/cpp/ProtoMessageEndpoint.hpp"
 #include <google/protobuf/message.h>
 
-ProtoMessageSender::consumed_needed_pair ProtoMessageSender::checkForSpace(const mutable_buffers &data)
+ProtoMessageSender::consumed_needed_pair ProtoMessageSender::checkForSpace(const mutable_buffers &data, IMessageWriter<TXType>::TXQ& txq)
 {
   CharArrayBuffer chars(data);
   std::ostream os(&chars);
@@ -11,16 +11,21 @@ ProtoMessageSender::consumed_needed_pair ProtoMessageSender::checkForSpace(const
   while(true)
   {
     {
-      Lock lock(mutex);
-      if (txq.size() < BUFFER_SIZE_LIMIT)
+      auto ep = endpoint.lock();
+      if (ep == nullptr)
       {
-        wake();
+        break;
+      }
+      if (!ep->IsTXQFull())
+      {
+        ep->wake();
 
         if (txq.empty())
         {
           break;
         }
       }
+      Lock lock(mutex);
 
       uint32_t body_size = txq.front() -> ByteSize();
       uint32_t head_size = sizeof(uint32_t);
@@ -60,17 +65,4 @@ ProtoMessageSender::consumed_needed_pair ProtoMessageSender::checkForSpace(const
   return consumed_needed_pair(consumed, 0);
 }
 
-Notification::NotificationBuilder ProtoMessageSender::send(std::shared_ptr<google::protobuf::Message> &s)
-{
-  Lock lock(mutex);
-  if (txq.size() < BUFFER_SIZE_LIMIT)
-  {
-    txq.push_back(s);
-    return Notification::NotificationBuilder();
-  }
-  else
-  {
-    return makeNotification();
-  }
-}
 

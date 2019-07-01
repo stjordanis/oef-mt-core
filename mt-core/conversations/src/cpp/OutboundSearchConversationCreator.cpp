@@ -3,7 +3,6 @@
 #include "mt-core/tasks-base/src/cpp/TNonBlockingWorkerTask.hpp"
 #include "mt-core/comms/src/cpp/ProtoMessageEndpoint.hpp"
 #include "threading/src/cpp/lib/StateMachineTask.hpp"
-#include "mt-core/comms/src/cpp/OefEndpoint.hpp"
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 #include "mt-core/comms/src/cpp/OutboundConversation.hpp"
 #include "fetch_teams/ledger/logger.hpp"
@@ -22,6 +21,8 @@
 #include "protos/src/protos/search_response.pb.h"
 #include "protos/src/protos/search_update.pb.h"
 #include "protos/src/protos/search_transport.pb.h"
+
+#include <google/protobuf/message.h>
 
 class OutboundSearchConversation
   : public OutboundConversation
@@ -137,6 +138,7 @@ public:
   using Workload = Parent::Workload;
   using WorkloadP = Parent::WorkloadP;
   using WorkloadProcessed = TNonBlockingWorkerTask<OutboundSearchConversation, TNONBLOCKINGWORKERTASK_SIZE>::WorkloadProcessed;
+  using EndpointType = Endpoint<std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>;
   static constexpr char const *LOGGING_NAME = "OutboundSearchConversationWorkerTask";
   OutboundSearchConversationWorkerTask(Core &core, const std::string &core_key, const Uri &core_uri,
       const Uri &search_uri, std::shared_ptr<OutboundConversations> outbounds)
@@ -158,7 +160,7 @@ protected:
   std::shared_ptr<ProtoPathMessageSender> ep_send;
   std::shared_ptr<ProtoPathMessageReader> ep_read;
   std::shared_ptr<OutboundConversations> outbounds_;
-  std::shared_ptr<Endpoint> ep;
+  std::shared_ptr<EndpointType> ep;
 
   Uri uri;
   Uri core_uri;
@@ -191,7 +193,7 @@ bool OutboundSearchConversationWorkerTask::connect()
 {
   try
   {
-    ep = std::make_shared<Endpoint>(core, 1000000, 1000000);
+    ep = std::make_shared<EndpointType>(core, 1000000, 1000000);
 
     ep -> connect(uri, core);
     ep_send = std::make_shared<ProtoPathMessageSender>(ep);
@@ -258,7 +260,10 @@ OutboundSearchConversationWorkerTask::WorkloadProcessed OutboundSearchConversati
   }
 
   FETCH_LOG_INFO(LOGGING_NAME, "Send initiator...");
-  ep_send -> send(workload -> ident, workload -> uri, workload -> initiator);
+  Uri uri(workload -> uri);
+  uri.port = workload -> ident;
+  auto data = std::make_pair(uri, workload -> initiator);
+  ep -> send(data);
   FETCH_LOG_INFO(LOGGING_NAME, "Starting search ep send loop...");
   ep -> run_sending();
   FETCH_LOG_INFO(LOGGING_NAME, "done..");
@@ -268,7 +273,9 @@ OutboundSearchConversationWorkerTask::WorkloadProcessed OutboundSearchConversati
 OutboundSearchConversationCreator::OutboundSearchConversationCreator(const std::string &core_key, const Uri &core_uri,
     const Uri &search_uri, Core &core, std::shared_ptr<OutboundConversations> outbounds)
 {
-  endpoint = std::make_shared<ProtoMessageEndpoint>(core);
+  auto ep0 = std::make_shared<Endpoint<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000);
+  endpoint = std::make_shared<ProtoMessageEndpoint>(std::move(ep0));
+  endpoint->setup(endpoint);
 
   worker = std::make_shared<OutboundSearchConversationWorkerTask>(core, core_key, core_uri, search_uri, outbounds);
 

@@ -15,6 +15,8 @@
 #include "mt-core/karma/src/cpp/KarmaPolicyNone.hpp"
 
 #include "google/protobuf/util/json_util.h"
+#include "basic_comms/src/cpp/Endpoint.hpp"
+#include "basic_comms/src/cpp/EndpointWebSocket.hpp"
 
 using namespace std::placeholders;
 
@@ -25,6 +27,7 @@ int MtCore::run()
   FETCH_LOG_INFO(LOGGING_NAME, "Starting core...");
   FETCH_LOG_INFO(LOGGING_NAME, "Core key: ", config_.core_key());
   FETCH_LOG_INFO(LOGGING_NAME, "Core URI: ", config_.core_uri());
+  FETCH_LOG_INFO(LOGGING_NAME, "WebSocket URI: ", config_.ws_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Search URI: ", config_.search_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "comms_thread_count: ", config_.comms_thread_count());
   FETCH_LOG_INFO(LOGGING_NAME, "tasks_thread_count: ", config_.tasks_thread_count());
@@ -126,8 +129,15 @@ void MtCore::startListeners()
 
   Uri core_uri(config_.core_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", core_uri.port);
-  auto task = std::make_shared<OefListenerStarterTask>(core_uri.port, listeners, core, initialFactoryCreator);
+  auto task = std::make_shared<OefListenerStarterTask<Endpoint>>(core_uri.port, listeners, core, initialFactoryCreator);
   task -> submit();
+  if (!config_.ws_uri().empty())
+  {
+    Uri ws_uri(config_.ws_uri());
+    FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", ws_uri.port);
+    auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator);
+    task_ws -> submit();
+  }
 }
 
 

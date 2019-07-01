@@ -6,6 +6,7 @@
 
 class OefListenerSet;
 
+template <template <typename> class EndpointType>
 class OefListenerStarterTask:public IMtCoreTask
 {
 public:
