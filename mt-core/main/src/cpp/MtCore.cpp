@@ -72,12 +72,49 @@ int MtCore::run()
   {
     tasks -> updateStatus();
 
-    FETCH_LOG_INFO(LOGGING_NAME, "----------------------------------------------");
-    mon.report([](const std::string &name, std::size_t value){
-        FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
-      });
-    tasks -> getFinishedTasks();
-    sleep(3);
+    unsigned int snooze = 3;
+
+    if (config_.prometheus_log_file().length())
+    {
+      if (config_.prometheus_log_interval())
+      {
+        snooze = config_.prometheus_log_interval();
+      }
+
+      std::fstream fs;
+      fs.open(config_.prometheus_log_file().c_str(), std::fstream::out);
+      if (fs.is_open())
+      {
+        mon.report([&fs](const std::string &name, std::size_t value){
+
+            auto name2 = name;
+            for(int i=0;i<name2.length();i++)
+            {
+              if (name2[i] == '.')
+              {
+                name2[i] = '_';
+              }
+            }
+
+            fs << "# TYPE "
+               << name2
+               << " "
+               << (( name2.find("_gauge_") != std::string::npos) ? "gauge" : "counter")
+               << std::endl;
+            fs << name2 << " " << value<< std::endl;
+
+            FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
+          });
+      }
+    }
+    else
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "----------------------------------------------");
+      mon.report([](const std::string &name, std::size_t value){
+          FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
+        });
+    }
+    sleep(snooze);
   }
   return 0;
 }

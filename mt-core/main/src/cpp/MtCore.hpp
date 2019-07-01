@@ -6,7 +6,6 @@
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
 #include "mt-core/comms/src/cpp/OutboundConversations.hpp"
 #include "mt-core/comms/src/cpp/OefListenerStarterTask.hpp"
-#include "mt-core/main/src/cpp/MtCoreArgs.hpp"
 #include "threading/src/cpp/lib/Taskpool.hpp"
 #include "threading/src/cpp/lib/Threadpool.hpp"
 #include "mt-core/agents/src/cpp/Agents.hpp"
@@ -22,8 +21,6 @@ class IKarmaPolicy;
 class MtCore
 {
 public:
-  using args = MtCoreArgs;
-
   static constexpr char const *LOGGING_NAME = "MtCore";
 
   MtCore()
