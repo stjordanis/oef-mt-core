@@ -51,6 +51,10 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
                  conversation -> getAvailableReplyCount()
   );
 
+  if (conversation -> getAvailableReplyCount() == 0){
+    return SearchQueryTask::StateResult(0, ERRORED);
+  }
+
   if (!conversation->success())
   {
     FETCH_LOG_WARN(LOGGING_NAME, "Search call returned error...");

@@ -60,6 +60,10 @@ void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_fact
 
 OefAgentEndpoint::~OefAgentEndpoint()
 {
+  endpoint->setOnCompleteHandler(nullptr);
+  endpoint->setOnErrorHandler(nullptr);
+  endpoint->setOnEofHandler(nullptr);
+  endpoint->setOnProtoErrorHandler(nullptr);
   FETCH_LOG_INFO(LOGGING_NAME, "~OefAgentEndpoint");
   count--;
 }

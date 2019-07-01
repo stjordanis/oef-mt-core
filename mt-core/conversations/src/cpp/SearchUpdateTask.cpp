@@ -42,7 +42,16 @@ SearchUpdateTask::StateResult SearchUpdateTask::handleResponse(void)
                  conversation -> getAvailableReplyCount()
   );
 
-  auto response = std::static_pointer_cast<fetch::oef::pb::UpdateResponse>(conversation->getReply(0));
+  if (conversation -> getAvailableReplyCount() == 0){
+    return SearchUpdateTask::StateResult(0, ERRORED);
+  }
+
+  auto resp = conversation->getReply(0);
+  if (!resp){
+    FETCH_LOG_ERROR(LOGGING_NAME, "Got nullptr as reply");
+    return SearchUpdateTask::StateResult(0, ERRORED);
+  }
+  auto response = std::static_pointer_cast<fetch::oef::pb::UpdateResponse>(resp);
 
   // TODO should add a status answer, even in the case of no error
 

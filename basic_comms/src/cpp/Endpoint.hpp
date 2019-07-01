@@ -8,6 +8,7 @@
 #include "basic_comms/src/cpp/Core.hpp"
 #include "basic_comms/src/cpp/IMessageReader.hpp"
 #include "basic_comms/src/cpp/IMessageWriter.hpp"
+#include "fetch_teams/ledger/logger.hpp"
 #include <iostream>
 
 
