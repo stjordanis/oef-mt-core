@@ -103,7 +103,6 @@ int MtCore::run()
                << std::endl;
             fs << name2 << " " << value<< std::endl;
 
-            FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
           });
       }
     }
