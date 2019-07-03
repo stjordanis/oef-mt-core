@@ -13,6 +13,7 @@ public:
 
   Waitable()
   {
+    cancelled = false;
   }
   virtual ~Waitable()
   {
@@ -26,10 +27,20 @@ public:
     Lock lock_other(other.mutex);
     Lock lock(mutex);
     std::swap(waiting, other.waiting);
+    std::swap(cancelled, other.cancelled);
+  }
+
+  void cancel(void);
+
+  bool isCancelled(void) const
+  {
+    Lock lock(mutex);
+    return cancelled;
   }
 
 protected:
   Waiting waiting;
+  bool cancelled;
   mutable Mutex mutex;
 private:
   Waitable(const Waitable &other) = delete; // { copy(other); }

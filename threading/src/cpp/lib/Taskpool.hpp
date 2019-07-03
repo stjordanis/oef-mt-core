@@ -55,6 +55,8 @@ public:
 
   void updateStatus() const;
 
+  void cancelTaskGroup(std::size_t group_id);
+
 protected:
 private:
 
