@@ -171,7 +171,6 @@ int MtCore::run()
                << (( new_name.find("_gauge_") != std::string::npos) ? "gauge" : "counter")
                << std::endl;
             fs << new_name << " " << value<< std::endl;
-            FETCH_LOG_INFO(LOGGING_NAME, new_name, ":", value);
           });
       }
     }
