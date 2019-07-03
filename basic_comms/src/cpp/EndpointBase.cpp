@@ -47,6 +47,7 @@ EndpointBase<TXType>::EndpointBase(
 {
   state = std::make_shared<StateType>(0);
   count++;
+  ident = endpoint_ident++;
 }
 
 template <typename TXType>
