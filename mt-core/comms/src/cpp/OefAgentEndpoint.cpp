@@ -5,6 +5,8 @@
 #include "mt-core/comms/src/cpp/ProtoMessageSender.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
 #include "monitoring/src/cpp/lib/Gauge.hpp"
+#include "threading/src/cpp/lib/Task.hpp"
+#include "threading/src/cpp/lib/Taskpool.hpp"
 
 static Gauge count("mt-core.network.OefAgentEndpoint");
 
@@ -20,31 +22,37 @@ void OefAgentEndpoint::setup()
 
   std::weak_ptr<OefAgentEndpoint> myself_wp = shared_from_this();
 
-  endpoint->setOnCompleteHandler([myself_wp](ConstCharArrayBuffer buffers){
+  auto myGroupId = getIdent();
+
+  endpoint->setOnCompleteHandler([myGroupId, myself_wp](ConstCharArrayBuffer buffers){
     if (auto myself_sp = myself_wp.lock())
     {
+      Task::setThreadGroupId(myGroupId);
       myself_sp -> factory -> processMessage(buffers);
     }
   });
 
-  endpoint->setOnErrorHandler([myself_wp](const boost::system::error_code& ec) {
+  endpoint->setOnErrorHandler([myGroupId, myself_wp](const boost::system::error_code& ec) {
     if (auto myself_sp = myself_wp.lock()) {
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
+      Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
     }
   });
 
-  endpoint->setOnEofHandler([myself_wp]() {
+  endpoint->setOnEofHandler([myGroupId, myself_wp]() {
     if (auto myself_sp = myself_wp.lock()) {
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
+      Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
     }
   });
 
-  endpoint->setOnProtoErrorHandler([myself_wp](const std::string &message) {
+  endpoint->setOnProtoErrorHandler([myGroupId, myself_wp](const std::string &message) {
     if (auto myself_sp = myself_wp.lock()) {
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
+      Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
     }
   });
 }

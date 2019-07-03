@@ -33,7 +33,6 @@ public:
 
   using StateType  = std::atomic<int>;
   using StateTypeP = std::shared_ptr<StateType>;
-  
 
   using EndpointState = enum {
     RUNNING_ENDPOINT = 1,
@@ -91,6 +90,8 @@ public:
     return *state== RUNNING_ENDPOINT;
   }
 
+  std::size_t getIdent(void) const { return ident; }
+
 protected:
 
   virtual void async_read(const std::size_t& bytes_needed) = 0;
@@ -105,6 +106,7 @@ protected:
   Mutex mutex;
   Mutex txq_mutex;
   std::size_t read_needed = 0;
+  std::size_t ident;
 
   std::string remote_id;
 

@@ -7,6 +7,7 @@
 #include "boost/beast/websocket/error.hpp"
 
 static Gauge count("mt-core.network.EndpointBase");
+static std::atomic<std::size_t> endpoint_ident(1000);
 
 template <typename TXType>
 bool EndpointBase<TXType>::connect(const Uri &uri, Core &core)
@@ -30,6 +31,7 @@ bool EndpointBase<TXType>::connect(const Uri &uri, Core &core)
       return true;
     }
   }
+  ident = endpoint_ident++;
   return false;
 }
 

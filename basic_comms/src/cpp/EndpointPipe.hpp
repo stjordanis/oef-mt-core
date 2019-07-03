@@ -51,6 +51,8 @@ public:
     endpoint->wake();
   }
 
+  std::size_t getIdent(void) const { return endpoint->getIdent(); }
+
 protected:
   std::shared_ptr<EndpointType> endpoint;
 
