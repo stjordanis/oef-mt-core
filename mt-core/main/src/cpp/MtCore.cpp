@@ -18,9 +18,74 @@
 #include "basic_comms/src/cpp/Endpoint.hpp"
 #include "basic_comms/src/cpp/EndpointWebSocket.hpp"
 
+#include <ctype.h>
+
 using namespace std::placeholders;
 
 static const unsigned int minimum_thread_count = 1;
+
+std::string prometheusUpThatNamingString(const std::string &name)
+{
+  std::string r;
+  bool upshift = false;
+  for(int i=0;i<name.length();i++)
+  {
+    auto c = name[i];
+
+    switch(c)
+    {
+    case '-':
+    case '_':
+      upshift = true;
+      break;
+    case '.':
+      r += "_";
+      break;
+
+    case 'a':
+    case 'b':
+    case 'c':
+    case 'd':
+    case 'e':
+
+    case 'f':
+    case 'g':
+    case 'h':
+    case 'i':
+    case 'j':
+
+    case 'k':
+    case 'l':
+    case 'm':
+    case 'n':
+    case 'o':
+
+    case 'p':
+    case 'q':
+    case 'r':
+    case 's':
+    case 't':
+
+    case 'u':
+    case 'v':
+    case 'w':
+    case 'x':
+    case 'y':
+
+    case 'z':
+      if (upshift)
+      {
+        r += std::string(1, ::toupper(c));
+        upshift=false;
+        break;
+      }
+    default:
+      r += c;
+      break;
+    }
+  }
+  return r;
+}
 
 int MtCore::run()
 {
@@ -68,6 +133,8 @@ int MtCore::run()
   auto mon_task = std::make_shared<MonitoringTask>();
   mon_task -> submit();
 
+  std::map<std::string, std::string> prometheus_names;
+
   while(1)
   {
     tasks -> updateStatus();
@@ -85,24 +152,25 @@ int MtCore::run()
       fs.open(config_.prometheus_log_file().c_str(), std::fstream::out);
       if (fs.is_open())
       {
-        mon.report([&fs](const std::string &name, std::size_t value){
-
-            auto name2 = name;
-            for(int i=0;i<name2.length();i++)
+        mon.report([&fs, &prometheus_names](const std::string &name, std::size_t value){
+            std::string new_name;
+            auto new_name_iter = prometheus_names.find(name);
+            if (new_name_iter == prometheus_names.end())
             {
-              if (name2[i] == '.')
-              {
-                name2[i] = '_';
-              }
+              new_name = prometheusUpThatNamingString(name);
+              prometheus_names[name] = new_name;
+            }
+            else
+            {
+              new_name = new_name_iter -> second;
             }
 
             fs << "# TYPE "
-               << name2
+               << new_name
                << " "
-               << (( name2.find("_gauge_") != std::string::npos) ? "gauge" : "counter")
+               << (( new_name.find("_gauge_") != std::string::npos) ? "gauge" : "counter")
                << std::endl;
-            fs << name2 << " " << value<< std::endl;
-
+            fs << new_name << " " << value<< std::endl;
           });
       }
     }
