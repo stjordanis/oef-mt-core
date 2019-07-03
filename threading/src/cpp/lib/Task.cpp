@@ -33,7 +33,7 @@ std::size_t Task::setGroupId(std::size_t new_group_id)
   if (group_id != new_group_id)
   {
     group_id = new_group_id;
-    FETCH_LOG_INFO(LOGGING_NAME, " task ", task_id, " moved from group ", g, " to group ", group_id);
+    //FETCH_LOG_INFO(LOGGING_NAME, " task ", task_id, " moved from group ", g, " to group ", group_id);
   }
   return g;
 }
