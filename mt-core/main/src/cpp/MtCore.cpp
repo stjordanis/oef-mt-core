@@ -17,6 +17,7 @@
 #include "google/protobuf/util/json_util.h"
 #include "basic_comms/src/cpp/Endpoint.hpp"
 #include "basic_comms/src/cpp/EndpointWebSocket.hpp"
+#include <stdio.h>
 
 #include <ctype.h>
 
@@ -148,8 +149,11 @@ int MtCore::run()
         snooze = config_.prometheus_log_interval();
       }
 
+      std::string final_file = config_.prometheus_log_file();
+      std::string temp_file = final_file + ".tmp";
+
       std::fstream fs;
-      fs.open(config_.prometheus_log_file().c_str(), std::fstream::out);
+      fs.open(temp_file.c_str(), std::fstream::out);
       if (fs.is_open())
       {
         mon.report([&fs, &prometheus_names](const std::string &name, std::size_t value){
@@ -165,13 +169,31 @@ int MtCore::run()
               new_name = new_name_iter -> second;
             }
 
-            fs << "# TYPE "
-               << new_name
-               << " "
-               << (( new_name.find("_gauge_") != std::string::npos) ? "gauge" : "counter")
-               << std::endl;
+            if (new_name.find("_gauge_") != std::string::npos)
+            {
+              fs << "# TYPE " << new_name << " gauge" << std::endl;
+            }
+            else
+            {
+              new_name += "_total";
+              fs << "# TYPE " << new_name << " counter" << std::endl;
+            }
             fs << new_name << " " << value<< std::endl;
           });
+        FETCH_LOG_INFO(LOGGING_NAME, "Wrote ", temp_file);
+
+        if (::rename(temp_file.c_str(), final_file.c_str()) == 0)
+        {
+          FETCH_LOG_INFO(LOGGING_NAME, "Wrote ", final_file);
+        }
+        else
+        {
+          FETCH_LOG_WARN(LOGGING_NAME, "Could not create ", final_file);
+        }
+      }
+      else
+      {
+        FETCH_LOG_WARN(LOGGING_NAME, "Could not create ", temp_file);
       }
     }
     else
