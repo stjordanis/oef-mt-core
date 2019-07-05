@@ -21,6 +21,9 @@
 
 #include <ctype.h>
 
+#include "mt-core/secure/experimental/cpp/EndpointSSL.hpp"
+#include "mt-core/oef-functions/src/cpp/InitialSslHandshakeTaskFactory.hpp"
+
 using namespace std::placeholders;
 
 static const unsigned int minimum_thread_count = 1;
@@ -94,6 +97,7 @@ int MtCore::run()
   FETCH_LOG_INFO(LOGGING_NAME, "Core key: ", config_.core_key());
   FETCH_LOG_INFO(LOGGING_NAME, "Core URI: ", config_.core_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "WebSocket URI: ", config_.ws_uri());
+  FETCH_LOG_INFO(LOGGING_NAME, "SSL URI: ", config_.ssl_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Search URI: ", config_.search_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "comms_thread_count: ", config_.comms_thread_count());
   FETCH_LOG_INFO(LOGGING_NAME, "tasks_thread_count: ", config_.tasks_thread_count());
@@ -198,7 +202,7 @@ int MtCore::run()
           FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
         });
     }
-    sleep(snooze);
+    sleep(snooze*20);
   }
   return 0;
 }
@@ -221,6 +225,19 @@ void MtCore::startListeners()
     FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", ws_uri.port);
     auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator);
     task_ws -> submit();
+  }
+  if (!config_.ssl_uri().empty())
+  {
+    initialFactoryCreator =
+      [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+      {
+        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
+      };
+
+    Uri ssl_uri(config_.ssl_uri());
+    FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", ssl_uri.port);
+    auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core, initialFactoryCreator);
+    task_ssl -> submit();
   }
 }
 
