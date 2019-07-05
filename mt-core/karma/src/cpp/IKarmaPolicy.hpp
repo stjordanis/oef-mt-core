@@ -17,6 +17,8 @@ public:
   {
   }
 
+  virtual std::string getBalance(const KarmaAccount &identifier) = 0;
+
   // Returns True or throws
   virtual bool perform(const KarmaAccount &identifier, const std::string &action) = 0;
 

@@ -28,6 +28,11 @@ void KarmaPolicyBasic::Account::bringUpToDate()
   }
 }
 
+std::string KarmaPolicyBasic::getBalance(const KarmaAccount &identifier)
+{
+  return std::to_string(accounts.access(*identifier).karma);
+}
+
 KarmaPolicyBasic::KarmaPolicyBasic(const google::protobuf::Map<std::string, std::string> &config)
 {
  // foreach(auto &kv : config)

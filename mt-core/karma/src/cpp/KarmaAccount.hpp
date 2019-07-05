@@ -31,6 +31,8 @@ public:
   {
   }
 
+  std::string getBalance();
+
   virtual void upgrade(const std::string &pubkey="", const std::string &ip="");
 
   virtual bool perform(const std::string &action);

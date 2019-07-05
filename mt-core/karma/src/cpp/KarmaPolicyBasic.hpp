@@ -20,6 +20,7 @@ public:
 
   virtual bool perform(const KarmaAccount &identifier, const std::string &action) override;
   virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action) override;
+  virtual std::string getBalance(const KarmaAccount &identifier) override;
 
   virtual void refreshTick(std::size_t amount);
 protected:

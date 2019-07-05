@@ -24,6 +24,9 @@ void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
   auto k = karmaPolicy -> getAccount(endpoint -> getRemoteId(), "");
   std::swap(k, karma);
 
+  FETCH_LOG_INFO(LOGGING_NAME, "KARMA: account=", endpoint -> getRemoteId(), "  balance=", karma.getBalance());
+
+
   std::weak_ptr<OefAgentEndpoint> myself_wp = shared_from_this();
 
   endpoint->setOnCompleteHandler([myself_wp](ConstCharArrayBuffer buffers){

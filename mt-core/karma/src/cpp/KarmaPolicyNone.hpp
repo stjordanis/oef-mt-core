@@ -16,6 +16,7 @@ public:
 
   virtual bool perform(const KarmaAccount &identifier, const std::string &action);
   virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action);
+  virtual std::string getBalance(const KarmaAccount &identifier) { return "ACCEPT ALL"; }
 protected:
 private:
   KarmaPolicyNone(const KarmaPolicyNone &other) = delete;
