@@ -44,5 +44,5 @@ void KarmaAccount::upgrade(const std::string &pubkey, const std::string &ip)
 
 std::string KarmaAccount::getBalance()
 {
-  policy -> getBalance(id);
+  return policy -> getBalance(*this);
 }

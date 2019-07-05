@@ -30,11 +30,14 @@ void KarmaPolicyBasic::Account::bringUpToDate()
 
 std::string KarmaPolicyBasic::getBalance(const KarmaAccount &identifier)
 {
+  std::cout << "Getting account " << *identifier << std::endl;
   return std::to_string(accounts.access(*identifier).karma);
 }
 
 KarmaPolicyBasic::KarmaPolicyBasic(const google::protobuf::Map<std::string, std::string> &config)
 {
+    accounts.get("(null karma account)"); // make sure the null account exists.
+
  // foreach(auto &kv : config)
  // {
  //   this -> config[kv.first] = kv.second;
