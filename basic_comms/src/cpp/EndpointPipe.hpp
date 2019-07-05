@@ -51,6 +51,11 @@ public:
     endpoint->wake();
   }
 
+  virtual const std::string &getRemoteId(void) const
+  {
+    return endpoint -> getRemoteId();
+  }
+
 protected:
   std::shared_ptr<EndpointType> endpoint;
 

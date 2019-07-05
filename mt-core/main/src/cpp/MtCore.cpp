@@ -62,7 +62,7 @@ int MtCore::run()
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE!!");
   }
 
-  startListeners();
+  startListeners(karma_policy.get());
 
   Monitoring mon;
   auto mon_task = std::make_shared<MonitoringTask>();
@@ -118,7 +118,7 @@ int MtCore::run()
   return 0;
 }
 
-void MtCore::startListeners()
+void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
 {
   IOefListener::FactoryCreator initialFactoryCreator =
     [this](std::shared_ptr<OefAgentEndpoint> endpoint)
@@ -128,13 +128,13 @@ void MtCore::startListeners()
 
   Uri core_uri(config_.core_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", core_uri.port);
-  auto task = std::make_shared<OefListenerStarterTask<Endpoint>>(core_uri.port, listeners, core, initialFactoryCreator);
+  auto task = std::make_shared<OefListenerStarterTask<Endpoint>>(core_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
   task -> submit();
   if (!config_.ws_uri().empty())
   {
     Uri ws_uri(config_.ws_uri());
     FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", ws_uri.port);
-    auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator);
+    auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
     task_ws -> submit();
   }
 }

@@ -9,6 +9,7 @@ class Core;
 class IOefAgentTaskFactory;
 class ProtoMessageReader;
 class ProtoMessageSender;
+class IKarmaPolicy;
 
 class OefAgentEndpoint
     : public EndpointPipe<ProtoMessageEndpoint, google::protobuf::Message>

@@ -7,9 +7,10 @@
 #include "basic_comms/src/cpp/EndpointWebSocket.hpp"
 
 template <template <typename> class EndpointType>
-Oefv1Listener<EndpointType>::Oefv1Listener(std::shared_ptr<Core> core, int port):listener(*core, port)
+Oefv1Listener<EndpointType>::Oefv1Listener(std::shared_ptr<Core> core, int port, IKarmaPolicy *karmaPolicy):listener(*core, port)
 {
   this -> port = port;
+  this -> karmaPolicy = karmaPolicy;
   listener.creator = [this](Core &core) {
     std::cout << "Create endpoint...." << std::endl;
     auto ep0 = std::make_shared<EndpointType<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000);
@@ -18,7 +19,7 @@ Oefv1Listener<EndpointType>::Oefv1Listener(std::shared_ptr<Core> core, int port)
     auto ep2 = std::make_shared<OefAgentEndpoint>(std::move(ep1));
     auto factory = this -> factoryCreator(ep2);
     ep2 -> setFactory(factory);
-    ep2 -> setup(karmaPolicy);
+    ep2 -> setup(this -> karmaPolicy);
     return ep2;
   };
 }

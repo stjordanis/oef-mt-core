@@ -30,7 +30,10 @@ void KarmaPolicyBasic::Account::bringUpToDate()
 
 KarmaPolicyBasic::KarmaPolicyBasic(const google::protobuf::Map<std::string, std::string> &config)
 {
-  this -> config = config;
+ // foreach(auto &kv : config)
+ // {
+ //   this -> config[kv.first] = kv.second;
+ // }
 }
 
 KarmaPolicyBasic::~KarmaPolicyBasic()

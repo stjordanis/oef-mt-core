@@ -10,20 +10,20 @@
 
 static Gauge count("mt-core.network.OefAgentEndpoint");
 
-OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoint, IKarmaPolicy *karmaPolicy)
+OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoint)
   : EndpointPipe(std::move(endpoint))
 {
   count++;
+  
 }
 
-void OefAgentEndpoint::setup(std::shared_ptr<OefAgentEndpoint> myself)
+void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 {
   // can't do this in the constructor because shared_from_this doesn't work in there.
 
-
-  auto k = karmaPolicy -> getAccount(remote_id, "");
-
+  auto k = karmaPolicy -> getAccount(endpoint -> getRemoteId(), "");
   std::swap(k, karma);
+
   std::weak_ptr<OefAgentEndpoint> myself_wp = shared_from_this();
 
   endpoint->setOnCompleteHandler([myself_wp](ConstCharArrayBuffer buffers){
