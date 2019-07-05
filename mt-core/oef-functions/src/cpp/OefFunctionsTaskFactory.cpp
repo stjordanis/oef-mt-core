@@ -42,6 +42,7 @@ void OefFunctionsTaskFactory::endpointClosed()
       agent_public_key_,
       true);
   convTask -> submit();
+  convTask -> setGroupId(0);
 }
 
 void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
