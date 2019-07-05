@@ -35,6 +35,11 @@ void Monitoring::add(IdType id, CountType delta)
   inner -> access(id) += delta;
 }
 
+void Monitoring::set(IdType id, CountType delta)
+{
+  inner -> access(id) = delta;
+}
+
 void Monitoring::sub(IdType id, CountType delta)
 {
   inner -> access(id) -= delta;

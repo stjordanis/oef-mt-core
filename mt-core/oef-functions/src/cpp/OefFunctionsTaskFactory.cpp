@@ -17,20 +17,33 @@
 #include "mt-core/conversations/src/cpp/SearchUpdateTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchRemoveTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchQueryTask.hpp"
+#include <random>
 
 
 void OefFunctionsTaskFactory::endpointClosed()
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "Endpoint closed for agent: ", agent_public_key_);
+  FETCH_LOG_WARN(LOGGING_NAME, "Endpoint closed for agent: ", agent_public_key_, ". Sending removeRow to search...");
   agents_->remove(agent_public_key_);
+
+  std::random_device r;
+  std::default_random_engine e1(r());
+  std::uniform_int_distribution<uint32_t> uniform_dist(1000000, 1000000000);
+
+  auto convTask = std::make_shared<SearchRemoveTask>(
+      nullptr,
+      outbounds,
+      getEndpoint(),
+      uniform_dist(e1),
+      core_key_,
+      agent_public_key_,
+      true);
+  convTask -> submit();
 }
 
 void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
 {
   auto envelope = fetch::oef::pb::Envelope();
   IOefAgentTaskFactory::read(envelope, data, data.size - data.current);
-
-  FETCH_LOG_INFO(LOGGING_NAME, "2222222222222    Got an Envelope");
 
   auto payload_case = envelope.payload_case();
   int32_t msg_id = envelope.msg_id();
@@ -62,7 +75,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
             envelope.msg_id(),
             core_key_,
             uri.agentPartAsString());
-        convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterService REPLY");
+        convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterService REPLY ");
         convTask -> submit();
         break;
     }
@@ -76,7 +89,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.agentPartAsString());
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterService REPLY");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterService REPLY ");
       convTask -> submit();
       break;
     }
@@ -90,8 +103,8 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.agentPartAsString());
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterDescription REPLY");
-      convTask->submit();;
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kRegisterDescription REPLY ");
+      convTask->submit();
       break;
     }
     case fetch::oef::pb::Envelope::kUnregisterDescription:
@@ -107,7 +120,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.agentPartAsString());
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterDescription REPLY");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kUnregisterDescription REPLY ");
       convTask -> submit();
       break;
     }
@@ -121,7 +134,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.toString(), 1);
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchAgents");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchAgents ");
       convTask -> submit();
       break;
     }
@@ -135,7 +148,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.toString(), 1);
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServices");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServices ");
       convTask -> submit();
       break;
     }
@@ -149,11 +162,12 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
           envelope.msg_id(),
           core_key_,
           uri.toString(), 4);
-      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServicesWide");
+      convTask->setDefaultSendReplyFunc(LOGGING_NAME, "kSearchServicesWide ");
       convTask -> submit();
+      break;
     }
     case fetch::oef::pb::Envelope::PAYLOAD_NOT_SET:
-      FETCH_LOG_ERROR(LOGGING_NAME, "Cannot process payload {} from {}", payload_case, agent_public_key_);
+      FETCH_LOG_ERROR(LOGGING_NAME, "Cannot process payload ", payload_case, " from ", agent_public_key_);
       break;
   }
 }

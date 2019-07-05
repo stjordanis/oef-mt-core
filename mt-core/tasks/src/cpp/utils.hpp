@@ -51,7 +51,7 @@ namespace OEFURI {
     bool empty;
 
     URI()
-    : protocol{"tcp"}, coreURI{""}, coreKey{""}, agentKey{""}, agentAlias{""}, empty{true}
+        : protocol{"tcp"}, coreURI{""}, coreKey{""}, agentKey{""}, agentAlias{""}, empty{true}
     {
     }
 
@@ -78,14 +78,13 @@ namespace OEFURI {
 
     std::string agentPartAsString()
     {
-      return agentKey + "/" + agentAlias;
+      return agentKey + (agentAlias.size()>0 ? ("/" + agentAlias) : "");
     }
 
     void parse(const std::string &uri) {
       std::vector<std::string> vec;
       split(uri, vec, '/');
-      if (vec.size() < 6) {
-        std::cerr << "OEFURI parse failed! Invalid URI: " << uri << std::endl;
+      if (vec.size() < 7) {
         return;
       }
       std::cerr << "GOT: " << uri << std::endl;
@@ -144,7 +143,7 @@ namespace OEFURI {
     }
 
     Builder(URI uri)
-    : uri_(std::move(uri))
+        : uri_(std::move(uri))
     {
     }
 

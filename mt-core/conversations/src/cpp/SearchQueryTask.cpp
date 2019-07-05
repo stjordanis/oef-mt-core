@@ -3,7 +3,13 @@
 #include "mt-core/comms/src/cpp/OutboundConversation.hpp"
 #include "protos/src/protos/search_response.pb.h"
 #include "mt-core/tasks/src/cpp/utils.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
 
+static Counter tasks_created("mt-core.search.query.tasks_created");
+static Counter tasks_resolved("mt-core.search.query.tasks_resolved");
+static Counter tasks_replied("mt-core.search.query.tasks_replied");
+static Counter tasks_unreplied("mt-core.search.query.tasks_unreplied");
+static Counter tasks_succeeded("mt-core.search.query.tasks_succeeded");
 
 SearchQueryTask::EntryPoint searchQueryTaskEntryPoints[] = {
     &SearchQueryTask::createConv,
@@ -18,7 +24,7 @@ SearchQueryTask::SearchQueryTask(
     std::string core_key,
     std::string agent_uri,
     uint16_t ttl)
-    :  SearchConverstationTask(
+    :  SearchConversationTask(
         "search",
         std::move(initiator),
         std::move(outbounds),
@@ -30,12 +36,12 @@ SearchQueryTask::SearchQueryTask(
         this)
     , ttl_{ttl}
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "Task created.");
+  tasks_created++;
 }
 
 SearchQueryTask::~SearchQueryTask()
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "Task gone.");
+  tasks_resolved++;
 }
 
 SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
@@ -44,6 +50,10 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
   FETCH_LOG_INFO(LOGGING_NAME, "Response.. ",
                  conversation -> getAvailableReplyCount()
   );
+
+  if (conversation -> getAvailableReplyCount() == 0){
+    return SearchQueryTask::StateResult(0, ERRORED);
+  }
 
   if (!conversation->success())
   {
@@ -57,24 +67,21 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
     return SearchQueryTask::StateResult(0, DEFER);
   }
 
-  auto proto = conversation->getReply(0);
-  FETCH_LOG_WARN(LOGGING_NAME, "Got proto: ", proto->DebugString(), " , reply size=", conversation->getAvailableReplyCount());
+  auto response = std::static_pointer_cast<fetch::oef::pb::SearchResponse>(conversation->getReply(0));
 
-  auto response = std::static_pointer_cast<fetch::oef::pb::SearchResponse>(proto);
   auto answer = std::make_shared<OUT_PROTO>();
-
   answer->set_answer_id(msg_id_);
 
   if (ttl_ == 1)
   {
     FETCH_LOG_INFO(LOGGING_NAME,  "Got search response: ", response->DebugString(), ", size: ", response->result_size());
+    auto answer_agents = answer->mutable_agents();
     if (response->result_size() < 1)
     {
-      FETCH_LOG_WARN(LOGGING_NAME, "Got empty search result!");
+      FETCH_LOG_WARN(LOGGING_NAME, "Got empty search result! Sending: ", answer->DebugString(), " to agent ", agent_uri_);
     }
     else
     {
-      auto answer_agents = answer->mutable_agents();
       for (auto &item : response->result())
       {
         auto agts = item.agents();
@@ -85,19 +92,19 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
           answer_agents->add_agents(uri.agentPartAsString());
         }
       }
-      FETCH_LOG_INFO(LOGGING_NAME, "Sending {} agents to {}", answer_agents->agents().size(), agent_uri_);
+      FETCH_LOG_INFO(LOGGING_NAME, "Sending ", answer_agents->agents().size(), "agents to ", agent_uri_);
     }
   }
   else
   {
     FETCH_LOG_INFO(LOGGING_NAME,  "Got wide search response: ", response->DebugString());
+    auto agents_wide = answer->mutable_agents_wide();
     if (response->result_size()<1)
     {
-      FETCH_LOG_WARN(LOGGING_NAME, "Got empty search result!");
+      FETCH_LOG_WARN(LOGGING_NAME, "Got empty search result! Sending: ", answer->DebugString(), " to agent ", agent_uri_);
     }
     else
     {
-      auto agents_wide = answer->mutable_agents_wide();
       int agents_nbr = 0;
       for (auto &item : response->result())
       {
@@ -116,17 +123,19 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
           aw->set_score(a.score());
         }
       }
-      FETCH_LOG_INFO(LOGGING_NAME, "Sending {} agents to {}", agents_nbr, agent_uri_);
+      tasks_succeeded++;
+      FETCH_LOG_INFO(LOGGING_NAME, "Sending ", agents_nbr, "agents to ", agent_uri_);
     }
   }
 
-
   if (sendReply)
   {
+    tasks_replied++;
     sendReply(answer, endpoint);
   }
   else
   {
+    tasks_unreplied++;
     FETCH_LOG_WARN(LOGGING_NAME, "No sendReply!!");
   }
 

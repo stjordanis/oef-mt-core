@@ -28,7 +28,7 @@ void KarmaPolicyBasic::Account::bringUpToDate()
   }
 }
 
-KarmaPolicyBasic::KarmaPolicyBasic(const std::map<std::string, std::string> &config)
+KarmaPolicyBasic::KarmaPolicyBasic(const google::protobuf::Map<std::string, std::string> &config)
 {
   this -> config = config;
 }

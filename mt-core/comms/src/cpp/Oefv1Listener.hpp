@@ -11,6 +11,7 @@ class OefAgentEndpoint;
 class IOefAgentTaskFactory;
 class IKarmaPolicy;
 
+template <template <typename> class EndpointType>
 class Oefv1Listener:public IOefListener
 {
 public:

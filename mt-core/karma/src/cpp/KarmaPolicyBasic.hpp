@@ -6,11 +6,13 @@
 #include "mt-core/karma/src/cpp/KarmaAccount.hpp"
 #include "cpp-utils/src/cpp/lib/BucketsOf.hpp"
 
+#include "google/protobuf/map.h"
+
 class KarmaPolicyBasic
   : public IKarmaPolicy
 {
 public:
-  KarmaPolicyBasic(const std::map<std::string, std::string> &config);
+  KarmaPolicyBasic(const google::protobuf::Map<std::string, std::string> &config);
   virtual ~KarmaPolicyBasic();
 
   virtual KarmaAccount getAccount(const std::string &pubkey="", const std::string &ip="") override;

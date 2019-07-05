@@ -10,7 +10,6 @@
 class OutboundSearchConversationWorkerTask;
 class ProtoMessageEndpoint;
 class Core;
-class OutboundSearchConnectorTask;
 
 class OutboundSearchConversationCreator : public IOutboundConversationCreator
 {
@@ -27,7 +26,6 @@ private:
 
   std::shared_ptr<OutboundSearchConversationWorkerTask> worker;
   std::shared_ptr<ProtoMessageEndpoint> endpoint;
-  std::shared_ptr<OutboundSearchConnectorTask> searchConnector;
 
   OutboundSearchConversationCreator(const OutboundSearchConversationCreator &other) = delete;
   OutboundSearchConversationCreator &operator=(const OutboundSearchConversationCreator &other) = delete;

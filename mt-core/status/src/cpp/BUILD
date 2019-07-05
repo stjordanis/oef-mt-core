@@ -10,7 +10,6 @@ cc_library(
     defines = DEFINES,
     deps = [
          "//threading/src/cpp/lib:lib",
-         "//cpp-utils/src/cpp/lib:lib",
-         "@com_google_protobuf//:protobuf",
-    ],
+         "//mt-core/tasks-base/src/cpp:lib",
+   ],
 )

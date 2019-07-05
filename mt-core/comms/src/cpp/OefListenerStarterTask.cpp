@@ -4,11 +4,14 @@
 
 #include "mt-core/comms/src/cpp/Oefv1Listener.hpp"
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
+#include "basic_comms/src/cpp/Endpoint.hpp"
+#include "basic_comms/src/cpp/EndpointWebSocket.hpp"
 
-ExitState OefListenerStarterTask::run(void)
+template <template <typename> class EndpointType>
+ExitState OefListenerStarterTask<EndpointType>::run(void)
 {
   // open port here.
-  auto result = std::make_shared<Oefv1Listener>(core, p, karmaPolicy);
+  auto result = std::make_shared<Oefv1Listener>(core, p, karmaPolicy);
 
   result -> factoryCreator = initialFactoryCreator;
 
@@ -18,3 +21,6 @@ ExitState OefListenerStarterTask::run(void)
   listeners -> add(p, result);
   return ExitState::COMPLETE;
 }
+
+template class OefListenerStarterTask<Endpoint>;
+template class OefListenerStarterTask<EndpointWebSocket>;

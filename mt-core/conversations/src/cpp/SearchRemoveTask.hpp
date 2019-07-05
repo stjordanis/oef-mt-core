@@ -11,7 +11,7 @@ class OefAgentEndpoint;
 
 
 class SearchRemoveTask
-: public SearchConverstationTask<
+: public SearchConversationTask<
     fetch::oef::pb::AgentDescription,
     fetch::oef::pb::Server_AgentMessage,
     fetch::oef::pb::Remove,
@@ -22,7 +22,7 @@ public:
   using IN_PROTO      = fetch::oef::pb::AgentDescription;
   using OUT_PROTO     = fetch::oef::pb::Server_AgentMessage;
   using REQUEST_PROTO = fetch::oef::pb::Remove;
-  using PARENT = SearchConverstationTask<
+  using PARENT = SearchConversationTask<
       fetch::oef::pb::AgentDescription,
       fetch::oef::pb::Server_AgentMessage,
       fetch::oef::pb::Update,
@@ -33,7 +33,8 @@ public:
                    std::shared_ptr<OefAgentEndpoint> endpoint,
                    uint32_t msg_id,
                    std::string core_key,
-                   std::string agent_uri
+                   std::string agent_uri,
+                   bool remove_row = false
   );
   virtual ~SearchRemoveTask();
 
@@ -46,6 +47,9 @@ public:
 
   StateResult handleResponse(void) override;
   std::shared_ptr<REQUEST_PROTO> make_request_proto() override;
+
+private:
+  bool remove_row_;
 
 private:
   SearchRemoveTask(const SearchRemoveTask &other) = delete; // { copy(other); }

@@ -7,6 +7,7 @@
 class OefListenerSet;
 class IKarmaPolicy;
 
+template <template <typename> class EndpointType>
 class OefListenerStarterTask:public IMtCoreTask
 {
 public:

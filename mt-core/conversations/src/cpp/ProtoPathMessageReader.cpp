@@ -2,6 +2,12 @@
 #include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
 #include "protos/src/protos/transport.pb.h"
 #include "basic_comms/src/cpp/Endpoint.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
+
+
+static Counter bytes_consumed_counter("mt-core.comms.protopath.read.bytes_consumed");
+static Counter bytes_requested_counter("mt-core.comms.protopath.read.bytes_requested");
+static Counter messages_handled_counter("mt-core.comms.protopath.read.messages_handled");
 
 
 ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::initial() {
@@ -11,7 +17,7 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::initial() {
 
 ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMessage(const buffers &data)
 {
-  std::cout << "==================================== ProtoPathMessageReader::checkForMessage" << std::endl;
+  FETCH_LOG_INFO(LOGGING_NAME, "checkForMessage");
 
   std::string s;
 
@@ -63,7 +69,6 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
       break;
     }
 
-    chars.diagnostic();
     TransportHeader leader;
 
     auto header_chars = ConstCharArrayBuffer(chars, chars.current + leader_size);
@@ -77,6 +82,9 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
     consumed += head_size;
     consumed += body_size;
 
+    bytes_consumed_counter += head_size;
+    bytes_consumed_counter += body_size;
+
     if (!leader.status().success())
     {
       std::string msg{""};
@@ -89,6 +97,7 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
       }
       FETCH_LOG_WARN(LOGGING_NAME, "Got error message from search: error_code=",
           error_code, ", message=\"", msg, "\"");
+      Counter("mt-core.comms.protopath.read.error_response")++;
       if (onError)
       {
         onError(leader.id(), error_code, msg);
@@ -99,6 +108,7 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
       if (onComplete)
       {
         FETCH_LOG_WARN(LOGGING_NAME,  "+++++++++++++++++ onComplete.");
+        messages_handled_counter++;
         onComplete( leader.status().success(), leader.id(), ConstCharArrayBuffer(chars, chars.current + payload_size));
       }
       else
@@ -109,5 +119,6 @@ ProtoPathMessageReader::consumed_needed_pair ProtoPathMessageReader::checkForMes
 
     chars.advance(payload_size);
   }
+  bytes_requested_counter += needed;
   return consumed_needed_pair(consumed, needed);
 }

@@ -10,7 +10,7 @@ class OefAgentEndpoint;
 
 
 class SearchQueryTask
-: public SearchConverstationTask<
+: public SearchConversationTask<
     fetch::oef::pb::AgentSearch,
     fetch::oef::pb::Server_AgentMessage,
     fetch::oef::pb::SearchQuery,

@@ -28,6 +28,7 @@ public:
   bool submit();
 
   virtual void makeRunnable();
+
 private:
   std::shared_ptr<Taskpool> pool;
   std::atomic<bool> cancelled;

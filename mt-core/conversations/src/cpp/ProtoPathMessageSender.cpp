@@ -3,8 +3,14 @@
 #include <google/protobuf/message.h>
 #include "protos/src/protos/transport.pb.h"
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
 
-ProtoPathMessageSender::consumed_needed_pair ProtoPathMessageSender::checkForSpace(const mutable_buffers &data)
+
+static Counter bytes_produced_counter("mt-core.comms.protopath.send.bytes_produced");
+static Counter bytes_requested_counter("mt-core.comms.protopath.send.bytes_requested");
+static Counter messages_handled_counter("mt-core.comms.protopath.send.messages_handled");
+
+ProtoPathMessageSender::consumed_needed_pair ProtoPathMessageSender::checkForSpace(const mutable_buffers &data, IMessageWriter::TXQ& txq)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "search message tx...");
   CharArrayBuffer chars(data);
@@ -15,16 +21,25 @@ ProtoPathMessageSender::consumed_needed_pair ProtoPathMessageSender::checkForSpa
   {
     FETCH_LOG_INFO(LOGGING_NAME, "Starting search message tx...");
     {
-      Lock lock(mutex);
-      if (txq.size() < BUFFER_SIZE_LIMIT)
+      auto ep = endpoint.lock();
+      if (ep == nullptr)
       {
-        wake();
+        FETCH_LOG_WARN(LOGGING_NAME, "No endpoint pointer, break..");
+        break;
+      }
+
+      if (!ep->IsTXQFull())
+      {
+        ep->wake();
 
         if (txq.empty())
         {
+          FETCH_LOG_WARN(LOGGING_NAME, "TXQ empty, break..");
           break;
         }
       }
+
+      Lock lock(mutex);
 
       TransportHeader leader;
       leader.set_uri(txq.front().first.path.substr(1));
@@ -48,31 +63,18 @@ ProtoPathMessageSender::consumed_needed_pair ProtoPathMessageSender::checkForSpa
       leader.SerializeToOstream(&os);
       txq.front().second -> SerializeToOstream(&os);
 
+      bytes_produced_counter += 8;
+      bytes_produced_counter += leader_size;
+      bytes_produced_counter += payload_size;
+
       txq.pop_front();
+      messages_handled_counter++;
       //std::cout << "Ready for sending! bytes=" << mesg_size << std::endl;
       //chars.diagnostic();
 
       consumed += mesg_size;
     }
   }
+  bytes_requested_counter += consumed;
   return consumed_needed_pair(consumed, 0);
 }
-
-Notification::NotificationBuilder ProtoPathMessageSender::send(std::size_t ident, const Uri &path, std::shared_ptr<google::protobuf::Message> &s)
-{
-  Lock lock(mutex);
-  if (txq.size() < BUFFER_SIZE_LIMIT)
-  {
-    FETCH_LOG_INFO(LOGGING_NAME, "send enqueing");
-
-    Uri uri(path);
-    uri.port = ident;
-    txq.push_back(std::make_pair(uri, s));
-    return Notification::NotificationBuilder();
-  }
-  else
-  {
-    return makeNotification();
-  }
-}
-

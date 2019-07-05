@@ -3,6 +3,11 @@
 
 #include "Listener.hpp"
 #include "Core.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
+
+static Counter accepting("mt-core.network.accept");
+static Counter errored("mt-core.network.accepted");
+static Counter accepted("mt-core.network.accepterror");
 
 Listener::Listener(Core &thecore, unsigned short int port):core(thecore)
 {
@@ -12,12 +17,14 @@ Listener::Listener(Core &thecore, unsigned short int port):core(thecore)
 void Listener::start_accept()
 {
   auto new_connection = creator(core);
+  accepting++;
   acceptor -> async_accept(new_connection->socket(),
                            std::bind(&Listener::handle_accept, this, new_connection, std::placeholders::_1));
 }
 
 void Listener::handle_accept(std::shared_ptr<ISocketOwner> new_connection, const boost::system::error_code& error)
 {
+  accepted++;
   if (!error)
   {
     new_connection->go();
@@ -25,6 +32,7 @@ void Listener::handle_accept(std::shared_ptr<ISocketOwner> new_connection, const
   }
   else
   {
+    errored++;
     std::cout << "Listener::handle_accept " << error << std::endl;
   }
 }
