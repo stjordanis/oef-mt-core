@@ -9,6 +9,8 @@ class IKarmaPolicy;
 class KarmaAccount
 {
 public:
+  static constexpr char const *LOGGING_NAME = "KarmaAccount";
+
   KarmaAccount(const KarmaAccount &other) { copy(other); }
   KarmaAccount &operator=(const KarmaAccount &other) { copy(other); return *this; }
   bool operator==(const KarmaAccount &other) const { return compare(other)==0; }
@@ -18,14 +20,18 @@ public:
     this -> id = 0;
     this -> policy = policy;
   }
-  KarmaAccount(std::size_t id, IKarmaPolicy *policy)
+
+  KarmaAccount()
   {
-    this -> id = id;
-    this -> policy = policy;
+    this -> id = 0;
+    this -> policy = 0;
   }
+
   virtual ~KarmaAccount()
   {
   }
+
+  virtual void upgrade(const std::string &pubkey="", const std::string &ip="");
 
   virtual bool perform(const std::string &action);
   virtual bool couldPerform(const std::string &action);
@@ -33,6 +39,8 @@ public:
   friend void swap(KarmaAccount &a, KarmaAccount &b);
   std::size_t operator*() const { return id; }
 protected:
+
+  friend IKarmaPolicy;
 
   std::size_t id;
   IKarmaPolicy *policy;
@@ -56,11 +64,16 @@ protected:
   {
     if (policy != other.policy)
     {
-      throw std::logic_error("KarmaAccounts are not comparable between policies.");
+      throw std::logic_error("KarmaAccounts are not swappable between policies.");
     }
     std::swap(id, other.id);
   }
-private:
+
+  KarmaAccount(std::size_t id, IKarmaPolicy *policy)
+  {
+    this -> id = id;
+    this -> policy = policy;
+  }
 };
 
 void swap(KarmaAccount& v1, KarmaAccount& v2);

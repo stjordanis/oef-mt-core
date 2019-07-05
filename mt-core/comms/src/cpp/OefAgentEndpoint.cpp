@@ -4,16 +4,23 @@
 #include "mt-core/comms/src/cpp/ProtoMessageReader.hpp"
 #include "mt-core/comms/src/cpp/ProtoMessageSender.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
+#include "mt-core/karma/src/cpp/IKarmaPolicy.hpp"
+#include "mt-core/karma/src/cpp/KarmaAccount.hpp"
+
 
 OefAgentEndpoint::OefAgentEndpoint(Core &core):OefEndpoint(core)
 {
 }
 
-void OefAgentEndpoint::setup(std::shared_ptr<OefAgentEndpoint> myself)
+void OefAgentEndpoint::setup(std::shared_ptr<OefAgentEndpoint> myself, IKarmaPolicy *karmaPolicy)
 {
   // can't do this in the constructor because shared_from_this doesn't work in there.
 
   OefEndpoint::setup(myself);
+
+  auto k = karmaPolicy -> getAccount(remote_id, "");
+
+  std::swap(k, karma);
 
   std::weak_ptr<OefAgentEndpoint> myself_wp = myself;
   auto completionHandler = [myself_wp](ConstCharArrayBuffer buffers){

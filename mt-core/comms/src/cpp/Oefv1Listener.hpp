@@ -9,11 +9,12 @@
 class Core;
 class OefAgentEndpoint;
 class IOefAgentTaskFactory;
+class IKarmaPolicy;
 
 class Oefv1Listener:public IOefListener
 {
 public:
-  Oefv1Listener(std::shared_ptr<Core> core, int port);
+  Oefv1Listener(std::shared_ptr<Core> core, int port, IKarmaPolicy *karmaPolicy);
   virtual ~Oefv1Listener()
   {
     std::cout << "Listener on "<< port << " GONE" << std::endl;
@@ -24,6 +25,8 @@ protected:
 private:
   Listener listener;
   int port;
+
+  IKarmaPolicy *karmaPolicy;
 
   Oefv1Listener(const Oefv1Listener &other) = delete;
   Oefv1Listener &operator=(const Oefv1Listener &other) = delete;

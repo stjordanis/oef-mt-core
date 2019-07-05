@@ -5,12 +5,15 @@
 #include "basic_comms/src/cpp/Core.hpp"
 #include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
 
-Oefv1Listener::Oefv1Listener(std::shared_ptr<Core> core, int port):listener(*core, port)
+class IKarmaPolicy;
+
+Oefv1Listener::Oefv1Listener(std::shared_ptr<Core> core, int port, IKarmaPolicy *karmaPolicy):listener(*core, port)
 {
   this -> port = port;
+  this -> karmaPolicy = karmaPolicy;
   listener.creator = [this](Core &core){
     auto ep = std::make_shared<OefAgentEndpoint>(core);
-    ep -> setup(ep);
+    ep -> setup(ep, this->karmaPolicy);
     auto factory = this -> factoryCreator(ep);
     ep -> setFactory(factory);
     return ep;

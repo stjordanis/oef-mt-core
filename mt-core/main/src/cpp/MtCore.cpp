@@ -83,7 +83,7 @@ void MtCore::startListeners(const std::vector<uint16_t> &ports)
   for(auto &p : ports)
   {
     FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", p);
-    auto task = std::make_shared<OefListenerStarterTask>(p, listeners, core, initialFactoryCreator);
+    auto task = std::make_shared<OefListenerStarterTask>(p, listeners, core, initialFactoryCreator, karma_policy.get());
     task -> submit();
   }
 }

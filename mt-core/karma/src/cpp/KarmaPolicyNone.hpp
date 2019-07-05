@@ -15,7 +15,7 @@ public:
   virtual KarmaAccount getAccount(const std::string &pubkey="", const std::string &ip="");
 
   virtual bool perform(const KarmaAccount &identifier, const std::string &action);
-  virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action) const;
+  virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action);
 protected:
 private:
   KarmaPolicyNone(const KarmaPolicyNone &other) = delete;

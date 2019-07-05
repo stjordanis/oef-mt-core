@@ -8,7 +8,7 @@
 ExitState OefListenerStarterTask::run(void)
 {
   // open port here.
-  auto result = std::make_shared<Oefv1Listener>(core, p);
+  auto result = std::make_shared<Oefv1Listener>(core, p, karmaPolicy);
 
   result -> factoryCreator = initialFactoryCreator;
 
