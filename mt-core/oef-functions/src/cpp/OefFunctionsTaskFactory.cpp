@@ -17,8 +17,11 @@
 #include "mt-core/conversations/src/cpp/SearchUpdateTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchRemoveTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchQueryTask.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
 #include <random>
 
+
+static Counter endpoint_closed("mt-core.oef_functions_endpoint_closed");
 
 void OefFunctionsTaskFactory::endpointClosed()
 {
@@ -29,6 +32,7 @@ void OefFunctionsTaskFactory::endpointClosed()
   std::default_random_engine e1(r());
   std::uniform_int_distribution<uint32_t> uniform_dist(1000000, 1000000000);
 
+  endpoint_closed ++;
   auto convTask = std::make_shared<SearchRemoveTask>(
       nullptr,
       outbounds,

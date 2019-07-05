@@ -6,8 +6,8 @@
 #include "monitoring/src/cpp/lib/Counter.hpp"
 
 static Counter accepting("mt-core.network.accept");
-static Counter errored("mt-core.network.accepted");
-static Counter accepted("mt-core.network.accepterror");
+static Counter errored("mt-core.network.accepterror");
+static Counter accepted("mt-core.network.accepted");
 
 Listener::Listener(Core &thecore, unsigned short int port):core(thecore)
 {
