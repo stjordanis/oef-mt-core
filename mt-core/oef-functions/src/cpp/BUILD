@@ -17,5 +17,8 @@ cc_library(
          "//protos/src/protos:cc_oef_core_pb",
          "//fetch_teams/ledger:lib",
          "//mt-core/agents/src/cpp:lib",
+         "//fetch_teams/ledger/experimental/crypto:lib",
+         "@openssl//:ssl",
+         "@openssl//:crypto",
    ],
 )

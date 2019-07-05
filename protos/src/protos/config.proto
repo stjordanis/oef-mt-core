@@ -8,6 +8,7 @@ message CoreConfig {
     string search_uri = 3;
     string ws_uri = 4;
     string ssl_uri = 5;
+    string secure_uri = 6;
 
     uint32 comms_thread_count = 10;
     uint32 tasks_thread_count = 11;
