@@ -35,7 +35,7 @@ public:
 
   virtual void upgrade(const std::string &pubkey="", const std::string &ip="");
 
-  virtual bool perform(const std::string &action);
+  virtual bool perform(const std::string &action, bool force=false);
   virtual bool couldPerform(const std::string &action);
 
   friend void swap(KarmaAccount &a, KarmaAccount &b);

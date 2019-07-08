@@ -6,7 +6,7 @@
 class MonitoringTask  : public Task
 {
 public:
-  static constexpr char const *LOGGING_NAME = "KarmaRefreshTask";
+  static constexpr char const *LOGGING_NAME = "MonitoringTask";
 
   MonitoringTask()
   {

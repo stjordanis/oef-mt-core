@@ -18,15 +18,16 @@ public:
   virtual KarmaAccount getAccount(const std::string &pubkey="", const std::string &ip="") override;
   void upgrade(KarmaAccount &account, const std::string &pubkey="", const std::string &ip="") override;
 
-  virtual bool perform(const KarmaAccount &identifier, const std::string &action) override;
+  virtual bool perform(const KarmaAccount &identifier, const std::string &action, bool force=false) override;
   virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action) override;
   virtual std::string getBalance(const KarmaAccount &identifier) override;
 
   virtual void refreshTick(std::size_t amount);
 protected:
 private:
-  using KARMA = std::size_t;
+  using KARMA = int32_t;
   using TICKS = std::size_t;
+  static constexpr char const *LOGGING_NAME = "KarmaPolicyBasic";
 
   class Account
   {
@@ -46,6 +47,8 @@ private:
 
   Accounts accounts;
   Config config;
+
+  KARMA afterwards(KARMA currentBalance, const std::string &effect);
 
   AccountNumber getAccountNumber(const AccountName &s);
   const std::string &getPolicy(const std::string &action) const;

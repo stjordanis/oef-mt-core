@@ -14,20 +14,23 @@ OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoin
   : EndpointPipe(std::move(endpoint))
 {
   count++;
-  
 }
 
 void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 {
   // can't do this in the constructor because shared_from_this doesn't work in there.
-
-  auto k = karmaPolicy -> getAccount(endpoint -> getRemoteId(), "");
-  std::swap(k, karma);
-
-  FETCH_LOG_INFO(LOGGING_NAME, "KARMA: account=", endpoint -> getRemoteId(), "  balance=", karma.getBalance());
-
-
   std::weak_ptr<OefAgentEndpoint> myself_wp = shared_from_this();
+
+  endpoint->setOnStartHandler([myself_wp, karmaPolicy](){
+      FETCH_LOG_INFO(LOGGING_NAME, "KARMA in OefAgentEndpoint");
+      if (auto myself_sp = myself_wp.lock())
+      {
+        auto k = karmaPolicy -> getAccount(myself_sp -> endpoint -> getRemoteId(), "");
+        std::swap(k, myself_sp -> karma);
+        myself_sp -> karma . perform("login");
+        FETCH_LOG_INFO(LOGGING_NAME, "KARMA: account=", myself_sp -> endpoint -> getRemoteId(), "  balance=", myself_sp -> karma.getBalance());
+      }
+    });
 
   endpoint->setOnCompleteHandler([myself_wp](ConstCharArrayBuffer buffers){
     if (auto myself_sp = myself_wp.lock())
@@ -38,6 +41,7 @@ void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 
   endpoint->setOnErrorHandler([myself_wp](const boost::system::error_code& ec) {
     if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> karma . perform("error");
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
     }
@@ -52,6 +56,7 @@ void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 
   endpoint->setOnProtoErrorHandler([myself_wp](const std::string &message) {
     if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> karma . perform("error");
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
     }

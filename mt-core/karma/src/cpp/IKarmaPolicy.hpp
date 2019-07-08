@@ -9,6 +9,7 @@ class IKarmaPolicy
 {
 public:
   static constexpr char const *LOGGING_NAME = "IKarmaPolicy";
+
   IKarmaPolicy();
   virtual ~IKarmaPolicy();
 
@@ -20,7 +21,7 @@ public:
   virtual std::string getBalance(const KarmaAccount &identifier) = 0;
 
   // Returns True or throws
-  virtual bool perform(const KarmaAccount &identifier, const std::string &action) = 0;
+  virtual bool perform(const KarmaAccount &identifier, const std::string &action, bool force=false) = 0;
 
   virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action) = 0;
 

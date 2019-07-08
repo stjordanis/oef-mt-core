@@ -23,7 +23,6 @@ public:
 
   void setFactory(std::shared_ptr<IOefAgentTaskFactory> new_factory);
   void setup(IKarmaPolicy *karmaPolicy);
-
 protected:
 private:
   std::shared_ptr<IOefAgentTaskFactory> factory;

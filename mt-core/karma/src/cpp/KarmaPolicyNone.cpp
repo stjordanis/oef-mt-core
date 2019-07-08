@@ -19,7 +19,7 @@ KarmaAccount KarmaPolicyNone::getAccount(const std::string &pubkey, const std::s
   return mkAccount(0);
 }
 
-bool KarmaPolicyNone::perform(const KarmaAccount &identifier, const std::string &action)
+bool KarmaPolicyNone::perform(const KarmaAccount &identifier, const std::string &action, bool force)
 {
   return true;
 }
