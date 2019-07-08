@@ -16,7 +16,7 @@ KarmaPolicyNone::~KarmaPolicyNone()
 
 KarmaAccount KarmaPolicyNone::getAccount(const std::string &pubkey, const std::string &ip)
 {
-  return mkAccount(0);
+  return mkAccount(0, "NO_KARMA_POLICY");
 }
 
 bool KarmaPolicyNone::perform(const KarmaAccount &identifier, const std::string &action, bool force)

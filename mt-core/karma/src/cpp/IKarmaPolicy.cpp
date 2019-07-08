@@ -29,7 +29,7 @@ void IKarmaPolicy::changeAccountNumber(KarmaAccount *acc, std::size_t number)
 }
 
 // because friendship is not heritable.
-KarmaAccount IKarmaPolicy::mkAccount(std::size_t number)
+KarmaAccount IKarmaPolicy::mkAccount(std::size_t number, const std::string &name)
 {
-  return KarmaAccount(number, this);
+  return KarmaAccount(number, this, name);
 }

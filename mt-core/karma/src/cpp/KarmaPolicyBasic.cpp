@@ -34,7 +34,7 @@ void KarmaPolicyBasic::Account::bringUpToDate()
 
 std::string KarmaPolicyBasic::getBalance(const KarmaAccount &identifier)
 {
-  return std::string("karma=") + std::to_string(accounts.access(*identifier).karma) + "/" + std::to_string(MAX_KARMA);
+  return std::string("account=") + identifier.getName() + "  karma=" +std::to_string(accounts.access(*identifier).karma) + "/" + std::to_string(MAX_KARMA);
 }
 
 KarmaPolicyBasic::KarmaPolicyBasic(const google::protobuf::Map<std::string, std::string> &config)
@@ -66,15 +66,15 @@ KarmaAccount KarmaPolicyBasic::getAccount(const std::string &pubkey, const std::
 {
   if (pubkey.length() > 0)
   {
-    return mkAccount(getAccountNumber(pubkey));
+    return mkAccount(getAccountNumber(pubkey), pubkey);
   }
   else if (ip.length() > 0)
   {
-    return mkAccount(getAccountNumber(ip));
+    return mkAccount(getAccountNumber(ip), ip);
   }
   else
   {
-    return mkAccount(0);
+    return mkAccount(0, "DEFAULT_KARMA_ACCOUNT");
   }
 }
 
@@ -144,10 +144,11 @@ KarmaPolicyBasic::KARMA KarmaPolicyBasic::afterwards(KARMA currentBalance, const
 
 bool KarmaPolicyBasic::perform(const KarmaAccount &identifier, const std::string &action, bool force)
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Event => ", action);
   accounts.access(*identifier).bringUpToDate();
   KARMA prev = accounts.access(*identifier).karma;
   KARMA next = afterwards(prev, getPolicy(action));
+
+  FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Event ", action, " for ", identifier.getName(), " scores ", prev, " => ",  next);
 
   if (next >= 0 || force)
   {

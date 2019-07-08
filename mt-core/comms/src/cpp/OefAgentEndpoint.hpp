@@ -23,10 +23,11 @@ public:
 
   void setFactory(std::shared_ptr<IOefAgentTaskFactory> new_factory);
   void setup(IKarmaPolicy *karmaPolicy);
+
+  KarmaAccount karma;
 protected:
 private:
   std::shared_ptr<IOefAgentTaskFactory> factory;
-  KarmaAccount karma;
 
   OefAgentEndpoint(const OefAgentEndpoint &other) = delete;
   OefAgentEndpoint &operator=(const OefAgentEndpoint &other) = delete;

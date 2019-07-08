@@ -19,6 +19,7 @@ public:
   {
     this -> id = 0;
     this -> policy = policy;
+    this -> name = "NULL_KARMA_ACCOUNT";
   }
 
   KarmaAccount()
@@ -40,12 +41,15 @@ public:
 
   friend void swap(KarmaAccount &a, KarmaAccount &b);
   std::size_t operator*() const { return id; }
+
+  const std::string &getName(void) const { return name; }
 protected:
 
   friend IKarmaPolicy;
 
   std::size_t id;
   IKarmaPolicy *policy;
+  std::string name;
 
   int compare(const KarmaAccount &other) const
   {
@@ -61,6 +65,7 @@ protected:
   {
     id = other.id;
     policy = other.policy;
+    name = other.name;
   }
   void swap(KarmaAccount &other)
   {
@@ -69,12 +74,14 @@ protected:
       throw std::logic_error("KarmaAccounts are not swappable between policies.");
     }
     std::swap(id, other.id);
+    std::swap(name, other.name);
   }
 
-  KarmaAccount(std::size_t id, IKarmaPolicy *policy)
+  KarmaAccount(std::size_t id, IKarmaPolicy *policy, const std::string &name)
   {
     this -> id = id;
     this -> policy = policy;
+    this -> name = name;
   }
 };
 

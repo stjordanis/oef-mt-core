@@ -34,7 +34,7 @@ protected:
   void changeAccountNumber(KarmaAccount *acc, std::size_t number);
 
   // because friendship is not heritable.
-    KarmaAccount mkAccount(std::size_t number);
+  KarmaAccount mkAccount(std::size_t number, const std::string &name);
 private:
   IKarmaPolicy(const IKarmaPolicy &other) = delete;
   IKarmaPolicy &operator=(const IKarmaPolicy &other) = delete;
