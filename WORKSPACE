@@ -4,40 +4,26 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "9510dd2afc29e7245e9e884336f848c8a6600a14ae726adb6befdb4f786f0be2",
-    strip_prefix = "protobuf-3.6.1.3",
-    urls = ["https://github.com/google/protobuf/archive/v3.6.1.3.zip"],
+    sha256 = "1e622ce4b84b88b6d2cdf1db38d1a634fe2392d74f0b7b74ff98f3a51838ee53",
+    strip_prefix = "protobuf-3.8.0",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.8.0.zip"],
 )
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
 
 http_archive(
     name = "six_archive",
-    build_file_content = """
-genrule(
-  name = "copy_six",
-  srcs = ["six-1.10.0/six.py"],
-  outs = ["six.py"],
-  cmd = "cp $< $(@)",
-)
-
-py_library(
-  name = "six",
-  srcs = ["six.py"],
-  srcs_version = "PY2AND3",
-  visibility = ["//visibility:public"],
-)
-""",
-#    sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a",
-    urls = [
-          "https://pypi.python.org/packages/source/s/six/six-1.10.0.tar.gz",
-    ],
+    build_file = "@//:six.BUILD",
+    sha256 = "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73",
+    urls = ["https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz"],
 )
 
 bind(
   name = "six",
   actual = "@six_archive//:six",
 )
-
-
 
 http_archive(
     name = "bazel_skylib",
@@ -48,7 +34,7 @@ http_archive(
 
 #http_archive(
 #    name = "pypi_six",
-#    url = "https://pypi.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz",
+#    url = "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz",
 #    build_file_content = """
 #py_library(
 #    name = "six",
@@ -56,23 +42,23 @@ http_archive(
 #    visibility = ["//visibility:public"],
 #)
 #    """,
-#    strip_prefix = "six-1.11.0",
+#    strip_prefix = "six-1.12.0",
 #)
 
 http_archive(
     name = "protobuf_python",
-    url = "https://files.pythonhosted.org/packages/1b/90/f531329e628ff34aee79b0b9523196eb7b5b6b398f112bb0c03b24ab1973/protobuf-3.6.1.tar.gz",
+    url = "https://files.pythonhosted.org/packages/65/95/8fe278158433a9bc34723f9ecbdee3097fb6baefaca932ec0331a9f80244/protobuf-3.8.0.tar.gz",
     build_file_content = """
 py_library(
     name = "protobuf_python",
     srcs = glob(["google/protobuf/**/*.py"]),
     visibility = ["//visibility:public"],
     imports = [
-        "//six:six",
+        "@pypi_six//:six",
     ],
 )
     """,
-    strip_prefix = "protobuf-3.6.1",
+    strip_prefix = "protobuf-3.8.0",
 )
 
 new_git_repository(
@@ -163,7 +149,7 @@ cc_library(
 
 git_repository(
     name = "com_github_nelhage_rules_boost",
-    commit = "6d6fd834281cb8f8e758dd9ad76df86304bf1869",
+    commit = "417642961150e987bc1ac78c7814c617566ffdaa",
     remote = "https://github.com/nelhage/rules_boost",
 )
 

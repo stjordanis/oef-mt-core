@@ -180,13 +180,8 @@ int MtCore::run()
             }
             fs << new_name << " " << value<< std::endl;
           });
-        FETCH_LOG_INFO(LOGGING_NAME, "Wrote ", temp_file);
 
-        if (::rename(temp_file.c_str(), final_file.c_str()) == 0)
-        {
-          FETCH_LOG_INFO(LOGGING_NAME, "Wrote ", final_file);
-        }
-        else
+        if (::rename(temp_file.c_str(), final_file.c_str()) != 0)
         {
           FETCH_LOG_WARN(LOGGING_NAME, "Could not create ", final_file);
         }
