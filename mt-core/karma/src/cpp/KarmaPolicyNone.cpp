@@ -16,15 +16,15 @@ KarmaPolicyNone::~KarmaPolicyNone()
 
 KarmaAccount KarmaPolicyNone::getAccount(const std::string &pubkey, const std::string &ip)
 {
-  return KarmaAccount(0, this);
+  return mkAccount(0, "NO_KARMA_POLICY");
 }
 
-bool KarmaPolicyNone::perform(const KarmaAccount &identifier, const std::string &action)
+bool KarmaPolicyNone::perform(const KarmaAccount &identifier, const std::string &action, bool force)
 {
   return true;
 }
 
-bool KarmaPolicyNone::couldPerform(const KarmaAccount &identifier, const std::string &action) const
+bool KarmaPolicyNone::couldPerform(const KarmaAccount &identifier, const std::string &action)
 {
   return true;
 }

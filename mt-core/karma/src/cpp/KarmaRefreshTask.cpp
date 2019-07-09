@@ -15,6 +15,6 @@ ExitState KarmaRefreshTask::run(void)
   FETCH_LOG_INFO(LOGGING_NAME, "LOGGED KarmaRefreshTask RUN ms=" + std::to_string(d.count()));
   policy -> refreshCycle(d);
 
-  submit(std::chrono::milliseconds(10000));
+  submit(std::chrono::milliseconds(interval));
   return COMPLETE;
 }

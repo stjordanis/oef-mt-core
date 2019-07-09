@@ -1,5 +1,4 @@
 build --python_path="/usr/local/opt/python/bin/python3.7"
-build --force_python=PY3
 
 build:asan --strip=never
 build:asan --copt -O1

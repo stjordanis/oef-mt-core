@@ -1,16 +1,17 @@
 #pragma once
 
-#include "mt-core/tasks/src/cpp/IMtCoreCommsTask.hpp"
-class OefEndpoint;
+#include "mt-core/tasks-base/src/cpp/IMtCoreTask.hpp"
+
+class OefAgentEndpoint;
 
 template<class PROTOBUF>
-class TSendProtoTask : public IMtCoreCommsTask
+class TSendProtoTask : public IMtCoreTask
 {
 public:
   using Proto = PROTOBUF;
   using ProtoP = std::shared_ptr<Proto>;
 
-  TSendProtoTask(ProtoP pb, std::shared_ptr<OefAgentEndpoint> endpoint) : IMtCoreCommsTask(endpoint)
+  TSendProtoTask(ProtoP pb, std::shared_ptr<OefAgentEndpoint> endpoint) : IMtCoreTask()
   {
     this -> endpoint = endpoint;
     this -> pb = pb;

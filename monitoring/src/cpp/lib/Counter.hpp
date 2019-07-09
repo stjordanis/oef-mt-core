@@ -11,6 +11,10 @@ public:
   {
     id = Monitoring::find(name);
   }
+  Counter(const std::string &name)
+  {
+    id = Monitoring::find(name.c_str());
+  }
   virtual ~Counter()
   {
   }

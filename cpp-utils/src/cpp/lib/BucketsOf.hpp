@@ -31,7 +31,7 @@ public:
     auto iter = names.find(name);
     if (iter == names.end())
     {
-      auto x = extend();
+      auto x = lockless_extend();
       names[name] = x;
       return x;
     }
@@ -46,7 +46,7 @@ public:
     return (iter != names.end());
   }
 
-  IDENT_TYPE extend()
+  IDENT_TYPE lockless_extend()
   {
     if (size >= BUCKET_SIZE * buckets.size())
     {

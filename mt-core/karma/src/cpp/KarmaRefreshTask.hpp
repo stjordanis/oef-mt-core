@@ -13,8 +13,9 @@ class KarmaRefreshTask
 public:
   static constexpr char const *LOGGING_NAME = "KarmaRefreshTask";
 
-  KarmaRefreshTask(IKarmaPolicy *policy)
+  KarmaRefreshTask(IKarmaPolicy *policy, std::size_t interval)
   {
+    this -> interval = interval;
     this -> policy = policy;
     FETCH_LOG_INFO(LOGGING_NAME, "KarmaRefreshTask CREATED");
     last_execute = std::chrono::high_resolution_clock::now();
@@ -32,6 +33,7 @@ public:
 protected:
   std::chrono::high_resolution_clock::time_point last_execute;
   IKarmaPolicy *policy;
+  std::size_t interval;
 private:
   KarmaRefreshTask(const KarmaRefreshTask &other) = delete;
   KarmaRefreshTask &operator=(const KarmaRefreshTask &other) = delete;

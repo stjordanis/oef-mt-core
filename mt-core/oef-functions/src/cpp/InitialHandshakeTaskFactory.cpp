@@ -44,6 +44,10 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
         state = WAITING_FOR_Agent_Server_Answer;
 
         agents_->add(public_key_, getEndpoint());
+
+        getEndpoint() -> karma . upgrade("", public_key_);
+        getEndpoint() -> karma . perform("login");
+
         successor(std::make_shared<OefFunctionsTaskFactory>(core_key_, agents_, public_key_, outbounds));
       }
       break;

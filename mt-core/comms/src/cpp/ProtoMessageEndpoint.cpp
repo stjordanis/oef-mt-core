@@ -3,23 +3,23 @@
 #include "mt-core/comms/src/cpp/ProtoMessageSender.hpp"
 #include "mt-core/comms/src/cpp/ProtoMessageReader.hpp"
 
-ProtoMessageEndpoint::ProtoMessageEndpoint(Core &core)
-  : Endpoint(core, 1000000, 1000000)
+
+ProtoMessageEndpoint::ProtoMessageEndpoint(std::shared_ptr<EndpointType> endpoint)
+  : EndpointPipe(std::move(endpoint))
 {
 }
 
-// can't do this in the constructor because shared_from_this doesn't work in there.
-
-void ProtoMessageEndpoint::setup(std::shared_ptr<ProtoMessageEndpoint> myself)
+void ProtoMessageEndpoint::setup(std::shared_ptr<ProtoMessageEndpoint>& myself)
 {
   std::weak_ptr<ProtoMessageEndpoint> myself_wp = myself;
 
   protoMessageSender = std::make_shared<ProtoMessageSender>(myself_wp);
-  writer = protoMessageSender;
+  endpoint->writer = protoMessageSender;
 
   protoMessageReader = std::make_shared<ProtoMessageReader>(myself_wp);
-  reader = protoMessageReader;
+  endpoint->reader = protoMessageReader;
 }
+
 
 void ProtoMessageEndpoint::setEndianness(Endianness newstate)
 {
@@ -27,7 +27,3 @@ void ProtoMessageEndpoint::setEndianness(Endianness newstate)
   protoMessageSender -> setEndianness(newstate);
 }
 
-Notification::NotificationBuilder ProtoMessageEndpoint::send(std::shared_ptr<google::protobuf::Message> s)
-{
-  return protoMessageSender -> send(s);
-}

@@ -2,6 +2,11 @@
 #include "mt-core/comms/src/cpp/OutboundConversations.hpp"
 #include "mt-core/comms/src/cpp/OutboundConversation.hpp"
 #include "protos/src/protos/search_response.pb.h"
+#include "monitoring/src/cpp/lib/Counter.hpp"
+
+static Counter remove_task_created("mt-core.search.remove.tasks_created");
+static Counter remove_task_errored("mt-core.search.remove.tasks_errored");
+static Counter remove_task_succeeded("mt-core.search.remove.tasks_succeeded");
 
 
 SearchRemoveTask::EntryPoint searchRemoveTaskEntryPoints[] = {
@@ -30,6 +35,7 @@ SearchRemoveTask::SearchRemoveTask(
     , remove_row_(remove_row)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Task created.");
+  remove_task_created++;
 }
 
 SearchRemoveTask::~SearchRemoveTask()
@@ -44,6 +50,11 @@ SearchRemoveTask::StateResult SearchRemoveTask::handleResponse(void)
                  conversation -> getAvailableReplyCount()
   );
 
+  if (conversation -> getAvailableReplyCount() == 0){
+    remove_task_errored++;
+    return SearchRemoveTask::StateResult(0, ERRORED);
+  }
+
   auto response = std::static_pointer_cast<fetch::oef::pb::RemoveResponse>(conversation->getReply(0));
 
   // TODO should add a status answer, even in the case of no error
@@ -56,6 +67,8 @@ SearchRemoveTask::StateResult SearchRemoveTask::handleResponse(void)
     error->set_operation(fetch::oef::pb::Server_AgentMessage_OEFError::UNREGISTER_SERVICE);
     FETCH_LOG_WARN(LOGGING_NAME, "Sending error ", error, " to ", agent_uri_);
 
+    remove_task_errored++;
+
     if (sendReply)
     {
       sendReply(answer, endpoint);
@@ -64,6 +77,10 @@ SearchRemoveTask::StateResult SearchRemoveTask::handleResponse(void)
     {
       FETCH_LOG_WARN(LOGGING_NAME, "No sendReply!!");
     }
+  }
+  else
+  {
+    remove_task_succeeded ++;
   }
 
   FETCH_LOG_INFO(LOGGING_NAME, "COMPLETE");

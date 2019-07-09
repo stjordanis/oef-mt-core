@@ -2,8 +2,8 @@ syntax = "proto2";
 
 package fetch.oef.pb;
 
-import "query.proto";
-import "fipa.proto";
+import "protos/src/protos/query.proto";
+import "protos/src/protos/fipa.proto";
 
 message Agent {
     message Server {

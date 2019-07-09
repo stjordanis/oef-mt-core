@@ -138,10 +138,10 @@ ExitState MonitoringTask::run(void)
   {
     Gauge marker(yes);
     marker = 1;
-    Gauge("status.core.vsize") = r_self.vsize;
-    Gauge("status.core.vsize.mb") = r_self.vsize / 1024 / 1024;
-    Gauge("status.core.rss") = r_self.rss;
-    Gauge("status.core.rss.mb") = r_self.rss / 1024 / 1024;
+    Gauge("mt-core.gauge.vsize") = r_self.vsize;
+    Gauge("mt-core.gauge.vsize.mb") = r_self.vsize / 1024 / 1024;
+    Gauge("mt-core.gauge.rss") = r_self.rss;
+    Gauge("mt-core.gauge.rss.mb") = r_self.rss / 1024 / 1024;
   }
   else
   {

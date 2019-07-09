@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package fetch.oef.pb;
 
-import "search_update.proto";
+import "protos/src/protos/search_update.proto";
 
 message Remove {
     bytes key = 1;

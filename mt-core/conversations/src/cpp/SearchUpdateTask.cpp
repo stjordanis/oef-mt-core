@@ -2,7 +2,11 @@
 #include "mt-core/comms/src/cpp/OutboundConversations.hpp"
 #include "mt-core/comms/src/cpp/OutboundConversation.hpp"
 #include "protos/src/protos/search_response.pb.h"
+#include "monitoring/src/cpp/lib/Counter.hpp"
 
+static Counter update_task_created("mt-core.search.update.tasks_created");
+static Counter update_task_errored("mt-core.search.update.tasks_errored");
+static Counter update_task_succeeded("mt-core.search.update.tasks_succeeded");
 
 SearchUpdateTask::EntryPoint searchUpdateTaskEntryPoints[] = {
     &SearchUpdateTask::createConv,
@@ -28,6 +32,7 @@ SearchUpdateTask::SearchUpdateTask(
         this)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Task created.");
+  update_task_created++;
 }
 
 SearchUpdateTask::~SearchUpdateTask()
@@ -42,7 +47,18 @@ SearchUpdateTask::StateResult SearchUpdateTask::handleResponse(void)
                  conversation -> getAvailableReplyCount()
   );
 
-  auto response = std::static_pointer_cast<fetch::oef::pb::UpdateResponse>(conversation->getReply(0));
+  if (conversation -> getAvailableReplyCount() == 0){
+    update_task_errored++;
+    return SearchUpdateTask::StateResult(0, ERRORED);
+  }
+
+  auto resp = conversation->getReply(0);
+  if (!resp){
+    FETCH_LOG_ERROR(LOGGING_NAME, "Got nullptr as reply");
+    update_task_errored++;
+    return SearchUpdateTask::StateResult(0, ERRORED);
+  }
+  auto response = std::static_pointer_cast<fetch::oef::pb::UpdateResponse>(resp);
 
   // TODO should add a status answer, even in the case of no error
 
@@ -53,7 +69,7 @@ SearchUpdateTask::StateResult SearchUpdateTask::handleResponse(void)
     auto error = answer->mutable_oef_error();
     error->set_operation(fetch::oef::pb::Server_AgentMessage_OEFError::REGISTER_SERVICE);
     FETCH_LOG_WARN(LOGGING_NAME, "Sending error ", error, " ", agent_uri_);
-
+    update_task_errored++;
     if (sendReply)
     {
       sendReply(answer, endpoint);
@@ -62,7 +78,10 @@ SearchUpdateTask::StateResult SearchUpdateTask::handleResponse(void)
     {
       FETCH_LOG_WARN(LOGGING_NAME, "No sendReply!!");
     }
-
+  }
+  else
+  {
+    update_task_succeeded++;
   }
 
   FETCH_LOG_INFO(LOGGING_NAME, "COMPLETE");

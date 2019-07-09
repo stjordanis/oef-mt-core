@@ -1,14 +1,15 @@
 #pragma once
 
+#include "basic_comms/src/cpp/EndpointBase.hpp"
 #include "mt-core/tasks-base/src/cpp/IMtCoreTask.hpp"
+
 #include <google/protobuf/message.h>
 
-class OefEndpoint;
 
 class IMtCoreCommsTask : public IMtCoreTask
 {
 public:
-  IMtCoreCommsTask(std::shared_ptr<OefEndpoint> endpoint) : IMtCoreTask()
+  IMtCoreCommsTask(std::shared_ptr<EndpointBase<google::protobuf::Message>> endpoint) : IMtCoreTask()
   {
     this -> endpoint = endpoint;
   }
@@ -17,7 +18,7 @@ public:
   }
 
 protected:
-  std::shared_ptr<OefEndpoint> endpoint;
+  std::shared_ptr<EndpointBase<google::protobuf::Message>> endpoint;
 private:
   IMtCoreCommsTask(const IMtCoreCommsTask &other) = delete;
   IMtCoreCommsTask &operator=(const IMtCoreCommsTask &other) = delete;

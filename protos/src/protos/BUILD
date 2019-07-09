@@ -6,7 +6,6 @@ proto_library(
     visibility = [
             "//visibility:public",
     ],
-    proto_source_root = "protos/src/protos",
 )
 
 py_proto_library(

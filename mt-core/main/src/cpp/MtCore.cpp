@@ -15,16 +15,89 @@
 #include "mt-core/karma/src/cpp/KarmaPolicyNone.hpp"
 
 #include "google/protobuf/util/json_util.h"
+#include "basic_comms/src/cpp/Endpoint.hpp"
+#include "basic_comms/src/cpp/EndpointWebSocket.hpp"
+#include <stdio.h>
+
+#include <ctype.h>
+
+#include "mt-core/secure/experimental/cpp/EndpointSSL.hpp"
+#include "mt-core/oef-functions/src/cpp/InitialSslHandshakeTaskFactory.hpp"
+#include "mt-core/oef-functions/src/cpp/InitialSecureHandshakeTaskFactory.hpp"
 
 using namespace std::placeholders;
 
 static const unsigned int minimum_thread_count = 1;
+
+std::string prometheusUpThatNamingString(const std::string &name)
+{
+  std::string r;
+  bool upshift = false;
+  for(int i=0;i<name.length();i++)
+  {
+    auto c = name[i];
+
+    switch(c)
+    {
+    case '-':
+    case '_':
+      upshift = true;
+      break;
+    case '.':
+      r += "_";
+      break;
+
+    case 'a':
+    case 'b':
+    case 'c':
+    case 'd':
+    case 'e':
+
+    case 'f':
+    case 'g':
+    case 'h':
+    case 'i':
+    case 'j':
+
+    case 'k':
+    case 'l':
+    case 'm':
+    case 'n':
+    case 'o':
+
+    case 'p':
+    case 'q':
+    case 'r':
+    case 's':
+    case 't':
+
+    case 'u':
+    case 'v':
+    case 'w':
+    case 'x':
+    case 'y':
+
+    case 'z':
+      if (upshift)
+      {
+        r += std::string(1, ::toupper(c));
+        upshift=false;
+        break;
+      }
+    default:
+      r += c;
+      break;
+    }
+  }
+  return r;
+}
 
 int MtCore::run()
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Starting core...");
   FETCH_LOG_INFO(LOGGING_NAME, "Core key: ", config_.core_key());
   FETCH_LOG_INFO(LOGGING_NAME, "Core URI: ", config_.core_uri());
+  FETCH_LOG_INFO(LOGGING_NAME, "WebSocket URI: ", config_.ws_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Search URI: ", config_.search_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "comms_thread_count: ", config_.comms_thread_count());
   FETCH_LOG_INFO(LOGGING_NAME, "tasks_thread_count: ", config_.tasks_thread_count());
@@ -59,27 +132,82 @@ int MtCore::run()
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE!!");
   }
 
-  startListeners();
+  startListeners(karma_policy.get());
 
   Monitoring mon;
   auto mon_task = std::make_shared<MonitoringTask>();
   mon_task -> submit();
 
+  std::map<std::string, std::string> prometheus_names;
+
   while(1)
   {
     tasks -> updateStatus();
 
-    FETCH_LOG_INFO(LOGGING_NAME, "----------------------------------------------");
-    mon.report([](const std::string &name, std::size_t value){
-        FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
-      });
-    tasks -> getFinishedTasks();
-    sleep(3);
+    unsigned int snooze = 3;
+
+    if (config_.prometheus_log_file().length())
+    {
+      if (config_.prometheus_log_interval())
+      {
+        snooze = config_.prometheus_log_interval();
+      }
+
+      std::string final_file = config_.prometheus_log_file();
+      std::string temp_file = final_file + ".tmp";
+
+      std::fstream fs;
+      fs.open(temp_file.c_str(), std::fstream::out);
+      if (fs.is_open())
+      {
+        mon.report([&fs, &prometheus_names](const std::string &name, std::size_t value){
+            std::string new_name;
+            auto new_name_iter = prometheus_names.find(name);
+            if (new_name_iter == prometheus_names.end())
+            {
+              new_name = prometheusUpThatNamingString(name);
+              prometheus_names[name] = new_name;
+            }
+            else
+            {
+              new_name = new_name_iter -> second;
+            }
+
+            if (new_name.find("_gauge_") != std::string::npos)
+            {
+              fs << "# TYPE " << new_name << " gauge" << std::endl;
+            }
+            else
+            {
+              new_name += "_total";
+              fs << "# TYPE " << new_name << " counter" << std::endl;
+            }
+            fs << new_name << " " << value<< std::endl;
+          });
+
+        if (::rename(temp_file.c_str(), final_file.c_str()) != 0)
+        {
+          FETCH_LOG_WARN(LOGGING_NAME, "Could not create ", final_file);
+        }
+      }
+      else
+      {
+        FETCH_LOG_WARN(LOGGING_NAME, "Could not create ", temp_file);
+      }
+    }
+    else
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, "----------------------------------------------");
+      mon.report([](const std::string &name, std::size_t value){
+          FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
+        });
+    }
+    sleep(snooze);
   }
   return 0;
 }
 
-void MtCore::startListeners()
+void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
 {
   IOefListener::FactoryCreator initialFactoryCreator =
     [this](std::shared_ptr<OefAgentEndpoint> endpoint)
@@ -89,8 +217,41 @@ void MtCore::startListeners()
 
   Uri core_uri(config_.core_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", core_uri.port);
-  auto task = std::make_shared<OefListenerStarterTask>(core_uri.port, listeners, core, initialFactoryCreator);
+  auto task = std::make_shared<OefListenerStarterTask<Endpoint>>(core_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
   task -> submit();
+  if (!config_.ws_uri().empty())
+  {
+    Uri ws_uri(config_.ws_uri());
+    FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", ws_uri.port);
+    auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+    task_ws -> submit();
+  }
+  if (!config_.ssl_uri().empty())
+  {
+    initialFactoryCreator =
+      [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+      {
+        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
+      };
+
+    Uri ssl_uri(config_.ssl_uri());
+    FETCH_LOG_INFO(LOGGING_NAME, "TLS/SSL Listener on ", ssl_uri.port);
+    auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+    task_ssl -> submit();
+  }
+  if (!config_.secure_uri().empty())
+  {
+    initialFactoryCreator =
+      [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+      {
+        return std::make_shared<InitialSecureHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
+      };
+
+    Uri secure_uri(config_.secure_uri());
+    FETCH_LOG_INFO(LOGGING_NAME, "Secure Listener on ", secure_uri.port);
+    auto task_secure = std::make_shared<OefListenerStarterTask<Endpoint>>(secure_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+    task_secure -> submit();
+  }
 }
 
 

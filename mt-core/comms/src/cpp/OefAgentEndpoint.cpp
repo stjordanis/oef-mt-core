@@ -5,38 +5,73 @@
 #include "mt-core/comms/src/cpp/ProtoMessageSender.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
 #include "monitoring/src/cpp/lib/Gauge.hpp"
+#include "threading/src/cpp/lib/Task.hpp"
+#include "threading/src/cpp/lib/Taskpool.hpp"
+#include "mt-core/karma/src/cpp/IKarmaPolicy.hpp"
 
 static Gauge count("mt-core.network.OefAgentEndpoint");
 
-OefAgentEndpoint::OefAgentEndpoint(Core &core):OefEndpoint(core)
+OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoint)
+  : EndpointPipe(std::move(endpoint))
 {
   count++;
 }
 
-void OefAgentEndpoint::setup(std::shared_ptr<OefAgentEndpoint> myself)
+void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 {
   // can't do this in the constructor because shared_from_this doesn't work in there.
+  std::weak_ptr<OefAgentEndpoint> myself_wp = shared_from_this();
 
-  OefEndpoint::setup(myself);
+  endpoint->setOnStartHandler([myself_wp, karmaPolicy](){
+      FETCH_LOG_INFO(LOGGING_NAME, "KARMA in OefAgentEndpoint");
+      if (auto myself_sp = myself_wp.lock())
+      {
+        auto k = karmaPolicy -> getAccount(myself_sp -> endpoint -> getRemoteId(), "");
+        std::swap(k, myself_sp -> karma);
+        myself_sp -> karma . perform("login");
+        FETCH_LOG_INFO(LOGGING_NAME, "KARMA: account=", myself_sp -> endpoint -> getRemoteId(), "  balance=", myself_sp -> karma.getBalance());
+      }
+    });
 
-  std::weak_ptr<OefAgentEndpoint> myself_wp = myself;
-  auto completionHandler = [myself_wp](ConstCharArrayBuffer buffers){
+  auto myGroupId = getIdent();
+
+  endpoint->setOnCompleteHandler([myGroupId, myself_wp](ConstCharArrayBuffer buffers){
     if (auto myself_sp = myself_wp.lock())
     {
+      Task::setThreadGroupId(myGroupId);
       myself_sp -> factory -> processMessage(buffers);
     }
-  };
-  protoMessageReader -> onComplete = completionHandler;
+  });
 
-  onError = [this](const boost::system::error_code& ec) { if (factory) { factory -> endpointClosed(); factory.reset(); } };
-  onEof = [this]()                                      { if (factory) { factory -> endpointClosed(); factory.reset(); } };
-  onProtoError = [this](const std::string &message)     { if (factory) { factory -> endpointClosed(); factory.reset(); } };
+  endpoint->setOnErrorHandler([myGroupId, myself_wp](const boost::system::error_code& ec) {
+    if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> karma . perform("error");
+      myself_sp -> factory -> endpointClosed();
+      myself_sp -> factory.reset();
+      Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
+    }
+  });
+
+  endpoint->setOnEofHandler([myGroupId, myself_wp]() {
+    if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> factory -> endpointClosed();
+      myself_sp -> factory.reset();
+      Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
+    }
+  });
+
+  endpoint->setOnProtoErrorHandler([myGroupId, myself_wp](const std::string &message) {
+    if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> karma . perform("error");
+      myself_sp -> factory -> endpointClosed();
+      myself_sp -> factory.reset();
+      Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
+    }
+  });
 }
 
 void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_factory)
 {
-  Lock lock(mutex);
-
   if (factory)
   {
     new_factory -> endpoint = factory -> endpoint;
@@ -46,12 +81,10 @@ void OefAgentEndpoint::setFactory(std::shared_ptr<IOefAgentTaskFactory> new_fact
 
 OefAgentEndpoint::~OefAgentEndpoint()
 {
+  endpoint->setOnCompleteHandler(nullptr);
+  endpoint->setOnErrorHandler(nullptr);
+  endpoint->setOnEofHandler(nullptr);
+  endpoint->setOnProtoErrorHandler(nullptr);
   FETCH_LOG_INFO(LOGGING_NAME, "~OefAgentEndpoint");
   count--;
-}
-
-void OefAgentEndpoint::go(void)
-{
-  Endpoint::go();
-  FETCH_LOG_INFO(LOGGING_NAME, "GO!");
 }

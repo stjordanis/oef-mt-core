@@ -10,40 +10,35 @@
 #include "threading/src/cpp/lib/Notification.hpp"
 #include "fetch_teams/ledger/logger.hpp"
 
-#include "./basic_comms/src/cpp/Endpoint.hpp"
+#include "basic_comms/src/cpp/EndpointBase.hpp"
 
+#include <list>
 
 namespace google
 {
   namespace protobuf
   {
     class Message;
-  };
-};
+  }
+}
 
 class ProtoMessageEndpoint;
 class Uri;
 
-#include <list>
 
 class ProtoPathMessageSender
-  : public IMessageWriter
-  , public Waitable
+  : public IMessageWriter <std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>
 {
 public:
   using Mutex = std::mutex;
   using Lock = std::lock_guard<Mutex>;
+  using TXType = std::pair<Uri, std::shared_ptr<google::protobuf::Message>>;
   using consumed_needed_pair = IMessageWriter::consumed_needed_pair;
+  using EndpointType         = EndpointBase<std::pair<Uri, std::shared_ptr<google::protobuf::Message>>>;
 
-  using Pb = google::protobuf::Message;
-  using PbP = std::shared_ptr<Pb>;
-  using Payload = std::pair<Uri, PbP>;
-  using Queue = std::list<Payload>;
-
-  static constexpr std::size_t BUFFER_SIZE_LIMIT = 50;
   static constexpr char const *LOGGING_NAME = "ProtoPathMessageSender";
 
-  ProtoPathMessageSender(std::weak_ptr<Endpoint> endpoint)
+  ProtoPathMessageSender(std::weak_ptr<EndpointType> endpoint)
   {
     this -> endpoint = endpoint;
   }
@@ -51,15 +46,12 @@ public:
   {
   }
 
-  Notification::NotificationBuilder send(std::size_t ident, const Uri &path, std::shared_ptr<google::protobuf::Message> &s);
-  virtual consumed_needed_pair checkForSpace(const mutable_buffers &data);
+  virtual consumed_needed_pair checkForSpace(const mutable_buffers &data, IMessageWriter::TXQ& txq);
 protected:
 private:
   Mutex mutex;
-  std::weak_ptr<Endpoint> endpoint;
-  std::vector<Notification::Notification> waiting;
+  std::weak_ptr<EndpointType> endpoint;
 
-  Queue txq;
 
   ProtoPathMessageSender(const ProtoPathMessageSender &other) = delete;
   ProtoPathMessageSender &operator=(const ProtoPathMessageSender &other) = delete;
