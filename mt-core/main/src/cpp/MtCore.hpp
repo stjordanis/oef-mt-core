@@ -45,7 +45,7 @@ private:
   Threadpool comms_runners;
   Threadpool tasks_runners;
 
-  void startListeners();
+  void startListeners(IKarmaPolicy *karmaPolicy);
   bool configureFromJsonFile(const std::string &config_file);
   bool configureFromJson(const std::string &config_json);
 

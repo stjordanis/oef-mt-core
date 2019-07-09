@@ -5,6 +5,7 @@
 #include "basic_comms/src/cpp/Core.hpp"
 
 class OefListenerSet;
+class IKarmaPolicy;
 
 template <template <typename> class EndpointType>
 class OefListenerStarterTask:public IMtCoreTask
@@ -15,12 +16,14 @@ public:
   OefListenerStarterTask(int p,
                          std::shared_ptr<OefListenerSet> listeners,
                          std::shared_ptr<Core> core,
-                         FactoryCreator initialFactoryCreator)
+                         FactoryCreator initialFactoryCreator,
+                         IKarmaPolicy *karmaPolicy)
   {
     this -> p = p;
     this -> listeners = listeners;
     this -> core = core;
     this -> initialFactoryCreator = initialFactoryCreator;
+    this -> karmaPolicy = karmaPolicy;
   }
   virtual ~OefListenerStarterTask()
   {
@@ -37,6 +40,8 @@ private:
   std::shared_ptr<Core> core;
   int p;
   FactoryCreator initialFactoryCreator;
+  IKarmaPolicy *karmaPolicy;
+
   OefListenerStarterTask(const OefListenerStarterTask &other) = delete;
   OefListenerStarterTask &operator=(const OefListenerStarterTask &other) = delete;
   bool operator==(const OefListenerStarterTask &other) = delete;

@@ -213,7 +213,7 @@ template <typename TXType>
 void EndpointBase<TXType>::go()
 {
   remote_id = socket().remote_endpoint().address().to_string();
-  //std::cout << "Endpoint::go" << std::endl;
+  FETCH_LOG_INFO(LOGGING_NAME, "remote_id detected as: ", remote_id);
   boost::asio::socket_base::linger option(false, 0);
   socket().set_option(option);
 
@@ -221,7 +221,17 @@ void EndpointBase<TXType>::go()
   {
     auto myStart = onStart;
     onStart = 0;
-    myStart();
+    try
+    {
+      myStart();
+    }
+    catch(...)
+    {
+      Lock lock(mutex);
+      *state |= ERRORED_ENDPOINT;
+      *state |= CLOSED_ENDPOINT;
+      socket().close();
+    }
   }
 
   *state |= RUNNING_ENDPOINT;

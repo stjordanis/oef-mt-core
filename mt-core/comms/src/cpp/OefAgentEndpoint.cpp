@@ -7,6 +7,7 @@
 #include "monitoring/src/cpp/lib/Gauge.hpp"
 #include "threading/src/cpp/lib/Task.hpp"
 #include "threading/src/cpp/lib/Taskpool.hpp"
+#include "mt-core/karma/src/cpp/IKarmaPolicy.hpp"
 
 static Gauge count("mt-core.network.OefAgentEndpoint");
 
@@ -16,11 +17,21 @@ OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoin
   count++;
 }
 
-void OefAgentEndpoint::setup()
+void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 {
   // can't do this in the constructor because shared_from_this doesn't work in there.
-
   std::weak_ptr<OefAgentEndpoint> myself_wp = shared_from_this();
+
+  endpoint->setOnStartHandler([myself_wp, karmaPolicy](){
+      FETCH_LOG_INFO(LOGGING_NAME, "KARMA in OefAgentEndpoint");
+      if (auto myself_sp = myself_wp.lock())
+      {
+        auto k = karmaPolicy -> getAccount(myself_sp -> endpoint -> getRemoteId(), "");
+        std::swap(k, myself_sp -> karma);
+        myself_sp -> karma . perform("login");
+        FETCH_LOG_INFO(LOGGING_NAME, "KARMA: account=", myself_sp -> endpoint -> getRemoteId(), "  balance=", myself_sp -> karma.getBalance());
+      }
+    });
 
   auto myGroupId = getIdent();
 
@@ -34,6 +45,7 @@ void OefAgentEndpoint::setup()
 
   endpoint->setOnErrorHandler([myGroupId, myself_wp](const boost::system::error_code& ec) {
     if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> karma . perform("error");
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
       Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
@@ -50,6 +62,7 @@ void OefAgentEndpoint::setup()
 
   endpoint->setOnProtoErrorHandler([myGroupId, myself_wp](const std::string &message) {
     if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> karma . perform("error");
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
       Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);

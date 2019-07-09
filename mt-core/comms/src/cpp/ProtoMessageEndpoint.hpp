@@ -37,6 +37,11 @@ public:
 
   void setup(std::shared_ptr<ProtoMessageEndpoint>& myself);
 
+  void setOnStartHandler(EndpointType::StartNotification handler)
+  {
+    endpoint -> onStart = std::move(handler);
+  }
+
   void setOnCompleteHandler(ProtoMessageReader::CompleteNotification handler)
   {
     protoMessageReader->onComplete = std::move(handler);
