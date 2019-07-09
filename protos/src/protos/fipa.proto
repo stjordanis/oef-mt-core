@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package fetch.oef.pb;
 
-import "query.proto";
+import "protos/src/protos/query.proto";
 
 message Fipa {
     message Cfp {

@@ -13,6 +13,7 @@ cc_library(
          "//mt-core/karma/src/cpp:lib",
          "//mt-core/threading/src/cpp:lib",
          "//mt-core/tasks-base/src/cpp:lib",
+         "//mt-core/secure/experimental/cpp:lib",
          "@com_google_protobuf//:protobuf",
          "//fetch_teams/ledger:lib"
     ],

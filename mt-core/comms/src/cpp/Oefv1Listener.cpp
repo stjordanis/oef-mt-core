@@ -5,6 +5,7 @@
 #include "basic_comms/src/cpp/Core.hpp"
 #include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
 #include "basic_comms/src/cpp/EndpointWebSocket.hpp"
+#include "mt-core/secure/experimental/cpp/EndpointSSL.hpp"
 
 template <template <typename> class EndpointType>
 Oefv1Listener<EndpointType>::Oefv1Listener(std::shared_ptr<Core> core, int port, IKarmaPolicy *karmaPolicy):listener(*core, port)
@@ -32,3 +33,4 @@ void Oefv1Listener<EndpointType>::start(void)
 
 template class Oefv1Listener<Endpoint>;
 template class Oefv1Listener<EndpointWebSocket>;
+template class Oefv1Listener<EndpointSSL>;

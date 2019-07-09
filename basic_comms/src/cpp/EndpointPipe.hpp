@@ -50,6 +50,8 @@ public:
   {
     endpoint->wake();
   }
+  
+  std::size_t getIdent(void) const { return endpoint->getIdent(); }
 
   virtual const std::string &getRemoteId(void) const
   {
