@@ -1,3 +1,5 @@
+workspace(name = "oort")
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
@@ -12,6 +14,14 @@ http_archive(
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
+
+http_archive(
+    name = "openssl",
+    url = "https://github.com/openssl/openssl/archive/OpenSSL_1_1_1c.tar.gz",
+    sha256 = "640f3a3c26aef38293b4ab4017562aa7dccf787267382d27fc003538b405bbb5",
+    strip_prefix = "openssl-OpenSSL_1_1_1c",
+    build_file = "@oort//:BUILD.openssl",
+)
 
 http_archive(
     name = "six_archive",

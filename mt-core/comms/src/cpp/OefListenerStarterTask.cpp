@@ -6,6 +6,7 @@
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
 #include "basic_comms/src/cpp/Endpoint.hpp"
 #include "basic_comms/src/cpp/EndpointWebSocket.hpp"
+#include "mt-core/secure/experimental/cpp/EndpointSSL.hpp"
 
 template <template <typename> class EndpointType>
 ExitState OefListenerStarterTask<EndpointType>::run(void)
@@ -24,3 +25,4 @@ ExitState OefListenerStarterTask<EndpointType>::run(void)
 
 template class OefListenerStarterTask<Endpoint>;
 template class OefListenerStarterTask<EndpointWebSocket>;
+template class OefListenerStarterTask<EndpointSSL>;

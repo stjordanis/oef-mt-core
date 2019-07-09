@@ -15,4 +15,7 @@ message CoreConfig {
 
     string prometheus_log_file = 30;
     uint32 prometheus_log_interval = 31;
+    
+    string ssl_uri = 40;
+    string secure_uri = 41;
 }
