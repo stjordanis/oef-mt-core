@@ -7,6 +7,7 @@
 #include "monitoring/src/cpp/lib/Gauge.hpp"
 #include "threading/src/cpp/lib/Task.hpp"
 #include "threading/src/cpp/lib/Taskpool.hpp"
+#include "mt-core/karma/src/cpp/IKarmaPolicy.hpp"
 
 static Gauge count("mt-core.network.OefAgentEndpoint");
 

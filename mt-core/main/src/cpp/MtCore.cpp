@@ -236,7 +236,7 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
 
     Uri ssl_uri(config_.ssl_uri());
     FETCH_LOG_INFO(LOGGING_NAME, "TLS/SSL Listener on ", ssl_uri.port);
-    auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core, initialFactoryCreator);
+    auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
     task_ssl -> submit();
   }
   if (!config_.secure_uri().empty())
@@ -249,7 +249,7 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
 
     Uri secure_uri(config_.secure_uri());
     FETCH_LOG_INFO(LOGGING_NAME, "Secure Listener on ", secure_uri.port);
-    auto task_secure = std::make_shared<OefListenerStarterTask<Endpoint>>(secure_uri.port, listeners, core, initialFactoryCreator);
+    auto task_secure = std::make_shared<OefListenerStarterTask<Endpoint>>(secure_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
     task_secure -> submit();
   }
 }
