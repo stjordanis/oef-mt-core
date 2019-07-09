@@ -98,8 +98,6 @@ int MtCore::run()
   FETCH_LOG_INFO(LOGGING_NAME, "Core key: ", config_.core_key());
   FETCH_LOG_INFO(LOGGING_NAME, "Core URI: ", config_.core_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "WebSocket URI: ", config_.ws_uri());
-  FETCH_LOG_INFO(LOGGING_NAME, "SSL URI: ", config_.ssl_uri());
-  FETCH_LOG_INFO(LOGGING_NAME, "Secure URI: ", config_.secure_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Search URI: ", config_.search_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "comms_thread_count: ", config_.comms_thread_count());
   FETCH_LOG_INFO(LOGGING_NAME, "tasks_thread_count: ", config_.tasks_thread_count());
@@ -204,7 +202,7 @@ int MtCore::run()
           FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
         });
     }
-    sleep(snooze*20);
+    sleep(snooze);
   }
   return 0;
 }
@@ -237,7 +235,7 @@ void MtCore::startListeners()
       };
 
     Uri ssl_uri(config_.ssl_uri());
-    FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", ssl_uri.port);
+    FETCH_LOG_INFO(LOGGING_NAME, "TLS/SSL Listener on ", ssl_uri.port);
     auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core, initialFactoryCreator);
     task_ssl -> submit();
   }
@@ -250,7 +248,7 @@ void MtCore::startListeners()
       };
 
     Uri secure_uri(config_.secure_uri());
-    FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", secure_uri.port);
+    FETCH_LOG_INFO(LOGGING_NAME, "Secure Listener on ", secure_uri.port);
     auto task_secure = std::make_shared<OefListenerStarterTask<Endpoint>>(secure_uri.port, listeners, core, initialFactoryCreator);
     task_secure -> submit();
   }

@@ -7,8 +7,6 @@ message CoreConfig {
     string core_uri = 2;
     string search_uri = 3;
     string ws_uri = 4;
-    string ssl_uri = 5;
-    string secure_uri = 6;
 
     uint32 comms_thread_count = 10;
     uint32 tasks_thread_count = 11;
@@ -17,4 +15,7 @@ message CoreConfig {
 
     string prometheus_log_file = 30;
     uint32 prometheus_log_interval = 31;
+    
+    string ssl_uri = 40;
+    string secure_uri = 41;
 }

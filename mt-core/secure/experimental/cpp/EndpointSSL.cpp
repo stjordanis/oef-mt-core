@@ -23,7 +23,6 @@ EndpointSSL<TXType>::EndpointSSL(
   try 
   {
     ssl_ctx_p = make_ssl_ctx();
-    //ssl_sock_p = new SocketSSL(std::move(Socket{core}), *ssl_ctx_p);
     ssl_sock_p = new SocketSSL(std::move(sock), *ssl_ctx_p);
   }
   catch(std::exception &ec)
@@ -67,10 +66,7 @@ void EndpointSSL<TXType>::close()
 template <typename TXType>
 void EndpointSSL<TXType>::go()
 {
-  //ssl_sock_p = new SocketSSL(std::move(EndpointSSL<TXType>::socket()), *ssl_ctx_p);
-  // performing handshake
   FETCH_LOG_WARN(LOGGING_NAME, "Got new connection, attempting ssl handshake ...");
-  //auto self{shared_from_this()};
   ssl_sock_p->async_handshake(boost::asio::ssl::stream_base::server, 
     [this](const boost::system::error_code& error)
       {
@@ -136,7 +132,7 @@ std::string EndpointSSL<TXType>::key_get_password() const
 template <typename TXType>
 typename EndpointSSL<TXType>::ContextSSL* EndpointSSL<TXType>::make_ssl_ctx()
 {
-  // TOFIX hard coded 
+  // TOFIX(LR) hard coded 
   auto ssl_ctx = new ContextSSL(boost::asio::ssl::context::sslv23);
   ssl_ctx->set_options(
       boost::asio::ssl::context::default_workarounds

@@ -21,8 +21,6 @@ public:
   , public_key_{""}
   , core_key_{std::move(core_key)}
   {
-    state = WAITING_FOR_Agent_Server_ID;
-    
     // just to test openssl linkage
     SSL_load_error_strings();
     
@@ -46,11 +44,6 @@ public:
   virtual void endpointClosed(void) {}
 protected:
 private:
-
-  enum {
-    WAITING_FOR_Agent_Server_ID,
-    WAITING_FOR_Agent_Server_Answer,
-  } state;
 
   InitialSecureHandshakeTaskFactory(const InitialSecureHandshakeTaskFactory &other) = delete;
   InitialSecureHandshakeTaskFactory &operator=(const InitialSecureHandshakeTaskFactory &other) = delete;
