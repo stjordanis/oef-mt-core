@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <vector>
 
 #include "mt-core/karma/src/cpp/IKarmaPolicy.hpp"
 #include "mt-core/karma/src/cpp/KarmaAccount.hpp"
@@ -22,7 +23,7 @@ public:
   virtual bool couldPerform(const KarmaAccount &identifier, const std::string &action) override;
   virtual std::string getBalance(const KarmaAccount &identifier) override;
 
-  virtual void refreshTick(std::size_t amount);
+  virtual void refreshCycle(const std::chrono::milliseconds delta) override;
 protected:
 private:
   using KARMA = int32_t;
@@ -48,10 +49,7 @@ private:
   Accounts accounts;
   Config config;
 
-  KARMA afterwards(KARMA currentBalance, const std::string &effect);
-
   AccountNumber getAccountNumber(const AccountName &s);
-  const std::string &getPolicy(const std::string &action) const;
 
   Account &access(const KarmaAccount &identifier);
   const Account &access(const KarmaAccount &identifier) const;
@@ -60,4 +58,10 @@ private:
   KarmaPolicyBasic &operator=(const KarmaPolicyBasic &other) = delete;
   bool operator==(const KarmaPolicyBasic &other) = delete;
   bool operator<(const KarmaPolicyBasic &other) = delete;
+
+  std::vector<std::string> getPolicies(const std::string &action) const;
+  const std::string &getPolicy(const std::string &action) const;
+  KARMA parseEffect(KARMA currentBalance, const std::string &effect);
+  KARMA afterwards(KARMA currentBalance, const std::string &actions);
+  std::string getLessSpecificAction(const std::string &action) const;
 };
