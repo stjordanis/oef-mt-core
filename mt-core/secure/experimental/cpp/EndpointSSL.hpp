@@ -11,6 +11,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <openssl/evp.h>
 
 template <typename TXType>
 class EndpointSSL
@@ -39,7 +40,8 @@ public:
       Core &core
       ,std::size_t sendBufferSize
       ,std::size_t readBufferSize
-      ,std::string key = ""
+      ,std::string sk_file = "mt-core/secure/experimental/cpp/core.pem"
+      ,std::string pk_file = "mt-core/secure/experimental/cpp/core_pub.pem" // not mandatory, for debug
   );
 
   virtual ~EndpointSSL();
@@ -79,4 +81,13 @@ private:
   std::string key_get_password() const;
 
   std::string agent_key_;
+
+  std::string sk_f;
+  std::string pk_f; // not mandatory, for debug
+
 };
+  
+// crypto utils
+std::string to_string_RSA(RSA* pk);
+std::string to_string_EVP_PKEY(EVP_PKEY* pk);
+std::string to_string_PEM_f(const std::string file_path);

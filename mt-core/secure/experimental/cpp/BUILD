@@ -7,7 +7,7 @@ cc_library(
     ],
     srcs = glob(["EndpointSSL.cpp"]),
     hdrs = glob(["EndpointSSL.hpp"]),
-    data = [":dh2048.pem",":server.pem"],
+    data = [":dh2048.pem", ":core.pem", ":core_pub.pem"],
     defines = DEFINES,
     deps = [
          #"//fetch_teams/ledger/crypto:lib",
@@ -26,7 +26,7 @@ cc_binary(
         "//visibility:public",
     ],
     srcs = glob(["client.cpp"]),
-    data = [":ca.pem"],
+    data = [":private_key.pem"],
     deps = [
          "//protos/src/protos:cc_oef_core_pb",
          "@boost//:asio",

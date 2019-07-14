@@ -202,7 +202,7 @@ int MtCore::run()
           FETCH_LOG_INFO(LOGGING_NAME, name, ":", value);
         });
     }
-    sleep(snooze);
+    sleep(snooze*1000);
   }
   return 0;
 }

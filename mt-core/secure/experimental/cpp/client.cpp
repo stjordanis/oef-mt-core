@@ -15,6 +15,10 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
+#include <openssl/ssl.h>
+#include <openssl/rsa.h>
+#include <openssl/evp.h>
+
 using boost::asio::ip::tcp;
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -29,7 +33,7 @@ public:
       const tcp::resolver::results_type& endpoints)
     : socket_(io_context, context)
   {
-    socket_.set_verify_mode(boost::asio::ssl::verify_peer);
+    socket_.set_verify_mode(boost::asio::ssl::verify_none);
     socket_.set_verify_callback(
         std::bind(&client::verify_certificate, this, _1, _2));
 
@@ -80,6 +84,49 @@ private:
         {
           if (!error)
           {
+          ERR_load_crypto_strings();
+          // get peer pub key (core id)
+          if (X509* cert = SSL_get_peer_certificate(socket_.native_handle()))
+          {
+            if(EVP_PKEY* pk = X509_get_pubkey(cert))
+            {
+              RSA * rsa = EVP_PKEY_get1_RSA(pk);
+              if (!rsa) {
+                std::cout << "[sslclient] error getting rsa key" << std::endl;
+                return;
+              }
+              std::cout << "[sslclient] getting rsa key" << std::endl;
+              BIO * mem = BIO_new(BIO_s_mem());
+              //BIO * b64f = BIO_new(BIO_f_base64());
+              //mem = BIO_push(b64f, mem);
+              //BIO_set_flags(mem, BIO_FLAGS_BASE64_NO_NL);
+              //BIO_set_close(mem, BIO_CLOSE);
+              if (!mem) {
+                std::cout << "[sslclient] error creating bio mem buf" << std::endl;
+                return;
+              }
+              std::cout << "[sslclient] creating bio mem buf" << std::endl;
+              int status = RSA_print(mem, rsa, 0);
+              if (!status) {
+                std::cout << "[sslclient] error printing RSA key to bio" << std::endl;
+                return;
+              }
+              std::cout << "[sslclient] printing RSA key to bio" << std::endl;
+              char *pk_ptr = nullptr;
+              long len = BIO_get_mem_data(mem, &pk_ptr);
+              if (!len) {
+                std::cout << "[sslclient] error getting bio char pointer" << std::endl;
+                return;
+              }
+              std::cout << "[sslclient] getting bio char pointer" << std::endl;
+              std::string pk_str(pk_ptr,len);
+              std::cout << "[sslclient] Got Core PubKey: " << pk_str << std::endl;
+            }
+          } 
+          else
+          {
+            std::cout << "[sslclient] Couldn't get Agent public key from ssl socket : " << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+          }
             send_request();
           }
           else
@@ -150,7 +197,9 @@ int main(int argc, char* argv[])
     auto endpoints = resolver.resolve(argv[1], argv[2]);
 
     boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23);
-    ctx.load_verify_file("mt-core/secure/experimental/cpp/ca.pem");
+    //ctx.load_verify_file("mt-core/secure/experimental/cpp/ca.pem");
+    //ctx.use_rsa_private_key_file("mt-core/secure/experimental/cpp/private_key.pem", boost::asio::ssl::context::pem);
+    ctx.use_private_key_file("mt-core/secure/experimental/cpp/private_key.pem", boost::asio::ssl::context::pem);
 
     client c(io_context, ctx, endpoints);
 
