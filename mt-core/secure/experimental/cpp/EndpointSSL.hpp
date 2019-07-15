@@ -13,6 +13,7 @@
 #include <boost/asio/ssl.hpp>
 #include <openssl/evp.h>
 
+
 template <typename TXType>
 class EndpointSSL
   : public Endpoint<TXType>
@@ -64,6 +65,8 @@ public:
     else
       return "";
   }
+  
+  std::string get_peer_ssl_key_RSA();
 
 protected:
   virtual void async_read(const std::size_t& bytes_needed) override;
@@ -81,13 +84,18 @@ private:
   std::string key_get_password() const;
 
   std::string agent_key_;
+  std::string agent_ssl_key_;
 
   std::string sk_f;
   std::string pk_f; // not mandatory, for debug
 
 };
   
-// crypto utils
+// openssl utils
+std::string RSA_Modulus(std::string rsa_str);
 std::string to_string_RSA(RSA* pk);
 std::string to_string_EVP_PKEY(EVP_PKEY* pk);
 std::string to_string_PEM_f(const std::string file_path);
+bool verify_agent_certificate(bool, boost::asio::ssl::verify_context&);
+std::string RSA_Modulus_from_PEM_f(std::string file_path);
+std::string RSA_Modulus_short_format(std::string modulus);

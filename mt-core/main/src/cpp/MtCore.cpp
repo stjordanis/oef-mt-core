@@ -25,6 +25,10 @@
 #include "mt-core/oef-functions/src/cpp/InitialSslHandshakeTaskFactory.hpp"
 #include "mt-core/oef-functions/src/cpp/InitialSecureHandshakeTaskFactory.hpp"
 
+// openssl utils
+extern std::string RSA_Modulus_from_PEM_f(std::string file_path);
+extern std::string RSA_Modulus_short_format(std::string modulus);
+
 using namespace std::placeholders;
 
 static const unsigned int minimum_thread_count = 1;
@@ -132,6 +136,17 @@ int MtCore::run()
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE!!");
   }
 
+  if(load_ssl_pub_keys(config_.white_list_file()))
+  {
+    FETCH_LOG_INFO(LOGGING_NAME, white_list_.size()," keys loaded successfully from white list file: ", 
+      config_.white_list_file());
+  }
+  else
+  {
+    FETCH_LOG_WARN(LOGGING_NAME, " error when loading ssl keys from white list file: ", 
+      config_.white_list_file());
+  }
+
   startListeners(karma_policy.get());
 
   Monitoring mon;
@@ -231,7 +246,7 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
     initialFactoryCreator =
       [this](std::shared_ptr<OefAgentEndpoint> endpoint)
       {
-        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
+        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_, white_list_);
       };
 
     Uri ssl_uri(config_.ssl_uri());
@@ -298,4 +313,27 @@ bool MtCore::configureFromJson(const std::string &config_json)
     FETCH_LOG_ERROR(LOGGING_NAME, "Parse error: '" + status.ToString() + "'");
   }
   return status.ok();
+}
+
+bool MtCore::load_ssl_pub_keys(std::string white_list_file)
+{
+  try {
+    std::ifstream file{white_list_file};
+    std::string line;
+    while(std::getline(file,line))
+    {
+      if(line.empty()) continue;
+      std::string key = RSA_Modulus_from_PEM_f(line);
+      FETCH_LOG_INFO(LOGGING_NAME, "inserting in white list : ", RSA_Modulus_short_format(key));
+      //FETCH_LOG_INFO(LOGGING_NAME, "inserting in wlst : ", RSA_Modulus(to_string_PEM_f(line))); // TORM
+      //white_list_.insert(RSA_Modulus(to_string_PEM_f(line))); // TODO need to add error management
+      white_list_.insert(key); // TODO need to add error management
+    }
+    return true;
+  } 
+  catch (std::exception& ex)
+  {
+    FETCH_LOG_ERROR(LOGGING_NAME, "Exception: ", ex.what());
+    return false;
+  }
 }

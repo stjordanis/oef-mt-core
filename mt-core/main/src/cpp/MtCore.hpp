@@ -41,6 +41,8 @@ private:
   std::shared_ptr<OutboundConversations> outbounds;
   std::shared_ptr<Agents> agents_;
   fetch::oef::pb::CoreConfig config_;
+  
+  std::set<std::string> white_list_;
 
   Threadpool comms_runners;
   Threadpool tasks_runners;
@@ -48,6 +50,7 @@ private:
   void startListeners(IKarmaPolicy *karmaPolicy);
   bool configureFromJsonFile(const std::string &config_file);
   bool configureFromJson(const std::string &config_json);
+  bool load_ssl_pub_keys(std::string white_list_file);
 
 
   MtCore(const MtCore &other) = delete;
