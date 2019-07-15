@@ -34,7 +34,11 @@ void InitialSslHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
   }
   else
   {
-    FETCH_LOG_WARN(LOGGING_NAME, "Agent ", public_key_," ssl authenticated and NOT white listed. Disconnecting ...");
+    for (auto &key : white_list_)
+    {
+      std::cout << "////////////////((((((^^^^^^^^^^^|||||||| " << key.compare(ssl_public_key_) << std::endl;
+    }
+    FETCH_LOG_WARN(LOGGING_NAME, "Agent ", public_key_," ssl authenticated and NOT white listed. Disconnecting ... ", white_list_.size());
   }
 
 } 
