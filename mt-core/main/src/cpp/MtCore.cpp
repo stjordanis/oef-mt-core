@@ -292,8 +292,10 @@ bool MtCore::configureFromJsonFile(const std::string &config_file)
 
 bool MtCore::configureFromJson(const std::string &config_json)
 {
+  google::protobuf::util::JsonParseOptions options;
+  options.ignore_unknown_fields = true;
 
-  auto status = google::protobuf::util::JsonStringToMessage(config_json, &config_);
+  auto status = google::protobuf::util::JsonStringToMessage(config_json, &config_, options);
   if (!status.ok()) {
     FETCH_LOG_ERROR(LOGGING_NAME, "Parse error: '" + status.ToString() + "'");
   }
