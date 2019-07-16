@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <set>
 
 #include "basic_comms/src/cpp/Core.hpp"
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
@@ -10,6 +12,7 @@
 #include "threading/src/cpp/lib/Threadpool.hpp"
 #include "mt-core/agents/src/cpp/Agents.hpp"
 #include "fetch_teams/ledger/logger.hpp"
+#include "mt-core/secure/experimental/cpp/public_key_utils.hpp"
 
 #include "protos/src/protos/config.pb.h"
 
@@ -21,6 +24,7 @@ class IKarmaPolicy;
 class MtCore
 {
 public:
+  
   static constexpr char const *LOGGING_NAME = "MtCore";
 
   MtCore()
@@ -42,7 +46,7 @@ private:
   std::shared_ptr<Agents> agents_;
   fetch::oef::pb::CoreConfig config_;
   
-  std::set<std::string> white_list_;
+  std::shared_ptr<std::set<PublicKey>> white_list_;
 
   Threadpool comms_runners;
   Threadpool tasks_runners;

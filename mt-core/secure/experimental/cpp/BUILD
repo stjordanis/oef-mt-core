@@ -5,8 +5,8 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    srcs = glob(["EndpointSSL.cpp"]),
-    hdrs = glob(["EndpointSSL.hpp"]),
+    srcs = glob(["EndpointSSL.cpp", "public_key_utils.cpp"]),
+    hdrs = glob(["EndpointSSL.hpp", "public_key_utils.hpp"]),
     data = [":dh2048.pem", ":core.pem", ":core_pub.pem", ":sslclient_pub_list"],
     defines = DEFINES,
     deps = [

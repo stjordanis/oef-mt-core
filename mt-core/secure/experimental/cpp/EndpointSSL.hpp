@@ -8,6 +8,7 @@
 #include "basic_comms/src/cpp/IMessageReader.hpp"
 #include "basic_comms/src/cpp/IMessageWriter.hpp"
 #include "fetch_teams/ledger/logger.hpp"
+#include "mt-core/secure/experimental/cpp/public_key_utils.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -66,7 +67,7 @@ public:
       return "";
   }
   
-  std::string get_peer_ssl_key_RSA();
+  std::shared_ptr<EvpPublicKey> get_peer_ssl_key();
 
 protected:
   virtual void async_read(const std::size_t& bytes_needed) override;
@@ -81,7 +82,6 @@ private:
   Socket sock;
 
   ContextSSL* make_ssl_ctx();
-  std::string key_get_password() const;
 
   std::string agent_key_;
   std::string agent_ssl_key_;
@@ -91,11 +91,4 @@ private:
 
 };
   
-// openssl utils
-std::string RSA_Modulus(std::string rsa_str);
-std::string to_string_RSA(RSA* pk);
-std::string to_string_EVP_PKEY(EVP_PKEY* pk);
-std::string to_string_PEM_f(const std::string file_path);
 bool verify_agent_certificate(bool, boost::asio::ssl::verify_context&);
-std::string RSA_Modulus_from_PEM_f(std::string file_path);
-std::string RSA_Modulus_short_format(std::string modulus);

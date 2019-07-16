@@ -135,10 +135,11 @@ int MtCore::run()
     karma_policy = std::make_shared<KarmaPolicyNone>(77);
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE!!");
   }
-
+  
+  white_list_ = std::make_shared<std::set<PublicKey>>();
   if(load_ssl_pub_keys(config_.white_list_file()))
   {
-    FETCH_LOG_INFO(LOGGING_NAME, white_list_.size()," keys loaded successfully from white list file: ", 
+    FETCH_LOG_INFO(LOGGING_NAME, white_list_->size()," keys loaded successfully from white list file: ", 
       config_.white_list_file());
   }
   else
@@ -323,11 +324,16 @@ bool MtCore::load_ssl_pub_keys(std::string white_list_file)
     while(std::getline(file,line))
     {
       if(line.empty()) continue;
-      std::string key = RSA_Modulus_from_PEM_f(line);
-      FETCH_LOG_INFO(LOGGING_NAME, "inserting in white list : ", RSA_Modulus_short_format(key));
-      //FETCH_LOG_INFO(LOGGING_NAME, "inserting in wlst : ", RSA_Modulus(to_string_PEM_f(line))); // TORM
-      //white_list_.insert(RSA_Modulus(to_string_PEM_f(line))); // TODO need to add error management
-      white_list_.insert(key); // TODO need to add error management
+      try 
+      {
+        EvpPublicKey pub_key{line};
+        FETCH_LOG_INFO(LOGGING_NAME, "inserting in white list : ", pub_key);
+        white_list_->insert(pub_key); 
+      }
+      catch (std::exception& e)
+      {
+        FETCH_LOG_WARN(LOGGING_NAME, " error inserting file in white list: ", line, " - ", e.what()); 
+      }
     }
     return true;
   } 
