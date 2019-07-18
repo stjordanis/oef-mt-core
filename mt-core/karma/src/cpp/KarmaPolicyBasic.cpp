@@ -170,15 +170,22 @@ KarmaPolicyBasic::KARMA KarmaPolicyBasic::afterwards(KARMA currentBalance, const
 {
   auto policies = getPolicies(actions);
 
-  auto worst = currentBalance;
-  for(const auto &policy : policies)
+  try
   {
-    auto result = parseEffect(currentBalance, policy);
-    FETCH_LOG_INFO(LOGGING_NAME, "KARMA: afterwards ", policy, "    ", currentBalance, " => ", result);
-    if (result < worst)
+    auto worst = currentBalance;
+    for(const auto &policy : policies)
     {
-      worst = result;
+      auto result = parseEffect(currentBalance, policy);
+      FETCH_LOG_INFO(LOGGING_NAME, "KARMA: afterwards ", policy, "    ", currentBalance, " => ", result);
+      if (result < worst)
+      {
+        worst = result;
+      }
     }
+  }
+  catch(XKarma &x)
+  {
+    throw XKarma(std::string("actions:") + actions + " result in disconnect due to Karma policy");
   }
 
   return worst;
@@ -189,6 +196,8 @@ KarmaPolicyBasic::KARMA KarmaPolicyBasic::parseEffect(KARMA currentBalance, cons
 {
   switch(effect[0])
   {
+  case 'X':
+    throw XKarma("Disconnect due to Karma policy");
   case '0':
   case '1':
   case '2':
