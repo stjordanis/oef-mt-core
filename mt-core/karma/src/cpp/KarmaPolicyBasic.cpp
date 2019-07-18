@@ -169,10 +169,10 @@ const std::string &KarmaPolicyBasic::getPolicy(const std::string &action) const
 KarmaPolicyBasic::KARMA KarmaPolicyBasic::afterwards(KARMA currentBalance, const std::string &actions)
 {
   auto policies = getPolicies(actions);
+  auto worst = currentBalance;
 
   try
   {
-    auto worst = currentBalance;
     for(const auto &policy : policies)
     {
       auto result = parseEffect(currentBalance, policy);
