@@ -26,6 +26,7 @@ void KarmaPolicyBasic::Account::bringUpToDate()
     // Write this as long as nothing has updated karma while we were thinking.
     if (karma.compare_exchange_strong( old_karma, new_karma, std::memory_order_seq_cst))
     {
+      FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Bring up to date: ticks=", diff, " step=", tick_amounts, " when=", when, " now=", tc, " old=", old_karma, " new=", new_karma);
       when = tc;
       break;
     }
@@ -51,9 +52,11 @@ KarmaPolicyBasic::~KarmaPolicyBasic()
 {
 }
 
-void KarmaPolicyBasic::refreshTick(std::size_t amount)
+void KarmaPolicyBasic::refreshCycle(const std::chrono::milliseconds delta)
 {
-  tick_amounts = amount;
+  auto policies = getPolicies("refresh");
+  tick_amounts = parseEffect(0, policies[0]);
+  //FETCH_LOG_INFO(LOGGING_NAME, "KARMA: refreshTick of size ", tick_amounts);
   tick_counter++;
 }
 
@@ -96,11 +99,61 @@ const KarmaPolicyBasic::Account &KarmaPolicyBasic::access(const KarmaAccount &id
 
 std::string zero("0");
 
+void tokenise(const std::string &input, std::vector<std::string> &output, const char delim)
+{
+  std::size_t start = 0;
+  std::size_t end = 0;
+
+  while(true)
+  {
+    start = input.find_first_not_of(delim, end);
+    if (start == std::string::npos)
+    {
+      return;
+    }
+    end = input.find(delim, start); // could be npos.
+    output.push_back(input.substr(start, end-start)); // npos - start is still a huge number, this gets the last token.
+  }
+}
+
+std::vector<std::string> KarmaPolicyBasic::getPolicies(const std::string &action) const
+{
+  std::vector<std::string> actions;
+  tokenise(action, actions, ',');
+  if (actions.empty())
+  {
+    actions.push_back("*");
+  }
+
+  std::vector<std::string> policies;
+  for(const auto &action : actions)
+  {
+    policies.push_back(getPolicy(action));
+  }
+
+  return policies;
+}
+
+std::string KarmaPolicyBasic::getLessSpecificAction(const std::string &action) const
+{
+  if (action == "*")
+  {
+    return action;
+  }
+  auto r = action.find_last_of('.');
+  if (r == std::string::npos || r == 0)
+  {
+    return "*";
+  }
+  return action.substr(0, r-1);
+}
+
 const std::string &KarmaPolicyBasic::getPolicy(const std::string &action) const
 {
   Config::const_iterator iter;
   if ((iter = config.find(action)) != config.end())
   {
+    //FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Karma Event:", action, " => ", iter -> second);
     return iter -> second;
   }
   if ((iter = config.find("*")) != config.end())
@@ -112,10 +165,39 @@ const std::string &KarmaPolicyBasic::getPolicy(const std::string &action) const
   return zero;
 }
 
-KarmaPolicyBasic::KARMA KarmaPolicyBasic::afterwards(KARMA currentBalance, const std::string &effect)
+
+KarmaPolicyBasic::KARMA KarmaPolicyBasic::afterwards(KARMA currentBalance, const std::string &actions)
+{
+  auto policies = getPolicies(actions);
+
+  try
+  {
+    auto worst = currentBalance;
+    for(const auto &policy : policies)
+    {
+      auto result = parseEffect(currentBalance, policy);
+      FETCH_LOG_INFO(LOGGING_NAME, "KARMA: afterwards ", policy, "    ", currentBalance, " => ", result);
+      if (result < worst)
+      {
+        worst = result;
+      }
+    }
+  }
+  catch(XKarma &x)
+  {
+    throw XKarma(std::string("actions:") + actions + " result in disconnect due to Karma policy");
+  }
+
+  return worst;
+}
+
+
+KarmaPolicyBasic::KARMA KarmaPolicyBasic::parseEffect(KARMA currentBalance, const std::string &effect)
 {
   switch(effect[0])
   {
+  case 'X':
+    throw XKarma("Disconnect due to Karma policy");
   case '0':
   case '1':
   case '2':
@@ -142,13 +224,13 @@ KarmaPolicyBasic::KARMA KarmaPolicyBasic::afterwards(KARMA currentBalance, const
   };
 }
 
-bool KarmaPolicyBasic::perform(const KarmaAccount &identifier, const std::string &action, bool force)
+bool KarmaPolicyBasic::perform(const KarmaAccount &identifier, const std::string &event, bool force)
 {
   accounts.access(*identifier).bringUpToDate();
   KARMA prev = accounts.access(*identifier).karma;
-  KARMA next = afterwards(prev, getPolicy(action));
+  KARMA next = afterwards(prev, event);
 
-  FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Event ", action, " for ", identifier.getName(), " scores ", prev, " => ",  next);
+  FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Event ", event, " for ", identifier.getName(), " scores ", prev, " => ",  next);
 
   if (next >= 0 || force)
   {
@@ -156,7 +238,7 @@ bool KarmaPolicyBasic::perform(const KarmaAccount &identifier, const std::string
     return true;
   }
 
-  throw XKarma(action);
+  throw XKarma(event);
 }
 
 bool KarmaPolicyBasic::couldPerform(const KarmaAccount &identifier, const std::string &action)
