@@ -17,7 +17,7 @@ public:
   {
     this -> interval = interval;
     this -> policy = policy;
-    FETCH_LOG_INFO(LOGGING_NAME, "KarmaRefreshTask CREATED");
+    FETCH_LOG_INFO(LOGGING_NAME, "KarmaRefreshTask CREATED, interval=", interval);
     last_execute = std::chrono::high_resolution_clock::now();
   }
   virtual ~KarmaRefreshTask()
