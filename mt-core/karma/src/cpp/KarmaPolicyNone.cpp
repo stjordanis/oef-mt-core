@@ -2,7 +2,7 @@
 
 #include <unistd.h>
 
-KarmaPolicyNone::KarmaPolicyNone(int)
+KarmaPolicyNone::KarmaPolicyNone()
   : IKarmaPolicy()
 {
   FETCH_LOG_INFO(LOGGING_NAME, "KarmaPolicyNone created");
