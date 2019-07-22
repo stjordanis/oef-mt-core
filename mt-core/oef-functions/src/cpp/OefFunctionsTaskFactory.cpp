@@ -17,6 +17,7 @@
 #include "mt-core/conversations/src/cpp/SearchUpdateTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchRemoveTask.hpp"
 #include "mt-core/conversations/src/cpp/SearchQueryTask.hpp"
+#include "mt-core/karma/src/cpp/XError.hpp"
 #include "mt-core/karma/src/cpp/XKarma.hpp"
 #include "mt-core/karma/src/cpp/XDisconnect.hpp"
 #include "monitoring/src/cpp/lib/Counter.hpp"
@@ -71,6 +72,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
   {
   default:
     getEndpoint() -> karma . perform("oef.bad.unknown-message");
+    throw XError("unknown message");
     break;
 
     case fetch::oef::pb::Envelope::kSendMessage:
@@ -205,25 +207,44 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
       operation_code = fetch::oef::pb::Server_AgentMessage_OEFError_Operation_OTHER;
       getEndpoint() -> karma . perform("oef.bad.nopayload");
       FETCH_LOG_ERROR(LOGGING_NAME, "Cannot process payload ", payload_case, " from ", agent_public_key_);
+      throw XError("payload not set");
       break;
   }
 
-  } catch (XKarma &x)
+  }
+  catch (XError &x)
+  {
+    FETCH_LOG_INFO(LOGGING_NAME, "XERROR!!!! ", x.what());
+
+    auto error_response = std::make_shared<fetch::oef::pb::Server_AgentMessage>();
+    error_response -> set_answer_id(msg_id);
+    int failure = operation_code;
+    error_response -> mutable_oef_error() -> set_operation(fetch::oef::pb::Server_AgentMessage_OEFError_Operation(failure));
+
+    error_response -> mutable_oef_error() -> set_cause("ERROR");
+    error_response -> mutable_oef_error() -> set_detail(x.what());
+
+    auto senderTask = std::make_shared<TSendProtoTask<fetch::oef::pb::Server_AgentMessage>>(error_response, getEndpoint());
+    senderTask -> submit();
+
+  }
+  catch (XKarma &x)
   {
     FETCH_LOG_INFO(LOGGING_NAME, "XKARMA!!!! ", x.what());
 
     auto error_response = std::make_shared<fetch::oef::pb::Server_AgentMessage>();
     error_response -> set_answer_id(msg_id);
     int failure = operation_code;
-    failure |= fetch::oef::pb::Server_AgentMessage_OEFError_Operation_KARMA_;
     error_response -> mutable_oef_error() -> set_operation(fetch::oef::pb::Server_AgentMessage_OEFError_Operation(failure));
 
+    error_response -> mutable_oef_error() -> set_cause("KARMA");
     error_response -> mutable_oef_error() -> set_detail(x.what());
 
     auto senderTask = std::make_shared<TSendProtoTask<fetch::oef::pb::Server_AgentMessage>>(error_response, getEndpoint());
     senderTask -> submit();
 
-  } catch (XDisconnect &x)
+  }
+  catch (XDisconnect &x)
   {
     FETCH_LOG_INFO(LOGGING_NAME, "XDISCONNECT was thrown while processing OEF operation: ", x.what());
     throw;

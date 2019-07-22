@@ -72,25 +72,21 @@ message Server {
         }
         message OEFError {
             enum Operation {
-                REGISTER_SERVICE = 0x0;
-                UNREGISTER_SERVICE = 0x1;
-                REGISTER_DESCRIPTION = 0x2;
-                UNREGISTER_DESCRIPTION = 0x3;
+                REGISTER_SERVICE = 0;
+                UNREGISTER_SERVICE = 1;
+                REGISTER_DESCRIPTION = 2;
+                UNREGISTER_DESCRIPTION = 3;
 
-                SEARCH_SERVICES = 0x4;
-                SEARCH_SERVICES_WIDE = 0x5;
-                SEARCH_AGENTS = 0x6;
-                SEND_MESSAGE = 0x7;
+                SEARCH_SERVICES = 4;
+                SEARCH_SERVICES_WIDE = 5;
+                SEARCH_AGENTS = 6;
+                SEND_MESSAGE = 7;
 
-                OTHER = 0x99;
-
-                BAD_MESSAGE = 0x100;
-                BAD_OPERATION = 0x101;
-                KARMA_ = 0x200;
+                OTHER = 10000;
             }
             required int32 operation = 1;
-            optional string detail = 2;
-            optional int32 karma = 3;
+            optional string cause = 2;
+            optional string detail = 3;
         }
         message DialogueError {
             required int32 dialogue_id = 1;
