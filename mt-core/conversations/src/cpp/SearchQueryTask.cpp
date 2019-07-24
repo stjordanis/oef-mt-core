@@ -144,11 +144,17 @@ SearchQueryTask::StateResult SearchQueryTask::handleResponse(void)
   return SearchQueryTask::StateResult(0, COMPLETE);
 }
 
-std::shared_ptr<SearchQueryTask::REQUEST_PROTO> SearchQueryTask::make_request_proto()
-{
+std::shared_ptr<SearchQueryTask::REQUEST_PROTO> SearchQueryTask::make_request_proto() {
   auto search_query = std::make_shared<fetch::oef::pb::SearchQuery>();
   search_query->set_source_key(core_key_);
-  search_query->mutable_model()->CopyFrom(initiator->query());
+  if (initiator->has_query_v2())
+  {
+    search_query->mutable_query_v2()->CopyFrom(initiator->query_v2());
+  }
+  else
+  {
+    search_query->mutable_model()->CopyFrom(initiator->query());
+  }
   search_query->set_ttl(ttl_);
   FETCH_LOG_INFO(LOGGING_NAME, "Sending query to search: ", search_query->DebugString());
   return search_query;
