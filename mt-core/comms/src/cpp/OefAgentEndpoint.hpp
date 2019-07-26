@@ -30,13 +30,15 @@ public:
     bool will_heartbeat;
   } capabilities;
 
+  void heartbeat(void);
+  void heartbeat_recvd(void);
+
 protected:
 private:
   std::atomic<unsigned int> outstanding_heartbeats;
 
-  void heartbeat(void);
-
   std::shared_ptr<IOefAgentTaskFactory> factory;
+  std::size_t ident;
 
   OefAgentEndpoint(const OefAgentEndpoint &other) = delete;
   OefAgentEndpoint &operator=(const OefAgentEndpoint &other) = delete;

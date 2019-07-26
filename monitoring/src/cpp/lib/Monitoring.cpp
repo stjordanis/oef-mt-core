@@ -53,3 +53,11 @@ void Monitoring::report(ReportFunc func)
     }
 }
 
+void Monitoring::max(IdType id, CountType value)
+{
+}
+
+Monitoring::CountType Monitoring::get(IdType id)
+{
+  return inner -> access(id);
+}

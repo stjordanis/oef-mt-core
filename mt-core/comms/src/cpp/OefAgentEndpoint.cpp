@@ -5,16 +5,25 @@
 #include "mt-core/comms/src/cpp/ProtoMessageSender.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
 #include "monitoring/src/cpp/lib/Gauge.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
 #include "threading/src/cpp/lib/Task.hpp"
 #include "threading/src/cpp/lib/Taskpool.hpp"
 #include "mt-core/karma/src/cpp/IKarmaPolicy.hpp"
+#include "mt-core/karma/src/cpp/XKarma.hpp"
+#include "mt-core/tasks-base/src/cpp/TSendProtoTask.hpp"
+#include "protos/src/protos/agent.pb.h"
 
 static Gauge count("mt-core.network.OefAgentEndpoint");
+static Counter hb_sent("mt-core.network.OefAgentEndpoint.heartbeats.sent");
+static Counter hb_recvd("mt-core.network.OefAgentEndpoint.heartbeats.recvd");
+static Gauge hb_max_os("mt-core.network.OefAgentEndpoint.heartbeats.max-outstand");
 
 OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoint)
   : EndpointPipe(std::move(endpoint))
 {
+  outstanding_heartbeats = 0;
   count++;
+  ident = count.get();
 }
 
 void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
@@ -89,4 +98,39 @@ OefAgentEndpoint::~OefAgentEndpoint()
   endpoint->setOnProtoErrorHandler(nullptr);
   FETCH_LOG_INFO(LOGGING_NAME, "~OefAgentEndpoint");
   count--;
+}
+
+void OefAgentEndpoint::heartbeat()
+{
+  FETCH_LOG_INFO(LOGGING_NAME, "HB:", ident);
+  try
+  {
+    if (outstanding_heartbeats > 0)
+    {
+      hb_max_os . max(outstanding_heartbeats);
+      FETCH_LOG_INFO(LOGGING_NAME, "HB:", ident, " outstanding=", outstanding_heartbeats);
+      karma . perform("comms.outstanding_heartbeats."+std::to_string(outstanding_heartbeats));
+    }
+    
+    FETCH_LOG_INFO(LOGGING_NAME, "HB:", ident, " PING");
+    auto ping_message = std::make_shared<fetch::oef::pb::Server_AgentMessage>();
+    ping_message -> mutable_ping() ->set_dummy(1);
+    ping_message -> set_answer_id(0);
+    auto ping_task = std::make_shared<TSendProtoTask<fetch::oef::pb::Server_AgentMessage>>(ping_message,  shared_from_this());
+    
+    ping_task -> submit();
+    hb_sent++;
+    outstanding_heartbeats++;
+  }
+  catch(XKarma &x)
+  {
+    socket().close();
+  }
+}
+
+void OefAgentEndpoint::heartbeat_recvd(void)
+{
+  hb_recvd++;
+  outstanding_heartbeats--;
+  FETCH_LOG_INFO(LOGGING_NAME, "HB:", ident, " PONG  outstanding=", outstanding_heartbeats);
 }

@@ -32,6 +32,8 @@ public:
   static void add(IdType id, CountType delta);
   static void sub(IdType id, CountType delta);
   static void set(IdType id, CountType delta);
+  static void max(IdType id, CountType value);
+  static CountType get(IdType id);
 
   void report(ReportFunc);
 

@@ -63,6 +63,12 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     getEndpoint() -> karma . perform("oef.bad.unknown-message");
     break;
 
+    case fetch::oef::pb::Envelope::kPong:
+      {
+        getEndpoint() -> heartbeat_recvd();
+        break;
+      }
+      
     case fetch::oef::pb::Envelope::kSendMessage:
     {
       FETCH_LOG_INFO(LOGGING_NAME, "kSendMessage");
