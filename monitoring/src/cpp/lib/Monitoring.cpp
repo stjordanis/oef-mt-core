@@ -53,3 +53,7 @@ void Monitoring::report(ReportFunc func)
     }
 }
 
+Monitoring::CountType Monitoring::get(IdType id)
+{
+  return inner -> access(id);
+}

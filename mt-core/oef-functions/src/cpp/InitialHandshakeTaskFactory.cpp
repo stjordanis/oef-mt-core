@@ -48,6 +48,8 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
         getEndpoint() -> karma . upgrade("", public_key_);
         getEndpoint() -> karma . perform("login");
 
+        getEndpoint() -> setState("loggedin", true);
+
         successor(std::make_shared<OefFunctionsTaskFactory>(core_key_, agents_, public_key_, outbounds));
       }
       break;

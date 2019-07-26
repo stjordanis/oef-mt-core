@@ -5,6 +5,7 @@
 #include "mt-core/comms/src/cpp/ProtoMessageSender.hpp"
 #include "mt-core/comms/src/cpp/Endianness.hpp"
 #include "monitoring/src/cpp/lib/Gauge.hpp"
+#include "monitoring/src/cpp/lib/Counter.hpp"
 #include "threading/src/cpp/lib/Task.hpp"
 #include "threading/src/cpp/lib/Taskpool.hpp"
 #include "mt-core/karma/src/cpp/IKarmaPolicy.hpp"
@@ -15,6 +16,30 @@ OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoin
   : EndpointPipe(std::move(endpoint))
 {
   count++;
+  ident = count.get();
+}
+
+void OefAgentEndpoint::close(const std::string &reason)
+{
+  Counter("mt-core.network.OefAgentEndpoint.closed")++;
+  Counter(std::string("mt-core.network.OefAgentEndpoint.closed.") + reason)++;
+
+  socket().close();
+}
+
+void OefAgentEndpoint::setState(const std::string &stateName, bool value)
+{
+  states[stateName] = value;
+}
+
+bool OefAgentEndpoint::getState(const std::string &stateName) const
+{
+  auto entry = states.find(stateName);
+  if (entry == states.end())
+  {
+    return false;
+  }
+  return entry->second;
 }
 
 void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
