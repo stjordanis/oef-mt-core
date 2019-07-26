@@ -13,6 +13,7 @@
 
 #include "mt-core/karma/src/cpp/KarmaPolicyBasic.hpp"
 #include "mt-core/karma/src/cpp/KarmaPolicyNone.hpp"
+#include "mt-core/karma/src/cpp/KarmaRefreshTask.hpp"
 
 #include "google/protobuf/util/json_util.h"
 #include "basic_comms/src/cpp/Endpoint.hpp"
@@ -128,11 +129,13 @@ int MtCore::run()
   {
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = BASIC");
     karma_policy = std::make_shared<KarmaPolicyBasic>(config_.karma_policy());
+    std::shared_ptr<Task> refresher = std::make_shared<KarmaRefreshTask>(karma_policy.get(), config_.karma_refresh_interval_ms());
+    refresher -> submit();
   }
   else
   {
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE");
-    karma_policy = std::make_shared<KarmaPolicyNone>(77);
+    karma_policy = std::make_shared<KarmaPolicyNone>();
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE!!");
   }
   
@@ -308,8 +311,10 @@ bool MtCore::configureFromJsonFile(const std::string &config_file)
 
 bool MtCore::configureFromJson(const std::string &config_json)
 {
+  google::protobuf::util::JsonParseOptions options;
+  options.ignore_unknown_fields = true;
 
-  auto status = google::protobuf::util::JsonStringToMessage(config_json, &config_);
+  auto status = google::protobuf::util::JsonStringToMessage(config_json, &config_, options);
   if (!status.ok()) {
     FETCH_LOG_ERROR(LOGGING_NAME, "Parse error: '" + status.ToString() + "'");
   }

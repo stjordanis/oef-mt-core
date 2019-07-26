@@ -9,7 +9,7 @@ class KarmaPolicyNone
 {
 public:
   static constexpr char const *LOGGING_NAME = "KarmaPolicyNone";
-  KarmaPolicyNone(int);
+  KarmaPolicyNone();
   virtual ~KarmaPolicyNone();
 
   virtual KarmaAccount getAccount(const std::string &pubkey="", const std::string &ip="");

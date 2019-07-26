@@ -38,6 +38,7 @@ void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
   endpoint->setOnCompleteHandler([myGroupId, myself_wp](ConstCharArrayBuffer buffers){
     if (auto myself_sp = myself_wp.lock())
     {
+      myself_sp -> karma . perform("message");
       Task::setThreadGroupId(myGroupId);
       myself_sp -> factory -> processMessage(buffers);
     }
@@ -45,7 +46,7 @@ void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 
   endpoint->setOnErrorHandler([myGroupId, myself_wp](const boost::system::error_code& ec) {
     if (auto myself_sp = myself_wp.lock()) {
-      myself_sp -> karma . perform("error");
+      myself_sp -> karma . perform("error.comms");
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
       Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
@@ -54,6 +55,7 @@ void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 
   endpoint->setOnEofHandler([myGroupId, myself_wp]() {
     if (auto myself_sp = myself_wp.lock()) {
+      myself_sp -> karma . perform("eof");
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
       Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);
@@ -62,7 +64,7 @@ void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 
   endpoint->setOnProtoErrorHandler([myGroupId, myself_wp](const std::string &message) {
     if (auto myself_sp = myself_wp.lock()) {
-      myself_sp -> karma . perform("error");
+      myself_sp -> karma . perform("error.proto");
       myself_sp -> factory -> endpointClosed();
       myself_sp -> factory.reset();
       Taskpool::getDefaultTaskpool() . lock() -> cancelTaskGroup(myGroupId);

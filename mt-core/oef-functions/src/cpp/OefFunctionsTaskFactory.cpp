@@ -59,9 +59,14 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
 
   switch(payload_case)
   {
+  default:
+    getEndpoint() -> karma . perform("oef.bad.unknown-message");
+    break;
+
     case fetch::oef::pb::Envelope::kSendMessage:
     {
       FETCH_LOG_INFO(LOGGING_NAME, "kSendMessage");
+      getEndpoint() -> karma . perform("oef.kSendMessage");
       std::shared_ptr<fetch::oef::pb::Agent_Message> msg_ptr(envelope.release_send_message());
       FETCH_LOG_INFO(LOGGING_NAME, "Got agent message: ", msg_ptr->DebugString());
       auto senderTask = std::make_shared<AgentToAgentMessageTask<fetch::oef::pb::Agent_Message>>(
@@ -72,6 +77,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
 
     case fetch::oef::pb::Envelope::kRegisterService:
     {
+      getEndpoint() -> karma . perform("oef.kRegisterService");
         FETCH_LOG_INFO(LOGGING_NAME, "kRegisterService", envelope.register_service().DebugString());
         auto convTask = std::make_shared<SearchUpdateTask>(
             std::shared_ptr<fetch::oef::pb::AgentDescription>(envelope.release_register_service()),
@@ -85,8 +91,9 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
         break;
     }
     case fetch::oef::pb::Envelope::kUnregisterService:
-    {
-      FETCH_LOG_INFO(LOGGING_NAME, "kUnregisterService", envelope.unregister_service().DebugString());
+    { 
+      getEndpoint() -> karma . perform("oef.kUnregisterService");
+     FETCH_LOG_INFO(LOGGING_NAME, "kUnregisterService", envelope.unregister_service().DebugString());
       auto convTask = std::make_shared<SearchRemoveTask>(
           std::shared_ptr<fetch::oef::pb::AgentDescription>(envelope.release_unregister_service()),
           outbounds,
@@ -100,6 +107,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     }
     case fetch::oef::pb::Envelope::kRegisterDescription:
     {
+      getEndpoint() -> karma . perform("oef.kRegisterDescription");
       FETCH_LOG_INFO(LOGGING_NAME, "kRegisterDescription", envelope.register_description().DebugString());
       auto convTask = std::make_shared<SearchUpdateTask>(
           std::shared_ptr<fetch::oef::pb::AgentDescription>(envelope.release_register_description()),
@@ -114,6 +122,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     }
     case fetch::oef::pb::Envelope::kUnregisterDescription:
     {
+      getEndpoint() -> karma . perform("oef.kUnregisterDescription");
       //TODO: hack because of nothing
       //envelope.release_unregister_description()
       auto description = std::make_shared<fetch::oef::pb::AgentDescription>();
@@ -131,6 +140,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     }
     case fetch::oef::pb::Envelope::kSearchAgents:
     {
+      getEndpoint() -> karma . perform("oef.kSearchAgents");
       FETCH_LOG_INFO(LOGGING_NAME, "kSearchAgents", envelope.search_agents().DebugString());
       auto convTask = std::make_shared<SearchQueryTask>(
           std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.release_search_agents()),
@@ -145,6 +155,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     }
     case fetch::oef::pb::Envelope::kSearchServices:
     {
+      getEndpoint() -> karma . perform("oef.kSearchServices");
       FETCH_LOG_INFO(LOGGING_NAME, "kSearchServices", envelope.search_services().DebugString());
       auto convTask = std::make_shared<SearchQueryTask>(
           std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.release_search_services()),
@@ -159,6 +170,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     }
     case fetch::oef::pb::Envelope::kSearchServicesWide:
     {
+      getEndpoint() -> karma . perform("oef.kSearchServicesWide");
       FETCH_LOG_INFO(LOGGING_NAME, "kSearchServicesWide", envelope.search_services_wide().DebugString());
       auto convTask = std::make_shared<SearchQueryTask>(
           std::shared_ptr<fetch::oef::pb::AgentSearch>(envelope.release_search_services_wide()),
@@ -172,6 +184,7 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
       break;
     }
     case fetch::oef::pb::Envelope::PAYLOAD_NOT_SET:
+      getEndpoint() -> karma . perform("oef.bad.nopayload");
       FETCH_LOG_ERROR(LOGGING_NAME, "Cannot process payload ", payload_case, " from ", agent_public_key_);
       break;
   }
