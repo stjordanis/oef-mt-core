@@ -23,7 +23,7 @@ EndpointSSL<TXType>::EndpointSSL(
       ,std::string sk_file
       ,std::string pk_file
   )
-    : Endpoint<TXType>(core, sendBufferSize, readBufferSize)
+    : EndpointBase<TXType>(sendBufferSize, readBufferSize)
     , sock(core)
     , sk_f(sk_file)
     , pk_f(pk_file)
@@ -99,7 +99,7 @@ void EndpointSSL<TXType>::go()
             return;
           }
           FETCH_LOG_WARN(LOGGING_NAME, "SSL handshake successfull");
-          Endpoint<TXType>::go();
+          EndpointBase<TXType>::go();
         }
         else
         {
@@ -158,7 +158,7 @@ void EndpointSSL<TXType>::async_read(const std::size_t& bytes_needed)
   auto space = readBuffer.getSpaceBuffers();
   auto my_state = state;
 
-  FETCH_LOG_INFO(LOGGING_NAME, "run_reading: START");
+  FETCH_LOG_INFO(LOGGING_NAME, "run_reading: START, bytes_needed: ", bytes_needed);
   
   //auto self = shared_from_this();
   boost::asio::async_read(
@@ -169,6 +169,12 @@ void EndpointSSL<TXType>::async_read(const std::size_t& bytes_needed)
                             this -> complete_reading(my_state, ec, bytes);
                           }
                           );
+}
+
+template <typename TXType>
+bool EndpointSSL<TXType>::is_eof(const boost::system::error_code& ec) const
+{
+  return ec == boost::asio::error::eof;
 }
 
 template <typename TXType>

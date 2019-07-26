@@ -17,9 +17,9 @@ extern std::string RSA_Modulus_short_format(std::string modulus);
 void InitialSslHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
 {
   // TOFIX protocol msg only, its content will not be used
-  fetch::oef::pb::Agent_Server_ID id_pb;
+  fetch::oef::pb::Agent_Server_Answer hi_pb;
   ConstCharArrayBuffer buff(data);
-  IOefAgentTaskFactory::read(id_pb, buff); //
+  IOefAgentTaskFactory::read(hi_pb, buff); //
 
   // get ssl key
   ssl_public_key_ = std::dynamic_pointer_cast<EndpointSSL<std::shared_ptr<google::protobuf::Message>>>(this->getEndpoint()->getEndpoint()->getEndpoint())->get_peer_ssl_key();
@@ -37,6 +37,10 @@ void InitialSslHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
     senderTask -> submit();
 
     agents_->add(public_key_, getEndpoint());
+
+    getEndpoint() -> karma . upgrade("", public_key_);
+    getEndpoint() -> karma . perform("login");
+
     successor(std::make_shared<OefFunctionsTaskFactory>(core_key_, agents_, public_key_, outbounds));
   }
   else
