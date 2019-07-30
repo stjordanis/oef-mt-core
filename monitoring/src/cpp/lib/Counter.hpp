@@ -22,6 +22,7 @@ public:
   Counter &operator=(const Counter &other) { copy(other); return *this; }
 
   Counter& add(std::size_t x) { Monitoring::add(id, x); return *this; }
+  std::size_t get() const { return Monitoring::get(id); }
 
   Counter& operator+=(std::size_t x) { Monitoring::add(id, x); return *this; }
   Counter& operator++() { Monitoring::add(id, 1); return *this; }

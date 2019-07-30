@@ -1,4 +1,5 @@
 #include "InitialSslHandshakeTaskFactory.hpp"
+#include "OefHeartbeatTask.hpp"
 #include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
 #include "mt-core/secure/experimental/cpp/EndpointSSL.hpp"
 #include "mt-core/oef-functions/src/cpp/OefFunctionsTaskFactory.hpp"
@@ -42,6 +43,15 @@ void InitialSslHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
 
     getEndpoint() -> karma . upgrade("", public_key_);
     getEndpoint() -> karma . perform("login");
+
+    if ( getEndpoint() -> capabilities.will_heartbeat )
+    {
+      auto heartbeat = std::make_shared<OefHeartbeatTask>(getEndpoint());
+      heartbeat -> submit();
+    }
+
+    getEndpoint() -> setState("loggedin", true);
+    getEndpoint() -> setState("ssl", true);
 
     successor(std::make_shared<OefFunctionsTaskFactory>(core_key_, agents_, public_key_, outbounds));
   }
