@@ -26,6 +26,29 @@ OefAgentEndpoint::OefAgentEndpoint(std::shared_ptr<ProtoMessageEndpoint> endpoin
   ident = count.get();
 }
 
+void OefAgentEndpoint::close(const std::string &reason)
+{
+  Counter("mt-core.network.OefAgentEndpoint.closed")++;
+  Counter(std::string("mt-core.network.OefAgentEndpoint.closed.") + reason)++;
+
+  socket().close();
+}
+
+void OefAgentEndpoint::setState(const std::string &stateName, bool value)
+{
+  states[stateName] = value;
+}
+
+bool OefAgentEndpoint::getState(const std::string &stateName) const
+{
+  auto entry = states.find(stateName);
+  if (entry == states.end())
+  {
+    return false;
+  }
+  return entry->second;
+}
+
 void OefAgentEndpoint::setup(IKarmaPolicy *karmaPolicy)
 {
   // can't do this in the constructor because shared_from_this doesn't work in there.

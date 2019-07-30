@@ -10,6 +10,7 @@
 #include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 #include "monitoring/src/cpp/lib/Monitoring.hpp"
 #include "mt-core/status/src/cpp/MonitoringTask.hpp"
+#include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
 
 #include "mt-core/karma/src/cpp/KarmaPolicyBasic.hpp"
 #include "mt-core/karma/src/cpp/KarmaPolicyNone.hpp"
@@ -25,6 +26,7 @@
 #include "mt-core/secure/experimental/cpp/EndpointSSL.hpp"
 #include "mt-core/oef-functions/src/cpp/InitialSslHandshakeTaskFactory.hpp"
 #include "mt-core/oef-functions/src/cpp/InitialSecureHandshakeTaskFactory.hpp"
+#include "mt-core/tasks/src/cpp/OefLoginTimeoutTask.hpp"
 
 using namespace std::placeholders;
 
@@ -217,9 +219,16 @@ int MtCore::run()
 
 void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
 {
+  std::size_t login_timeout_ms = 1000;
+  std::chrono::milliseconds login_timeout(login_timeout_ms);
+
   IOefListener::FactoryCreator initialFactoryCreator =
-    [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+    [this, login_timeout](std::shared_ptr<OefAgentEndpoint> endpoint)
     {
+      endpoint -> addGoFunction([login_timeout](std::shared_ptr<OefAgentEndpoint> self){
+          auto timeout = std::make_shared<OefLoginTimeoutTask>(self);
+          timeout -> submit(login_timeout);
+        });
       return std::make_shared<InitialHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
     };
 
@@ -237,8 +246,12 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
   if (!config_.ssl_uri().empty())
   {
     initialFactoryCreator =
-      [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+      [this, login_timeout](std::shared_ptr<OefAgentEndpoint> endpoint)
       {
+        endpoint -> addGoFunction([login_timeout](std::shared_ptr<OefAgentEndpoint> self){
+            auto timeout = std::make_shared<OefLoginTimeoutTask>(self);
+            timeout -> submit(login_timeout);
+          });
         return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
       };
 
@@ -250,9 +263,13 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
   if (!config_.secure_uri().empty())
   {
     initialFactoryCreator =
-      [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+      [this, login_timeout](std::shared_ptr<OefAgentEndpoint> endpoint)
       {
-        return std::make_shared<InitialSecureHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
+         endpoint -> addGoFunction([login_timeout](std::shared_ptr<OefAgentEndpoint> self){
+            auto timeout = std::make_shared<OefLoginTimeoutTask>(self);
+            timeout -> submit(login_timeout);
+          });
+         return std::make_shared<InitialSecureHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
       };
 
     Uri secure_uri(config_.secure_uri());

@@ -58,6 +58,8 @@ void InitialHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
           heartbeat -> submit();
         }
 
+        getEndpoint() -> setState("loggedin", true);
+
         successor(std::make_shared<OefFunctionsTaskFactory>(core_key_, agents_, public_key_, outbounds));
       }
       break;
