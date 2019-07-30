@@ -22,6 +22,8 @@ public:
   Gauge& add(std::size_t x) { Monitoring::add(id, x); return *this; }
   Gauge& sub(std::size_t x) { Monitoring::sub(id, x); return *this; }
 
+  Gauge& max(std::size_t x) { Monitoring::max(id, x); return *this; }
+
   Gauge& operator+=(std::size_t x) { Monitoring::add(id, x); return *this; }
   Gauge& operator-=(std::size_t x) { Monitoring::sub(id, x); return *this; }
   Gauge& operator++()              { Monitoring::add(id, 1); return *this; }

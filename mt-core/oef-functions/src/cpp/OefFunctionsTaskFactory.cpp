@@ -75,6 +75,12 @@ void OefFunctionsTaskFactory::processMessage(ConstCharArrayBuffer &data)
     throw XError("unknown message");
     break;
 
+    case fetch::oef::pb::Envelope::kPong:
+      {
+        getEndpoint() -> heartbeat_recvd();
+        break;
+      }
+      
     case fetch::oef::pb::Envelope::kSendMessage:
     {
       operation_code = fetch::oef::pb::Server_AgentMessage_OEFError_Operation_SEND_MESSAGE;

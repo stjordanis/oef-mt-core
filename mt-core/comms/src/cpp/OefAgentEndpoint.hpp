@@ -41,8 +41,16 @@ public:
   }
 
   KarmaAccount karma;
+  struct {
+    bool will_heartbeat;
+  } capabilities;
 
-  void close(const std::string &reason);
+  void heartbeat(void);
+  void heartbeat_recvd(void);
+  
+  
+  
+ void close(const std::string &reason);
   void setState(const std::string &stateName, bool value);
   bool getState(const std::string &stateName) const;
 
@@ -55,12 +63,14 @@ public:
   {
     go_functions.push_back(func);
   }
+
 protected:
 private:
-  std::list<std::function<void(SELF_P)>> go_functions;
+  std::map<std::string, bool> states;
   std::size_t ident;
   std::shared_ptr<IOefAgentTaskFactory> factory;
-  std::map<std::string, bool> states;
+  std::list<std::function<void(SELF_P)>> go_functions;
+  std::atomic<unsigned int> outstanding_heartbeats;
 
   OefAgentEndpoint(const OefAgentEndpoint &other) = delete;
   OefAgentEndpoint &operator=(const OefAgentEndpoint &other) = delete;
