@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basic_comms/src/cpp/Endpoint.hpp"
+#include "basic_comms/src/cpp/EndpointBase.hpp"
 #include "basic_comms/src/cpp/RingBuffer.hpp"
 #include "basic_comms/src/cpp/ISocketOwner.hpp"
 
@@ -8,25 +8,28 @@
 #include "basic_comms/src/cpp/IMessageReader.hpp"
 #include "basic_comms/src/cpp/IMessageWriter.hpp"
 #include "fetch_teams/ledger/logger.hpp"
+#include "mt-core/secure/experimental/cpp/public_key_utils.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <openssl/evp.h>
+
 
 template <typename TXType>
 class EndpointSSL
-  : public Endpoint<TXType>
+  : public EndpointBase<TXType>
   , public std::enable_shared_from_this<EndpointSSL<TXType>>
 {
 public:
-  using Endpoint<TXType>::state;
-  using Endpoint<TXType>::readBuffer;
-  using Endpoint<TXType>::sendBuffer;
+  using EndpointBase<TXType>::state;
+  using EndpointBase<TXType>::readBuffer;
+  using EndpointBase<TXType>::sendBuffer;
   using std::enable_shared_from_this<EndpointSSL<TXType>>::shared_from_this;
 
-  using Socket = typename Endpoint<TXType>::Socket;
+  using Socket = typename EndpointBase<TXType>::Socket;
   using SocketSSL = boost::asio::ssl::stream<Socket>;
   using ContextSSL = boost::asio::ssl::context;
-  using Lock      = typename Endpoint<TXType>::Lock;
+  using Lock      = typename EndpointBase<TXType>::Lock;
 
   static constexpr char const *LOGGING_NAME = "EndpointSSL";
 
@@ -39,7 +42,8 @@ public:
       Core &core
       ,std::size_t sendBufferSize
       ,std::size_t readBufferSize
-      ,std::string key = ""
+      ,std::string sk_file = "mt-core/secure/experimental/cpp/core.pem"
+      ,std::string pk_file = "mt-core/secure/experimental/cpp/core_pub.pem" // not mandatory, for debug
   );
 
   virtual ~EndpointSSL();
@@ -62,10 +66,13 @@ public:
     else
       return "";
   }
+  
+  std::shared_ptr<EvpPublicKey> get_peer_ssl_key();
 
 protected:
   virtual void async_read(const std::size_t& bytes_needed) override;
   virtual void async_write() override;
+  virtual bool is_eof(const boost::system::error_code& ec) const override;
 
 private:
   SocketSSL* ssl_sock_p;
@@ -76,7 +83,13 @@ private:
   Socket sock;
 
   ContextSSL* make_ssl_ctx();
-  std::string key_get_password() const;
 
   std::string agent_key_;
+  std::string agent_ssl_key_;
+
+  std::string sk_f;
+  std::string pk_f; // not mandatory, for debug
+
 };
+  
+bool verify_agent_certificate(bool, boost::asio::ssl::verify_context&);

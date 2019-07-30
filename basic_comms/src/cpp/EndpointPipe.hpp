@@ -57,6 +57,11 @@ public:
   {
     return endpoint -> getRemoteId();
   }
+  
+  std::shared_ptr<EndpointType> getEndpoint()
+  {
+    return endpoint;
+  }
 
 protected:
   std::shared_ptr<EndpointType> endpoint;

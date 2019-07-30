@@ -1,7 +1,9 @@
 {
   "core_key": "CoreKey",
-  "core_uri": "tcp://127.0.0.1:10000",
+  "core_uri": "tcp://127.0.0.1:10002",
   "ws_uri": "ws://127.0.0.1:8080",
+  "ssl_uri": "ssl://127.0.0.1:10005",
+  "white_list_file":"",
   "search_uri": "tcp://127.0.0.1:20000",
   "comms_thread_count": 10,
   "tasks_thread_count": 10,

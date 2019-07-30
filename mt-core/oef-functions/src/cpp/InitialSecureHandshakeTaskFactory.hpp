@@ -54,4 +54,6 @@ private:
   std::shared_ptr<Agents> agents_;
   std::string public_key_;
   std::string core_key_;
+
+
 };

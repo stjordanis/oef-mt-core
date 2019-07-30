@@ -28,6 +28,10 @@
 #include "mt-core/oef-functions/src/cpp/InitialSecureHandshakeTaskFactory.hpp"
 #include "mt-core/tasks/src/cpp/OefLoginTimeoutTask.hpp"
 
+// openssl utils
+extern std::string RSA_Modulus_from_PEM_f(std::string file_path);
+extern std::string RSA_Modulus_short_format(std::string modulus);
+
 using namespace std::placeholders;
 
 static const unsigned int minimum_thread_count = 1;
@@ -141,7 +145,27 @@ int MtCore::run()
     karma_policy = std::make_shared<KarmaPolicyNone>();
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE!!");
   }
-
+  
+  white_list_ = std::make_shared<std::set<PublicKey>>();
+  if (!config_.white_list_file().empty())
+  {
+    white_list_enabled_ = true;
+    if (load_ssl_pub_keys(config_.white_list_file()))
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, white_list_->size(), " keys loaded successfully from white list file: ",
+                     config_.white_list_file());
+    }
+    else
+    {
+      FETCH_LOG_WARN(LOGGING_NAME, " error when loading ssl keys from white list file: ",
+                     config_.white_list_file());
+    }
+  }
+  else
+  {
+    white_list_enabled_ = false;
+    FETCH_LOG_INFO(LOGGING_NAME, "White list disabled for SSL connection, because no white list file was provided!");
+  }
   startListeners(karma_policy.get());
 
   Monitoring mon;
@@ -252,7 +276,7 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
             auto timeout = std::make_shared<OefLoginTimeoutTask>(self);
             timeout -> submit(login_timeout);
           });
-        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
+        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_, white_list_, white_list_enabled_);
       };
 
     Uri ssl_uri(config_.ssl_uri());
@@ -325,4 +349,32 @@ bool MtCore::configureFromJson(const std::string &config_json)
     FETCH_LOG_ERROR(LOGGING_NAME, "Parse error: '" + status.ToString() + "'");
   }
   return status.ok();
+}
+
+bool MtCore::load_ssl_pub_keys(std::string white_list_file)
+{
+  try {
+    std::ifstream file{white_list_file};
+    std::string line;
+    while(std::getline(file,line))
+    {
+      if(line.empty()) continue;
+      try 
+      {
+        EvpPublicKey pub_key{line};
+        FETCH_LOG_INFO(LOGGING_NAME, "inserting in white list : ", pub_key);
+        white_list_->insert(pub_key); 
+      }
+      catch (std::exception& e)
+      {
+        FETCH_LOG_WARN(LOGGING_NAME, " error inserting file in white list: ", line, " - ", e.what()); 
+      }
+    }
+    return true;
+  } 
+  catch (std::exception& ex)
+  {
+    FETCH_LOG_ERROR(LOGGING_NAME, "Exception: ", ex.what());
+    return false;
+  }
 }

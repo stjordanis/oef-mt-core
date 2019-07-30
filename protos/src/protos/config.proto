@@ -19,4 +19,5 @@ message CoreConfig {
     
     string ssl_uri = 40;
     string secure_uri = 41;
+    string white_list_file = 42;
 }
