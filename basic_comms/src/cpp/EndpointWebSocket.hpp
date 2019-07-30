@@ -22,6 +22,7 @@ public:
   using EndpointBase<TXType>::sendBuffer;
   using std::enable_shared_from_this<EndpointWebSocket<TXType>>::shared_from_this;
 
+  using ConfigMap  = typename EndpointBase<TXType>::ConfigMap;
   using Socket     = typename EndpointBase<TXType>::Socket ;
   using Lock       = typename EndpointBase<TXType>::Lock;
   using StateType  = typename EndpointBase<TXType>::StateType;
@@ -32,7 +33,8 @@ public:
   explicit EndpointWebSocket(
       boost::asio::io_context& io_context,
       std::size_t sendBufferSize,
-      std::size_t readBufferSize);
+      std::size_t readBufferSize,
+      ConfigMap configMap);
 
   virtual ~EndpointWebSocket();
 

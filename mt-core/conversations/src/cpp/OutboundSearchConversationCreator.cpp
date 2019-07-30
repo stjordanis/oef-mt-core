@@ -193,7 +193,8 @@ bool OutboundSearchConversationWorkerTask::connect()
 {
   try
   {
-    ep = std::make_shared<EndpointType>(core, 1000000, 1000000);
+    std::unordered_map<std::string, std::string> endpointConfig;
+    ep = std::make_shared<EndpointType>(core, 1000000, 1000000, endpointConfig);
 
     ep -> connect(uri, core);
     ep_send = std::make_shared<ProtoPathMessageSender>(ep);
@@ -273,7 +274,8 @@ OutboundSearchConversationWorkerTask::WorkloadProcessed OutboundSearchConversati
 OutboundSearchConversationCreator::OutboundSearchConversationCreator(const std::string &core_key, const Uri &core_uri,
     const Uri &search_uri, Core &core, std::shared_ptr<OutboundConversations> outbounds)
 {
-  auto ep0 = std::make_shared<Endpoint<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000);
+  std::unordered_map<std::string, std::string> endpointConfig;
+  auto ep0 = std::make_shared<Endpoint<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000, endpointConfig);
   endpoint = std::make_shared<ProtoMessageEndpoint>(std::move(ep0));
   endpoint->setup(endpoint);
 

@@ -12,7 +12,7 @@ template <template <typename> class EndpointType>
 ExitState OefListenerStarterTask<EndpointType>::run(void)
 {
   // open port here.
-  auto result = std::make_shared<Oefv1Listener<EndpointType>>(core, p, karmaPolicy);
+  auto result = std::make_shared<Oefv1Listener<EndpointType>>(core, p, karmaPolicy, endpointConfig);
 
   result -> factoryCreator = initialFactoryCreator;
 

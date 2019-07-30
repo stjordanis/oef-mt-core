@@ -12,8 +12,9 @@ Endpoint<TXType>::Endpoint(
       Core &core
       ,std::size_t sendBufferSize
       ,std::size_t readBufferSize
+      ,ConfigMap configMap
   )
-    : EndpointBase<TXType>(sendBufferSize, readBufferSize)
+    : EndpointBase<TXType>(sendBufferSize, readBufferSize, configMap)
     , sock(core)
 {
   ep_count++;

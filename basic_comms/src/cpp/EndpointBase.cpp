@@ -39,9 +39,11 @@ template <typename TXType>
 EndpointBase<TXType>::EndpointBase(
       std::size_t sendBufferSize
       ,std::size_t readBufferSize
+      , ConfigMap configMap
   )
     : sendBuffer(sendBufferSize)
     , readBuffer(readBufferSize)
+    , configMap_(std::move(configMap))
     , asio_sending(false)
     , asio_reading(false)
 {

@@ -20,4 +20,7 @@ message CoreConfig {
     string ssl_uri = 40;
     string secure_uri = 41;
     string white_list_file = 42;
+    string core_cert_pk_file = 43;
+    string core_pubkey_file = 44;
+    string tmp_dh_file = 45;
 }

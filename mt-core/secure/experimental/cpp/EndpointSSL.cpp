@@ -20,13 +20,10 @@ EndpointSSL<TXType>::EndpointSSL(
       Core &core
       ,std::size_t sendBufferSize
       ,std::size_t readBufferSize
-      ,std::string sk_file
-      ,std::string pk_file
+      ,ConfigMap configMap
   )
-    : EndpointBase<TXType>(sendBufferSize, readBufferSize)
+    : EndpointBase<TXType>(sendBufferSize, readBufferSize, configMap)
     , sock(core)
-    , sk_f(sk_file)
-    , pk_f(pk_file)
 {
   ep_count++;
   ssl_setup = false;
@@ -185,9 +182,19 @@ typename EndpointSSL<TXType>::ContextSSL* EndpointSSL<TXType>::make_ssl_ctx()
       boost::asio::ssl::context::default_workarounds
       | boost::asio::ssl::context::no_sslv2);
       //| boost::asio::ssl::context::single_dh_use);
-  ssl_ctx->use_certificate_chain_file(sk_f);
-  ssl_ctx->use_private_key_file(sk_f, boost::asio::ssl::context::pem);
-  ssl_ctx->use_tmp_dh_file("mt-core/secure/experimental/cpp/dh2048.pem");
+  auto sk_f = configMap_.find("core_cert_pk_file");
+  if (sk_f == configMap_.end()) {
+    FETCH_LOG_ERROR(LOGGING_NAME, "SSL setup failed, because missing core_cert_pk_file from configuration!");
+    return nullptr;
+  }
+  ssl_ctx->use_certificate_chain_file(sk_f->second);
+  ssl_ctx->use_private_key_file(sk_f->second, boost::asio::ssl::context::pem);
+  auto dh_file = configMap_.find("tmp_dh_file");
+  if (dh_file == configMap_.end()) {
+    FETCH_LOG_ERROR(LOGGING_NAME, "SSL setup failed, because missing tmp_dh_file from configuration!");
+    return nullptr;
+  }
+  ssl_ctx->use_tmp_dh_file(dh_file->second);
 
   // impose cipher
   SSL_CTX_set_cipher_list(ssl_ctx->native_handle(), "DHE-RSA-AES256-SHA256");

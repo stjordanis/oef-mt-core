@@ -8,13 +8,14 @@
 #include "mt-core/secure/experimental/cpp/EndpointSSL.hpp"
 
 template <template <typename> class EndpointType>
-Oefv1Listener<EndpointType>::Oefv1Listener(std::shared_ptr<Core> core, int port, IKarmaPolicy *karmaPolicy):listener(*core, port)
+Oefv1Listener<EndpointType>::Oefv1Listener(std::shared_ptr<Core> core, int port, IKarmaPolicy *karmaPolicy, ConfigMap endpointConfig):listener(*core, port)
 {
   this -> port = port;
   this -> karmaPolicy = karmaPolicy;
+  this -> endpointConfig = std::move(endpointConfig);
   listener.creator = [this](Core &core) {
     std::cout << "Create endpoint...." << std::endl;
-    auto ep0 = std::make_shared<EndpointType<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000);
+    auto ep0 = std::make_shared<EndpointType<std::shared_ptr<google::protobuf::Message>>>(core, 1000000, 1000000, this->endpointConfig);
     auto ep1 = std::make_shared<ProtoMessageEndpoint>(std::move(ep0));
     ep1->setup(ep1);
     auto ep2 = std::make_shared<OefAgentEndpoint>(std::move(ep1));
