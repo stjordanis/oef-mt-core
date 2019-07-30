@@ -47,6 +47,7 @@ private:
   fetch::oef::pb::CoreConfig config_;
   
   std::shared_ptr<std::set<PublicKey>> white_list_;
+  bool white_list_enabled_;
 
   Threadpool comms_runners;
   Threadpool tasks_runners;

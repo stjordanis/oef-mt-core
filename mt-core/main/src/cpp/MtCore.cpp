@@ -140,17 +140,25 @@ int MtCore::run()
   }
   
   white_list_ = std::make_shared<std::set<PublicKey>>();
-  if(load_ssl_pub_keys(config_.white_list_file()))
+  if (!config_.white_list_file().empty())
   {
-    FETCH_LOG_INFO(LOGGING_NAME, white_list_->size()," keys loaded successfully from white list file: ", 
-      config_.white_list_file());
+    white_list_enabled_ = true;
+    if (load_ssl_pub_keys(config_.white_list_file()))
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, white_list_->size(), " keys loaded successfully from white list file: ",
+                     config_.white_list_file());
+    }
+    else
+    {
+      FETCH_LOG_WARN(LOGGING_NAME, " error when loading ssl keys from white list file: ",
+                     config_.white_list_file());
+    }
   }
   else
   {
-    FETCH_LOG_WARN(LOGGING_NAME, " error when loading ssl keys from white list file: ", 
-      config_.white_list_file());
+    white_list_enabled_ = false;
+    FETCH_LOG_INFO(LOGGING_NAME, "White list disabled for SSL connection, because no white list file was provided!");
   }
-
   startListeners(karma_policy.get());
 
   Monitoring mon;
@@ -250,7 +258,7 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
     initialFactoryCreator =
       [this](std::shared_ptr<OefAgentEndpoint> endpoint)
       {
-        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_, white_list_);
+        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_, white_list_, white_list_enabled_);
       };
 
     Uri ssl_uri(config_.ssl_uri());

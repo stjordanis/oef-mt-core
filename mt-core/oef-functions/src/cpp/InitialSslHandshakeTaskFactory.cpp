@@ -26,13 +26,15 @@ void InitialSslHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
   public_key_ = RSA_Modulus_short(*ssl_public_key_); 
 
   auto iter = white_list_->find(*ssl_public_key_);
-  if (iter != white_list_->end())
+  if (iter != white_list_->end() || !white_list_enabled_)
   {
     // send success 
     auto connected_pb = std::make_shared<fetch::oef::pb::Server_Connected>();
     connected_pb -> set_status(true);
 
-    FETCH_LOG_INFO(LOGGING_NAME, "Agent ", public_key_, " ssl authenticated and white listed, moving to OefFunctions...");
+    FETCH_LOG_INFO(LOGGING_NAME, "Agent ", public_key_,
+        " ssl authenticated and white listed ( or white list disabled = ",
+        white_list_enabled_,"), moving to OefFunctions...");
     auto senderTask = std::make_shared<TSendProtoTask<fetch::oef::pb::Server_Connected>>(connected_pb, getEndpoint());
     senderTask -> submit();
 
