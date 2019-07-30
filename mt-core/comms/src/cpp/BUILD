@@ -15,6 +15,7 @@ cc_library(
          "//mt-core/tasks-base/src/cpp:lib",
          "//mt-core/secure/experimental/cpp:lib",
          "@com_google_protobuf//:protobuf",
-         "//fetch_teams/ledger:lib"
+         "//fetch_teams/ledger:lib",
+         "//protos/src/protos:cc_oef_core_pb",
     ],
 )

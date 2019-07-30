@@ -25,9 +25,20 @@ public:
   void setup(IKarmaPolicy *karmaPolicy);
 
   KarmaAccount karma;
+
+  struct {
+    bool will_heartbeat;
+  } capabilities;
+
+  void heartbeat(void);
+  void heartbeat_recvd(void);
+
 protected:
 private:
+  std::atomic<unsigned int> outstanding_heartbeats;
+
   std::shared_ptr<IOefAgentTaskFactory> factory;
+  std::size_t ident;
 
   OefAgentEndpoint(const OefAgentEndpoint &other) = delete;
   OefAgentEndpoint &operator=(const OefAgentEndpoint &other) = delete;

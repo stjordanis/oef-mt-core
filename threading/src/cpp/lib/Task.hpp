@@ -31,6 +31,8 @@ public:
 
   virtual void makeRunnable();
 
+  std::size_t getTaskId() { return task_id; }
+
   std::size_t setGroupId(std::size_t new_group_id);
   static void setThreadGroupId(std::size_t new_group_id);
 private:

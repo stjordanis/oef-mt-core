@@ -9,7 +9,7 @@ import "protos/src/protos/dap_interface.proto";
 message Agent {
     message CapabilityBits
     {
-        optional bool can_handle_oob_errors = 1;
+        optional bool will_heartbeat = 1;
     }
 
     message Server {
@@ -18,7 +18,7 @@ message Agent {
         }
         message Answer {
             required string answer = 1;
-            optional CapabilityBits capabilityBits = 2;
+            optional CapabilityBits capability_bits = 2;
         }
     }
     message Message {
@@ -94,6 +94,9 @@ message Server {
             optional string cause = 2;
             optional string detail = 3;
         }
+        message CommsPing {
+            optional int32 dummy = 1;
+        }
         message DialogueError {
             required int32 dialogue_id = 1;
             required string origin = 2;
@@ -107,6 +110,7 @@ message Server {
             SearchResult agents = 4; // from oef
             SearchResultWide agents_wide = 5; // from oef
             DialogueError dialogue_error = 6;
+            CommsPing ping = 7;
         }
     }
 }
@@ -118,6 +122,10 @@ message AgentDescription {
 message AgentSearch {
     optional Query.Model query = 1;
     optional ConstructQueryObjectRequest query_v2 = 2;
+}
+
+message CommsPong {
+    optional int32 dummy = 1;
 }
 
 message Envelope {
@@ -133,6 +141,7 @@ message Envelope {
         AgentSearch search_services = 7;
         AgentSearch search_services_wide = 8;
         AgentSearch search_agents = 9;
+        CommsPong pong = 10;
     }
 }
 
