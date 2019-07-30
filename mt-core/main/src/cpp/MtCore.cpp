@@ -125,7 +125,12 @@ int MtCore::run()
   {
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = BASIC");
     karma_policy = std::make_shared<KarmaPolicyBasic>(config_.karma_policy());
-    std::shared_ptr<Task> refresher = std::make_shared<KarmaRefreshTask>(karma_policy.get(), config_.karma_refresh_interval_ms());
+    auto ref_interval = config_.karma_refresh_interval_ms();
+    if (ref_interval == 0)
+    {
+      ref_interval = 1000;
+    }
+    std::shared_ptr<Task> refresher = std::make_shared<KarmaRefreshTask>(karma_policy.get(), ref_interval);
     refresher -> submit();
   }
   else

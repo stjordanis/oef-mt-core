@@ -2,6 +2,7 @@
 #include "fetch_teams/ledger/logger.hpp"
 
 #include "XKarma.hpp"
+#include "XDisconnect.hpp"
 
 std::atomic<std::size_t> tick_amounts(0);
 std::atomic<std::size_t> tick_counter(0);
@@ -197,7 +198,7 @@ KarmaPolicyBasic::KARMA KarmaPolicyBasic::parseEffect(KARMA currentBalance, cons
   switch(effect[0])
   {
   case 'X':
-    throw XKarma("Disconnect due to Karma policy");
+    throw XDisconnect("Disconnect due to Karma policy");
   case '0':
   case '1':
   case '2':
@@ -230,14 +231,15 @@ bool KarmaPolicyBasic::perform(const KarmaAccount &identifier, const std::string
   KARMA prev = accounts.access(*identifier).karma;
   KARMA next = afterwards(prev, event);
 
-  FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Event ", event, " for ", identifier.getName(), " scores ", prev, " => ",  next);
 
   if (next >= 0 || force)
   {
+    FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Event ", event, " for ", identifier.getName(), " karma change ", prev, " => ",  next);
     accounts.access(*identifier).karma = next;
     return true;
   }
 
+  FETCH_LOG_INFO(LOGGING_NAME, "KARMA: Event ", event, " for ", identifier.getName(), " rejected because result karma = ",  next);
   throw XKarma(event);
 }
 

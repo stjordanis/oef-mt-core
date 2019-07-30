@@ -60,7 +60,7 @@ message Server {
         }
         repeated Item result = 1;
     }
-    
+
     message AgentMessage {
         message Content {
             required int32 dialogue_id = 1;
@@ -76,8 +76,17 @@ message Server {
                 UNREGISTER_SERVICE = 1;
                 REGISTER_DESCRIPTION = 2;
                 UNREGISTER_DESCRIPTION = 3;
+
+                SEARCH_SERVICES = 4;
+                SEARCH_SERVICES_WIDE = 5;
+                SEARCH_AGENTS = 6;
+                SEND_MESSAGE = 7;
+
+                OTHER = 10000;
             }
-            required Operation operation = 1;
+            required int32 operation = 1;
+            optional string cause = 2;
+            optional string detail = 3;
         }
         message DialogueError {
             required int32 dialogue_id = 1;
@@ -97,7 +106,7 @@ message Server {
 }
 
 message AgentDescription {
-    required Query.Instance description = 1; 
+    required Query.Instance description = 1;
 }
 
 message AgentSearch {
