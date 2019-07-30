@@ -7,12 +7,18 @@ import "protos/src/protos/fipa.proto";
 import "protos/src/protos/dap_interface.proto";
 
 message Agent {
+    message CapabilityBits
+    {
+        optional bool can_handle_oob_errors = 1;
+    }
+
     message Server {
         message ID {
             required string public_key = 1;
-        }       
+        }
         message Answer {
             required string answer = 1;
+            optional CapabilityBits capabilityBits = 2;
         }
     }
     message Message {
