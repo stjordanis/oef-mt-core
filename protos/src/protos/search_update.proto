@@ -3,6 +3,7 @@ syntax = "proto3";
 package fetch.oef.pb;
 
 import "protos/src/protos/query.proto";
+import "protos/src/protos/dap_interface.proto";
 
 message Update {
 
@@ -16,11 +17,6 @@ message Update {
     message Uri {
         string agent = 1;
         repeated string oef_core = 2;
-    }
-
-    message Location {
-        double lon = 1;
-        double lat = 2;
     }
 
     message Attribute {
@@ -43,7 +39,7 @@ message Update {
             //fetch.oef.pb.Query.DataModel dm = 6; // will arrive in future
             int32 i32 = 7;
             bool b = 8;
-            Location l = 9;
+            ValueMessage.Location l = 9;
             Address a = 10;
         }
 
