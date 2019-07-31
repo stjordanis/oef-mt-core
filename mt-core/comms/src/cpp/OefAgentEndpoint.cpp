@@ -125,17 +125,17 @@ OefAgentEndpoint::~OefAgentEndpoint()
 
 void OefAgentEndpoint::heartbeat()
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "HB:", ident);
+  FETCH_LOG_DEBUG(LOGGING_NAME, "HB:", ident);
   try
   {
     if (outstanding_heartbeats > 0)
     {
       hb_max_os . max(outstanding_heartbeats);
-      FETCH_LOG_INFO(LOGGING_NAME, "HB:", ident, " outstanding=", outstanding_heartbeats);
+      FETCH_LOG_DEBUG(LOGGING_NAME, "HB:", ident, " outstanding=", outstanding_heartbeats);
       karma . perform("comms.outstanding_heartbeats."+std::to_string(outstanding_heartbeats));
     }
     
-    FETCH_LOG_INFO(LOGGING_NAME, "HB:", ident, " PING");
+    FETCH_LOG_DEBUG(LOGGING_NAME, "HB:", ident, " PING");
     auto ping_message = std::make_shared<fetch::oef::pb::Server_AgentMessage>();
     ping_message -> mutable_ping() ->set_dummy(1);
     ping_message -> set_answer_id(0);
@@ -155,5 +155,5 @@ void OefAgentEndpoint::heartbeat_recvd(void)
 {
   hb_recvd++;
   outstanding_heartbeats--;
-  FETCH_LOG_INFO(LOGGING_NAME, "HB:", ident, " PONG  outstanding=", outstanding_heartbeats);
+  FETCH_LOG_DEBUG(LOGGING_NAME, "HB:", ident, " PONG  outstanding=", outstanding_heartbeats);
 }

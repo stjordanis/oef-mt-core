@@ -11,7 +11,7 @@ class OefLoginTimeoutTask
   : public Task
 {
 public:
-  static constexpr char const *LOGGING_NAME = "OefHeartbeatTask";
+  static constexpr char const *LOGGING_NAME = "OefLoginTimeoutTask";
 
   OefLoginTimeoutTask(std::shared_ptr<OefAgentEndpoint> ep)
   {
