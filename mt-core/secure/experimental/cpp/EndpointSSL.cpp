@@ -4,7 +4,14 @@
 #include "cpp-utils/src/cpp/lib/Uri.hpp"
 #include "monitoring/src/cpp/lib/Gauge.hpp"
 
+#include <openssl/ssl.h>
+#include <cerrno> // for fopen
+#include <cstdio> // for fopen
 #include <memory>
+#include <functional>
+
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 static Gauge ep_count("mt-core.network.EndpointSSL");
 
@@ -13,10 +20,10 @@ EndpointSSL<TXType>::EndpointSSL(
       Core &core
       ,std::size_t sendBufferSize
       ,std::size_t readBufferSize
-      ,std::string key 
+      ,ConfigMap configMap
   )
-    : Endpoint<TXType>(core, sendBufferSize, readBufferSize)
-    , key_(key), sock(core)
+    : EndpointBase<TXType>(sendBufferSize, readBufferSize, configMap)
+    , sock(core)
 {
   ep_count++;
   ssl_setup = false;
@@ -24,6 +31,9 @@ EndpointSSL<TXType>::EndpointSSL(
   {
     ssl_ctx_p = make_ssl_ctx();
     ssl_sock_p = new SocketSSL(std::move(sock), *ssl_ctx_p);
+    ssl_sock_p-> set_verify_mode(boost::asio::ssl::verify_peer);
+    ssl_sock_p-> set_verify_callback(
+        std::bind(&verify_agent_certificate, _1, _2));
   }
   catch(std::exception &ec)
   {
@@ -72,8 +82,21 @@ void EndpointSSL<TXType>::go()
       {
         if (!error)
         {
+          try
+          {
+            X509CertP cert{ssl_sock_p->native_handle()};
+            EvpPublicKey pk{cert};
+            
+            agent_ssl_key_ = RSA_Modulus(pk);
+            FETCH_LOG_INFO(LOGGING_NAME, "Got Agent PubKey: ", agent_ssl_key_);
+          }
+          catch (std::exception& e)
+          {
+            FETCH_LOG_WARN(LOGGING_NAME, "Couldn't get agent public key from ssl socket : ", e.what());
+            return;
+          }
           FETCH_LOG_WARN(LOGGING_NAME, "SSL handshake successfull");
-          Endpoint<TXType>::go();
+          EndpointBase<TXType>::go();
         }
         else
         {
@@ -81,6 +104,25 @@ void EndpointSSL<TXType>::go()
           close();
         }
       });
+}
+  
+template <typename TXType>
+std::shared_ptr<EvpPublicKey> EndpointSSL<TXType>::get_peer_ssl_key()
+{
+  X509CertP cert{ssl_sock_p->native_handle()};
+  return std::make_shared<EvpPublicKey>(cert);
+}
+  
+bool verify_agent_certificate(bool preverified,
+      boost::asio::ssl::verify_context& ctx)
+{
+  // Accept any
+  char subject_name[256];
+  X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+  X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+  FETCH_LOG_INFO("EndpointSSL", "Certificate: ", subject_name);
+
+  return true;
 }
 
 template <typename TXType>
@@ -113,6 +155,9 @@ void EndpointSSL<TXType>::async_read(const std::size_t& bytes_needed)
   auto space = readBuffer.getSpaceBuffers();
   auto my_state = state;
 
+  FETCH_LOG_INFO(LOGGING_NAME, "run_reading: START, bytes_needed: ", bytes_needed);
+  
+  //auto self = shared_from_this();
   boost::asio::async_read(
                           *ssl_sock_p,
                           space,
@@ -124,24 +169,35 @@ void EndpointSSL<TXType>::async_read(const std::size_t& bytes_needed)
 }
 
 template <typename TXType>
-std::string EndpointSSL<TXType>::key_get_password() const
+bool EndpointSSL<TXType>::is_eof(const boost::system::error_code& ec) const
 {
-  return "test";
+  return ec == boost::asio::error::eof;
 }
 
 template <typename TXType>
 typename EndpointSSL<TXType>::ContextSSL* EndpointSSL<TXType>::make_ssl_ctx()
 {
-  // TOFIX(LR) hard coded 
-  auto ssl_ctx = new ContextSSL(boost::asio::ssl::context::sslv23);
+  auto ssl_ctx = new ContextSSL(boost::asio::ssl::context::tlsv12);
   ssl_ctx->set_options(
       boost::asio::ssl::context::default_workarounds
-      | boost::asio::ssl::context::no_sslv2
-      | boost::asio::ssl::context::single_dh_use);
-  ssl_ctx->set_password_callback(std::bind(&EndpointSSL::key_get_password, this));
-  ssl_ctx->use_certificate_chain_file("mt-core/secure/experimental/cpp/server.pem");
-  ssl_ctx->use_private_key_file("mt-core/secure/experimental/cpp/server.pem", boost::asio::ssl::context::pem);
-  ssl_ctx->use_tmp_dh_file("mt-core/secure/experimental/cpp/dh2048.pem");
+      | boost::asio::ssl::context::no_sslv2);
+      //| boost::asio::ssl::context::single_dh_use);
+  auto sk_f = configMap_.find("core_cert_pk_file");
+  if (sk_f == configMap_.end()) {
+    FETCH_LOG_ERROR(LOGGING_NAME, "SSL setup failed, because missing core_cert_pk_file from configuration!");
+    return nullptr;
+  }
+  ssl_ctx->use_certificate_chain_file(sk_f->second);
+  ssl_ctx->use_private_key_file(sk_f->second, boost::asio::ssl::context::pem);
+  auto dh_file = configMap_.find("tmp_dh_file");
+  if (dh_file == configMap_.end()) {
+    FETCH_LOG_ERROR(LOGGING_NAME, "SSL setup failed, because missing tmp_dh_file from configuration!");
+    return nullptr;
+  }
+  ssl_ctx->use_tmp_dh_file(dh_file->second);
+
+  // impose cipher
+  SSL_CTX_set_cipher_list(ssl_ctx->native_handle(), "DHE-RSA-AES256-SHA256");
   
   return ssl_ctx;
 }

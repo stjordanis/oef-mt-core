@@ -10,6 +10,7 @@
 #include "mt-core/conversations/src/cpp/OutboundSearchConversationCreator.hpp"
 #include "monitoring/src/cpp/lib/Monitoring.hpp"
 #include "mt-core/status/src/cpp/MonitoringTask.hpp"
+#include "mt-core/comms/src/cpp/OefAgentEndpoint.hpp"
 
 #include "mt-core/karma/src/cpp/KarmaPolicyBasic.hpp"
 #include "mt-core/karma/src/cpp/KarmaPolicyNone.hpp"
@@ -25,6 +26,11 @@
 #include "mt-core/secure/experimental/cpp/EndpointSSL.hpp"
 #include "mt-core/oef-functions/src/cpp/InitialSslHandshakeTaskFactory.hpp"
 #include "mt-core/oef-functions/src/cpp/InitialSecureHandshakeTaskFactory.hpp"
+#include "mt-core/tasks/src/cpp/OefLoginTimeoutTask.hpp"
+
+// openssl utils
+extern std::string RSA_Modulus_from_PEM_f(std::string file_path);
+extern std::string RSA_Modulus_short_format(std::string modulus);
 
 using namespace std::placeholders;
 
@@ -125,7 +131,12 @@ int MtCore::run()
   {
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = BASIC");
     karma_policy = std::make_shared<KarmaPolicyBasic>(config_.karma_policy());
-    std::shared_ptr<Task> refresher = std::make_shared<KarmaRefreshTask>(karma_policy.get(), config_.karma_refresh_interval_ms());
+    auto ref_interval = config_.karma_refresh_interval_ms();
+    if (ref_interval == 0)
+    {
+      ref_interval = 1000;
+    }
+    std::shared_ptr<Task> refresher = std::make_shared<KarmaRefreshTask>(karma_policy.get(), ref_interval);
     refresher -> submit();
   }
   else
@@ -134,7 +145,27 @@ int MtCore::run()
     karma_policy = std::make_shared<KarmaPolicyNone>();
     FETCH_LOG_INFO(LOGGING_NAME, "KARMA = NONE!!");
   }
-
+  
+  white_list_ = std::make_shared<std::set<PublicKey>>();
+  if (!config_.white_list_file().empty())
+  {
+    white_list_enabled_ = true;
+    if (load_ssl_pub_keys(config_.white_list_file()))
+    {
+      FETCH_LOG_INFO(LOGGING_NAME, white_list_->size(), " keys loaded successfully from white list file: ",
+                     config_.white_list_file());
+    }
+    else
+    {
+      FETCH_LOG_WARN(LOGGING_NAME, " error when loading ssl keys from white list file: ",
+                     config_.white_list_file());
+    }
+  }
+  else
+  {
+    white_list_enabled_ = false;
+    FETCH_LOG_INFO(LOGGING_NAME, "White list disabled for SSL connection, because no white list file was provided!");
+  }
   startListeners(karma_policy.get());
 
   Monitoring mon;
@@ -212,47 +243,79 @@ int MtCore::run()
 
 void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
 {
+  std::size_t login_timeout_ms = 1000;
+  std::chrono::milliseconds login_timeout(login_timeout_ms);
+
   IOefListener::FactoryCreator initialFactoryCreator =
-    [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+    [this, login_timeout](std::shared_ptr<OefAgentEndpoint> endpoint)
     {
+      endpoint -> addGoFunction([login_timeout](std::shared_ptr<OefAgentEndpoint> self){
+          auto timeout = std::make_shared<OefLoginTimeoutTask>(self);
+          timeout -> submit(login_timeout);
+        });
       return std::make_shared<InitialHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
     };
 
   Uri core_uri(config_.core_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", core_uri.port);
-  auto task = std::make_shared<OefListenerStarterTask<Endpoint>>(core_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+  std::unordered_map<std::string, std::string> endpointConfig;
+  auto task = std::make_shared<OefListenerStarterTask<Endpoint>>(core_uri.port, listeners, core, initialFactoryCreator, karmaPolicy, endpointConfig);
   task -> submit();
   if (!config_.ws_uri().empty())
   {
     Uri ws_uri(config_.ws_uri());
     FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", ws_uri.port);
-    auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+    std::unordered_map<std::string, std::string> endpointConfigWS;
+    auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator, karmaPolicy, endpointConfigWS);
     task_ws -> submit();
   }
   if (!config_.ssl_uri().empty())
   {
     initialFactoryCreator =
-      [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+      [this, login_timeout](std::shared_ptr<OefAgentEndpoint> endpoint)
       {
-        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
+        endpoint -> addGoFunction([login_timeout](std::shared_ptr<OefAgentEndpoint> self){
+            auto timeout = std::make_shared<OefLoginTimeoutTask>(self);
+            timeout -> submit(login_timeout);
+          });
+        return std::make_shared<InitialSslHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_, white_list_, white_list_enabled_);
       };
 
     Uri ssl_uri(config_.ssl_uri());
     FETCH_LOG_INFO(LOGGING_NAME, "TLS/SSL Listener on ", ssl_uri.port);
-    auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
-    task_ssl -> submit();
+    std::unordered_map<std::string, std::string> endpointConfigSSL;
+    if (!config_.core_cert_pk_file().empty() && !config_.tmp_dh_file().empty())
+    {
+      endpointConfigSSL["core_cert_pk_file"] = config_.core_cert_pk_file();
+      endpointConfigSSL["tmp_dh_file"]       = config_.tmp_dh_file();
+
+      auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core,
+                                                                            initialFactoryCreator, karmaPolicy,
+                                                                            endpointConfigSSL);
+      task_ssl->submit();
+    }
+    else
+    {
+      FETCH_LOG_WARN(LOGGING_NAME, "Cannot create SSL endpoint because required files not set: core_cert_pk_file=",
+          config_.core_cert_pk_file(), ", tmp_dh_file=", config_.tmp_dh_file());
+    }
   }
   if (!config_.secure_uri().empty())
   {
     initialFactoryCreator =
-      [this](std::shared_ptr<OefAgentEndpoint> endpoint)
+      [this, login_timeout](std::shared_ptr<OefAgentEndpoint> endpoint)
       {
-        return std::make_shared<InitialSecureHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
+         endpoint -> addGoFunction([login_timeout](std::shared_ptr<OefAgentEndpoint> self){
+            auto timeout = std::make_shared<OefLoginTimeoutTask>(self);
+            timeout -> submit(login_timeout);
+          });
+         return std::make_shared<InitialSecureHandshakeTaskFactory>(config_.core_key(), endpoint, outbounds, agents_);
       };
 
     Uri secure_uri(config_.secure_uri());
+    std::unordered_map<std::string, std::string> endpointConfigSec;
     FETCH_LOG_INFO(LOGGING_NAME, "Secure Listener on ", secure_uri.port);
-    auto task_secure = std::make_shared<OefListenerStarterTask<Endpoint>>(secure_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+    auto task_secure = std::make_shared<OefListenerStarterTask<Endpoint>>(secure_uri.port, listeners, core, initialFactoryCreator, karmaPolicy, endpointConfigSec);
     task_secure -> submit();
   }
 }
@@ -303,4 +366,32 @@ bool MtCore::configureFromJson(const std::string &config_json)
     FETCH_LOG_ERROR(LOGGING_NAME, "Parse error: '" + status.ToString() + "'");
   }
   return status.ok();
+}
+
+bool MtCore::load_ssl_pub_keys(std::string white_list_file)
+{
+  try {
+    std::ifstream file{white_list_file};
+    std::string line;
+    while(std::getline(file,line))
+    {
+      if(line.empty()) continue;
+      try 
+      {
+        EvpPublicKey pub_key{line};
+        FETCH_LOG_INFO(LOGGING_NAME, "inserting in white list : ", pub_key);
+        white_list_->insert(pub_key); 
+      }
+      catch (std::exception& e)
+      {
+        FETCH_LOG_WARN(LOGGING_NAME, " error inserting file in white list: ", line, " - ", e.what()); 
+      }
+    }
+    return true;
+  } 
+  catch (std::exception& ex)
+  {
+    FETCH_LOG_ERROR(LOGGING_NAME, "Exception: ", ex.what());
+    return false;
+  }
 }

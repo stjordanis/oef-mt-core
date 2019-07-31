@@ -7,12 +7,18 @@ import "protos/src/protos/fipa.proto";
 import "protos/src/protos/dap_interface.proto";
 
 message Agent {
+    message CapabilityBits
+    {
+        optional bool will_heartbeat = 1;
+    }
+
     message Server {
         message ID {
             required string public_key = 1;
         }       
         message Answer {
-            required string answer = 1;
+            optional string answer = 1;
+            optional CapabilityBits capability_bits = 2;
         }
     }
     message Message {
@@ -60,7 +66,7 @@ message Server {
         }
         repeated Item result = 1;
     }
-    
+
     message AgentMessage {
         message Content {
             required int32 dialogue_id = 1;
@@ -76,8 +82,20 @@ message Server {
                 UNREGISTER_SERVICE = 1;
                 REGISTER_DESCRIPTION = 2;
                 UNREGISTER_DESCRIPTION = 3;
+
+                SEARCH_SERVICES = 4;
+                SEARCH_SERVICES_WIDE = 5;
+                SEARCH_AGENTS = 6;
+                SEND_MESSAGE = 7;
+
+                OTHER = 10000;
             }
-            required Operation operation = 1;
+            required int32 operation = 1;
+            optional string cause = 2;
+            optional string detail = 3;
+        }
+        message CommsPing {
+            optional int32 dummy = 1;
         }
         message DialogueError {
             required int32 dialogue_id = 1;
@@ -92,17 +110,22 @@ message Server {
             SearchResult agents = 4; // from oef
             SearchResultWide agents_wide = 5; // from oef
             DialogueError dialogue_error = 6;
+            CommsPing ping = 7;
         }
     }
 }
 
 message AgentDescription {
-    required Query.Instance description = 1; 
+    required Query.Instance description = 1;
 }
 
 message AgentSearch {
     optional Query.Model query = 1;
     optional ConstructQueryObjectRequest query_v2 = 2;
+}
+
+message CommsPong {
+    optional int32 dummy = 1;
 }
 
 message Envelope {
@@ -118,6 +141,7 @@ message Envelope {
         AgentSearch search_services = 7;
         AgentSearch search_services_wide = 8;
         AgentSearch search_agents = 9;
+        CommsPong pong = 10;
     }
 }
 

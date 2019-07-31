@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <set>
 
 #include "basic_comms/src/cpp/Core.hpp"
 #include "mt-core/comms/src/cpp/OefListenerSet.hpp"
@@ -10,6 +12,7 @@
 #include "threading/src/cpp/lib/Threadpool.hpp"
 #include "mt-core/agents/src/cpp/Agents.hpp"
 #include "fetch_teams/ledger/logger.hpp"
+#include "mt-core/secure/experimental/cpp/public_key_utils.hpp"
 
 #include "protos/src/protos/config.pb.h"
 
@@ -21,6 +24,7 @@ class IKarmaPolicy;
 class MtCore
 {
 public:
+  
   static constexpr char const *LOGGING_NAME = "MtCore";
 
   MtCore()
@@ -41,6 +45,9 @@ private:
   std::shared_ptr<OutboundConversations> outbounds;
   std::shared_ptr<Agents> agents_;
   fetch::oef::pb::CoreConfig config_;
+  
+  std::shared_ptr<std::set<PublicKey>> white_list_;
+  bool white_list_enabled_;
 
   Threadpool comms_runners;
   Threadpool tasks_runners;
@@ -48,6 +55,7 @@ private:
   void startListeners(IKarmaPolicy *karmaPolicy);
   bool configureFromJsonFile(const std::string &config_file);
   bool configureFromJson(const std::string &config_json);
+  bool load_ssl_pub_keys(std::string white_list_file);
 
 
   MtCore(const MtCore &other) = delete;

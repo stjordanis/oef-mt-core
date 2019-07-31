@@ -22,7 +22,8 @@ public:
   using EndpointBase<TXType>::readBuffer;
   using EndpointBase<TXType>::sendBuffer;
 
-  using Socket = typename EndpointBase<TXType>::Socket;
+  using ConfigMap = typename EndpointBase<TXType>::ConfigMap;
+  using Socket    = typename EndpointBase<TXType>::Socket;
 
   static constexpr char const *LOGGING_NAME = "Endpoint";
 
@@ -35,6 +36,7 @@ public:
       Core &core
       ,std::size_t sendBufferSize
       ,std::size_t readBufferSize
+      ,ConfigMap configMap
   );
 
   virtual ~Endpoint();

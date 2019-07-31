@@ -39,9 +39,11 @@ template <typename TXType>
 EndpointBase<TXType>::EndpointBase(
       std::size_t sendBufferSize
       ,std::size_t readBufferSize
+      , ConfigMap configMap
   )
     : sendBuffer(sendBufferSize)
     , readBuffer(readBufferSize)
+    , configMap_(std::move(configMap))
     , asio_sending(false)
     , asio_reading(false)
 {
@@ -87,7 +89,7 @@ void EndpointBase<TXType>::run_reading()
 {
   std::size_t read_needed_local = 0;
 
-  //std::cout << reader.get() << ":Endpoint::run_reading" << std::endl;
+  std::cout << reader.get() << ":Endpoint::run_reading" << std::endl;
   {
     Lock lock(mutex);
     if (asio_reading || *state != RUNNING_ENDPOINT)
