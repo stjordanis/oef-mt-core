@@ -34,11 +34,11 @@ void Endpoint<TXType>::async_write()
   int i = 0;
   for(auto &d : data)
   {
-    FETCH_LOG_INFO(LOGGING_NAME, "Send buffer ", i, "=", d.size(), " bytes on thr=", std::this_thread::get_id());
+    FETCH_LOG_DEBUG(LOGGING_NAME, "Send buffer ", i, "=", d.size(), " bytes on thr=", std::this_thread::get_id());
     ++i;
   }
 
-  FETCH_LOG_INFO(LOGGING_NAME, "run_sending: START");
+  FETCH_LOG_DEBUG(LOGGING_NAME, "run_sending: START");
 
   auto my_state = state;
   boost::asio::async_write(

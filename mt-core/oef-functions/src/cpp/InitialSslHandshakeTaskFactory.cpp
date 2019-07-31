@@ -21,6 +21,7 @@ void InitialSslHandshakeTaskFactory::processMessage(ConstCharArrayBuffer &data)
   fetch::oef::pb::Agent_Server_Answer hi_pb;
   ConstCharArrayBuffer buff(data);
   IOefAgentTaskFactory::read(hi_pb, buff); //
+  getEndpoint() -> capabilities.will_heartbeat = hi_pb.capability_bits().will_heartbeat();
 
   // get ssl key
   ssl_public_key_ = std::dynamic_pointer_cast<EndpointSSL<std::shared_ptr<google::protobuf::Message>>>(this->getEndpoint()->getEndpoint()->getEndpoint())->get_peer_ssl_key();

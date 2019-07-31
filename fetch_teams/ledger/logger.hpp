@@ -439,7 +439,7 @@ namespace fetch {
         }
 
         template <typename... Args>
-        void DEBUGWithName(char const *name, Args const &... args)
+        void DebugWithName(char const *name, Args &&... args)
         {
           std::lock_guard<std::mutex> lock(mutex_);
           if (this->log_ != nullptr)

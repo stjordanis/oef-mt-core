@@ -133,11 +133,11 @@ void EndpointSSL<TXType>::async_write()
   int i = 0;
   for(auto &d : data)
   {
-    FETCH_LOG_INFO(LOGGING_NAME, "Send buffer ", i, "=", d.size(), " bytes on thr=", std::this_thread::get_id());
+    FETCH_LOG_DEBUG(LOGGING_NAME, "Send buffer ", i, "=", d.size(), " bytes on thr=", std::this_thread::get_id());
     ++i;
   }
 
-  FETCH_LOG_INFO(LOGGING_NAME, "run_sending: START");
+  FETCH_LOG_DEBUG(LOGGING_NAME, "run_sending: START");
 
   auto my_state = state;
   boost::asio::async_write(
@@ -155,7 +155,7 @@ void EndpointSSL<TXType>::async_read(const std::size_t& bytes_needed)
   auto space = readBuffer.getSpaceBuffers();
   auto my_state = state;
 
-  FETCH_LOG_INFO(LOGGING_NAME, "run_reading: START, bytes_needed: ", bytes_needed);
+  FETCH_LOG_DEBUG(LOGGING_NAME, "run_reading: START, bytes_needed: ", bytes_needed);
   
   //auto self = shared_from_this();
   boost::asio::async_read(

@@ -70,7 +70,7 @@ void EndpointBase<TXType>::run_sending()
     }
     if (sendBuffer.getDataAvailable() == 0)
     {
-      FETCH_LOG_INFO(LOGGING_NAME, "create messages");
+      FETCH_LOG_DEBUG(LOGGING_NAME, "create messages");
       create_messages();
     }
     if (sendBuffer.getDataAvailable() == 0)
@@ -79,7 +79,7 @@ void EndpointBase<TXType>::run_sending()
     }
     asio_sending = true;
   }
-  FETCH_LOG_INFO(LOGGING_NAME, "ok data available");
+  FETCH_LOG_DEBUG(LOGGING_NAME, "ok data available");
 
   async_write();
 }
@@ -89,7 +89,7 @@ void EndpointBase<TXType>::run_reading()
 {
   std::size_t read_needed_local = 0;
 
-  std::cout << reader.get() << ":Endpoint::run_reading" << std::endl;
+  FETCH_LOG_DEBUG(LOGGING_NAME, reader.get(),  "::run_reading");
   {
     Lock lock(mutex);
     if (asio_reading || *state != RUNNING_ENDPOINT)
