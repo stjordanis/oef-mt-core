@@ -258,13 +258,15 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
 
   Uri core_uri(config_.core_uri());
   FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", core_uri.port);
-  auto task = std::make_shared<OefListenerStarterTask<Endpoint>>(core_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+  std::unordered_map<std::string, std::string> endpointConfig;
+  auto task = std::make_shared<OefListenerStarterTask<Endpoint>>(core_uri.port, listeners, core, initialFactoryCreator, karmaPolicy, endpointConfig);
   task -> submit();
   if (!config_.ws_uri().empty())
   {
     Uri ws_uri(config_.ws_uri());
     FETCH_LOG_INFO(LOGGING_NAME, "Listener on ", ws_uri.port);
-    auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+    std::unordered_map<std::string, std::string> endpointConfigWS;
+    auto task_ws = std::make_shared<OefListenerStarterTask<EndpointWebSocket>>(ws_uri.port, listeners, core, initialFactoryCreator, karmaPolicy, endpointConfigWS);
     task_ws -> submit();
   }
   if (!config_.ssl_uri().empty())
@@ -281,8 +283,22 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
 
     Uri ssl_uri(config_.ssl_uri());
     FETCH_LOG_INFO(LOGGING_NAME, "TLS/SSL Listener on ", ssl_uri.port);
-    auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
-    task_ssl -> submit();
+    std::unordered_map<std::string, std::string> endpointConfigSSL;
+    if (!config_.core_cert_pk_file().empty() && !config_.tmp_dh_file().empty())
+    {
+      endpointConfigSSL["core_cert_pk_file"] = config_.core_cert_pk_file();
+      endpointConfigSSL["tmp_dh_file"]       = config_.tmp_dh_file();
+
+      auto task_ssl = std::make_shared<OefListenerStarterTask<EndpointSSL>>(ssl_uri.port, listeners, core,
+                                                                            initialFactoryCreator, karmaPolicy,
+                                                                            endpointConfigSSL);
+      task_ssl->submit();
+    }
+    else
+    {
+      FETCH_LOG_WARN(LOGGING_NAME, "Cannot create SSL endpoint because required files not set: core_cert_pk_file=",
+          config_.core_cert_pk_file(), ", tmp_dh_file=", config_.tmp_dh_file());
+    }
   }
   if (!config_.secure_uri().empty())
   {
@@ -297,8 +313,9 @@ void MtCore::startListeners(IKarmaPolicy *karmaPolicy)
       };
 
     Uri secure_uri(config_.secure_uri());
+    std::unordered_map<std::string, std::string> endpointConfigSec;
     FETCH_LOG_INFO(LOGGING_NAME, "Secure Listener on ", secure_uri.port);
-    auto task_secure = std::make_shared<OefListenerStarterTask<Endpoint>>(secure_uri.port, listeners, core, initialFactoryCreator, karmaPolicy);
+    auto task_secure = std::make_shared<OefListenerStarterTask<Endpoint>>(secure_uri.port, listeners, core, initialFactoryCreator, karmaPolicy, endpointConfigSec);
     task_secure -> submit();
   }
 }

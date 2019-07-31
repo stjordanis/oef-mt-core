@@ -24,12 +24,14 @@ public:
   using EndpointBase<TXType>::state;
   using EndpointBase<TXType>::readBuffer;
   using EndpointBase<TXType>::sendBuffer;
+  using EndpointBase<TXType>::configMap_;
   using std::enable_shared_from_this<EndpointSSL<TXType>>::shared_from_this;
 
-  using Socket = typename EndpointBase<TXType>::Socket;
-  using SocketSSL = boost::asio::ssl::stream<Socket>;
+  using ConfigMap  = typename EndpointBase<TXType>::ConfigMap;
+  using Socket     = typename EndpointBase<TXType>::Socket;
+  using SocketSSL  = boost::asio::ssl::stream<Socket>;
   using ContextSSL = boost::asio::ssl::context;
-  using Lock      = typename EndpointBase<TXType>::Lock;
+  using Lock       = typename EndpointBase<TXType>::Lock;
 
   static constexpr char const *LOGGING_NAME = "EndpointSSL";
 
@@ -42,8 +44,7 @@ public:
       Core &core
       ,std::size_t sendBufferSize
       ,std::size_t readBufferSize
-      ,std::string sk_file = "mt-core/secure/experimental/cpp/core.pem"
-      ,std::string pk_file = "mt-core/secure/experimental/cpp/core_pub.pem" // not mandatory, for debug
+      ,ConfigMap configMap
   );
 
   virtual ~EndpointSSL();
@@ -86,9 +87,6 @@ private:
 
   std::string agent_key_;
   std::string agent_ssl_key_;
-
-  std::string sk_f;
-  std::string pk_f; // not mandatory, for debug
 
 };
   

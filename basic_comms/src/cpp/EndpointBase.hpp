@@ -22,9 +22,10 @@ class EndpointBase
   , public Waitable
 {
 public:
-  using Mutex   = std::mutex;
-  using Lock    = std::lock_guard<Mutex>;
-  using Socket  = boost::asio::ip::tcp::socket;
+  using Mutex     = std::mutex;
+  using Lock      = std::lock_guard<Mutex>;
+  using Socket    = boost::asio::ip::tcp::socket;
+  using ConfigMap = std::unordered_map<std::string, std::string>;
 
   using ErrorNotification      = std::function<void (const boost::system::error_code& ec)> ;
   using EofNotification        = std::function<void ()> ;
@@ -52,6 +53,7 @@ public:
   EndpointBase(
        std::size_t sendBufferSize
       ,std::size_t readBufferSize
+      ,ConfigMap configMap
   );
   virtual ~EndpointBase();
 
@@ -102,6 +104,8 @@ protected:
 protected:
   RingBuffer sendBuffer;
   RingBuffer readBuffer;
+
+  ConfigMap configMap_;
 
   Mutex mutex;
   Mutex txq_mutex;

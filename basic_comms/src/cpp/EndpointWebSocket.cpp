@@ -14,8 +14,9 @@ template <typename TXType>
 EndpointWebSocket<TXType>::EndpointWebSocket(
     boost::asio::io_context& io_context,
     std::size_t sendBufferSize,
-    std::size_t readBufferSize)
-  : EndpointBase<TXType>(sendBufferSize, readBufferSize)
+    std::size_t readBufferSize,
+    ConfigMap configMap)
+  : EndpointBase<TXType>(sendBufferSize, readBufferSize, configMap)
   , web_socket_(io_context)
   , strand_(web_socket_.get_executor())
 {
